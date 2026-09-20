@@ -1,0 +1,14 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: crm_easyoffice_local_frontend
+    container_name: crm_easyoffice_local_frontend
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - '5173:5173'
+    environment:
+      - VITE_BACKEND_ORIGIN=${VITE_BACKEND_ORIGIN:-http://host.docker.internal:8000}
