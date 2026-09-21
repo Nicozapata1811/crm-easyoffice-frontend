@@ -1,36 +1,36 @@
 /** Shell for the client portal: self-service for entrepreneurs. */
 
-import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import { Link as RouterLink, Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
-import { NavLinks } from "../components/NavLinks";
+import { AppHeader } from "../components/AppHeader";
+import { FolioNav } from "../components/FolioNav";
+import { CLIENTE_DEMO } from "../features/portal/datosDemo";
 
-const LINKS = [
-  { to: "/", label: "Servicios", end: true },
-  { to: "/mis-tramites", label: "Mis trámites" },
+/**
+ * ASSUMPTION: pending validation with Easy Office. Which step a route belongs
+ * to follows the prototype's five-step flow, not a validated state machine.
+ */
+const PASO_POR_RUTA: { patron: RegExp; paso: number }[] = [
+  { patron: /^\/tramites\/[^/]+\/nuevo$/, paso: 2 },
+  { patron: /^\/tramites\/[^/]+\/documento$/, paso: 3 },
+  { patron: /^\/tramites\/[^/]+\/pago$/, paso: 4 },
+  { patron: /^\/tramites\/[^/]+$/, paso: 5 },
 ];
 
 export function PortalLayout() {
+  const { pathname } = useLocation();
+  const paso = PASO_POR_RUTA.find(({ patron }) => patron.test(pathname))?.paso;
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <AppBar position="static">
-        <Toolbar sx={{ gap: 3 }}>
-          <Typography
-            variant="h6"
-            component={RouterLink}
-            to="/"
-            sx={{ color: "inherit", textDecoration: "none" }}
-          >
-            Easy Office
-          </Typography>
-          <NavLinks links={LINKS} />
-        </Toolbar>
-      </AppBar>
-      <Container component="main" sx={{ flex: 1, py: 4 }}>
+      <AppHeader
+        clienteNombre={CLIENTE_DEMO.nombre}
+        iniciales={CLIENTE_DEMO.iniciales}
+      />
+      {paso !== undefined && <FolioNav pasoActual={paso} />}
+      <Container component="main" maxWidth="lg" sx={{ flex: 1, py: 5, px: { xs: 2, md: 4 } }}>
         <Outlet />
       </Container>
     </Box>
