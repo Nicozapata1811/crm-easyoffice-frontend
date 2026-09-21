@@ -55,8 +55,8 @@ no lo reemplaza ni se incrusta en él.
 
 ## Instalación local
 
-Requisitos: Node.js 26 o superior. El backend debe estar corriendo en
-`http://localhost:8000`.
+Requisitos: Node.js 22.12 o superior (o 20.19+). El backend debe estar
+corriendo en `http://localhost:8000`.
 
 ```bash
 git clone git@github.com:Nicozapata1811/crm-easyoffice-frontend.git
