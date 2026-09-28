@@ -1,18 +1,25 @@
+import { useEffect } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormHelperText from "@mui/material/FormHelperText";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
+import { useCatalogo } from "../../../api/catalogo";
+import { parseDeepLinkParams } from "../../../lib/deepLinkParams";
 import { tokens } from "../../../theme";
-import { CLIENTE_DEMO } from "../datosDemo";
-import { domicilioSchema, type DomicilioForm } from "./schema";
+import { CLIENTE_DEMO, formatearPesos } from "../datosDemo";
+import { domicilioConPlanSchema, type DomicilioConPlanForm } from "./schema";
 
 /**
  * ASSUMPTION: pending validation with Easy Office. The comunas listed, and the
@@ -21,14 +28,23 @@ import { domicilioSchema, type DomicilioForm } from "./schema";
  */
 const COMUNAS = ["San Bernardo", "Santiago", "Puente Alto", "La Florida"];
 
+const SERVICIO = "domicilio-tributario";
+
 export function FormularioDomicilio() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const catalogo = useCatalogo();
+  const planes = catalogo.data?.servicios.find((s) => s.slug === SERVICIO)?.planes ?? [];
+  const enlace = parseDeepLinkParams(searchParams, planes);
+
   const {
     register,
+    control,
+    setValue,
     handleSubmit,
     formState: { errors, touchedFields },
-  } = useForm<DomicilioForm>({
-    resolver: zodResolver(domicilioSchema),
+  } = useForm<DomicilioConPlanForm>({
+    resolver: zodResolver(domicilioConPlanSchema),
     mode: "onBlur",
     defaultValues: {
       rutEmpresa: CLIENTE_DEMO.rut,
@@ -37,8 +53,17 @@ export function FormularioDomicilio() {
       direccion: "",
       comuna: COMUNAS[0],
       rolDeAvaluo: "",
+      plan: "",
+      // ASSUMPTION: pending validation with Easy Office. Travels with the form values
+      // until the backend defines the request that creates the trámite.
+      origen: enlace.origen.kind === "valid" ? enlace.origen.value : undefined,
     },
   });
+
+  const planDelEnlace = enlace.plan.kind === "valid" ? enlace.plan.value.slug : undefined;
+  useEffect(() => {
+    if (planDelEnlace) setValue("plan", planDelEnlace);
+  }, [planDelEnlace, setValue]);
 
   const rutValido = touchedFields.rutEmpresa && !errors.rutEmpresa;
 
@@ -101,6 +126,37 @@ export function FormularioDomicilio() {
             helperText={errors.rolDeAvaluo?.message ?? "Formato esperado: 0000-00"}
           />
         </Box>
+
+        <SectionHeading texto="Plan" />
+        {catalogo.isPending && (
+          <Typography sx={{ fontSize: 13, color: tokens.inkSoft }}>Cargando planes…</Typography>
+        )}
+        {catalogo.isError && (
+          <Typography sx={{ fontSize: 13, color: tokens.stamp }}>
+            No pudimos cargar los planes. Recarga la página para intentarlo de nuevo.
+          </Typography>
+        )}
+        <Controller
+          name="plan"
+          control={control}
+          render={({ field }) => (
+            <RadioGroup {...field} aria-label="Plan">
+              {planes.map((plan) => (
+                <FormControlLabel
+                  key={plan.slug}
+                  value={plan.slug}
+                  control={<Radio size="small" />}
+                  label={`${plan.nombre} · ${plan.meses} meses · ${formatearPesos(plan.precio)}${
+                    plan.precioConfirmado ? "" : " (precio referencial)"
+                  }`}
+                />
+              ))}
+            </RadioGroup>
+          )}
+        />
+        <FormHelperText error={Boolean(errors.plan)} sx={{ mb: 2 }}>
+          {errors.plan?.message ?? " "}
+        </FormHelperText>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1 }}>
           <Button variant="outlined" onClick={() => navigate("/")}>
