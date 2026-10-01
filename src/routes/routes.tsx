@@ -1,10 +1,9 @@
 /**
  * Route tree for both audiences.
  *
- * ASSUMPTION: pending validation with Easy Office. Routes distinguish only
- * whether a session exists and which audience a screen belongs to. The roles
- * and what each one may see are not defined yet, so no permission check is
- * made beyond that.
+ * The backoffice requires a staff session and checks permissions from
+ * GET /api/auth/me/. Client portal routes are not guarded yet: client
+ * accounts (HU-03) are not defined.
  */
 
 import { createBrowserRouter } from "react-router-dom";
@@ -21,14 +20,26 @@ import { PrevisualizacionDocumento } from "../features/portal/PrevisualizacionDo
 import { DetalleTramite } from "../features/backoffice/DetalleTramite/DetalleTramite";
 import { PanelOperativo } from "../features/backoffice/PanelOperativo/PanelOperativo";
 import { TiposTramite } from "../features/backoffice/TiposTramite/TiposTramite";
+import { PERMISOS } from "../features/auth/permisos";
+import { PlaceholderScreen } from "../components/PlaceholderScreen";
 import { NoEncontrado } from "./NoEncontrado";
+import { RequireAuth, RUTA_INGRESO } from "./RequireAuth";
+import { RequirePermission } from "./RequirePermission";
 
 export const router = createBrowserRouter([
   {
     element: <PortalLayout />,
     children: [
       { path: "/", element: <CatalogoServicios /> },
-      { path: "/ingresar", element: <Ingresar /> },
+      {
+        path: "/ingresar",
+        element: (
+          <PlaceholderScreen
+            titulo="Ingresar"
+            descripcion="Ingreso de clientes al portal. Pendiente de definir (HU-03)."
+          />
+        ),
+      },
       {
         path: "/tramites/domicilio-tributario/nuevo",
         element: <FormularioDomicilio />,
@@ -42,11 +53,25 @@ export const router = createBrowserRouter([
       { path: "/mis-tramites", element: <MisTramites /> },
     ],
   },
+  { path: RUTA_INGRESO, element: <Ingresar /> },
   {
     path: "/backoffice",
-    element: <BackofficeLayout />,
+    element: (
+      <RequireAuth>
+        <BackofficeLayout />
+      </RequireAuth>
+    ),
     children: [
-      { index: true, element: <PanelOperativo /> },
+      {
+        index: true,
+        // ASSUMPTION: pending validation with Easy Office. Whether an Ejecutivo
+        // sees the dashboard is undefined; only roles granted the permission do.
+        element: (
+          <RequirePermission permiso={PERMISOS.verPanelOperativo}>
+            <PanelOperativo />
+          </RequirePermission>
+        ),
+      },
       { path: "tramites/:tramiteId", element: <DetalleTramite /> },
       { path: "tipos-tramite", element: <TiposTramite /> },
     ],
