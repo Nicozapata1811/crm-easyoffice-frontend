@@ -20,7 +20,8 @@ This frontend serves two distinct audiences:
 - **Client portal** — self-service. The user is an entrepreneur who does not know
   the procedure. If the form does not guide them, the process falls back into an
   executive's hands and the whole project fails at its purpose.
-- **Backoffice** — Easy Office staff: executives, supervisors, administrators.
+- **Backoffice** — Easy Office staff. Confirmed roles: Administrador and
+  Ejecutivo. "Supervisor" appears in some user stories but is not confirmed.
 
 **Academic context.** Capstone project (Duoc UC, Ingeniería en Informática,
 PTY4614), three students, 18 weeks. The repository is public and audited.
@@ -46,13 +47,22 @@ script on the page, and this application handles personal data of real clients.
 Requests are sent with credentials included. CSRF token handling follows Django's
 convention.
 
+- Staff log in at `/backoffice/ingresar`. Endpoints: `/api/auth/csrf/`,
+  `login/`, `logout/`, `me/` (contract in the README).
+- The session user lives only in the TanStack Query cache (`useSesion`).
+  Logout clears the whole cache.
+- `RequireAuth` guards the backoffice. `RequirePermission` checks a permission
+  string from `me.permisos`, never the role name, so roles stay data.
+- Client portal login (HU-03) is not defined yet; `/ingresar` is a placeholder.
+
 ---
 
 ## Screens
 
-The prototype (static HTML, in the team's evidence repository) defines eight
-screens. They are a **proposal pending validation with the counterpart** —
-scheduled for week 6. Do not treat them as final requirements.
+The prototype (static HTML, in the team's documentation folder under
+`docs/06_ux_mockups/`; not yet published to the evidence repository) defines
+eight screens. They are a **proposal**, not final requirements. Where a screen
+and a requirement disagree, the requirement (MRQ-001) wins.
 
 **Client portal**
 
@@ -67,6 +77,13 @@ scheduled for week 6. Do not treat them as final requirements.
 
 7. Operational dashboard
 8. Case detail with audit trail
+
+**Operational dashboard (7)** shows exactly the RF-14 indicators, not the
+mockup's: the mockup's "average case time" would imply a measured time
+reduction. It reads from `dashboardService.getIndicators(periodo)`, which is
+synthetic today. Swap that implementation for the planned
+`GET /api/panel/indicadores/`; components must not change. Requires
+`core.view_dashboard` (Administrador only, pending validation for Ejecutivo).
 
 Still to build: **case type configuration** — the screen that makes the
 configurable engine visible. It is the highest-value missing screen.
@@ -178,15 +195,17 @@ raised data protection as one of the reasons for this project.
 
 ---
 
-## Current status (week 5 of 18)
+## Current status (Sprint 1 · 22 Sep – 3 Oct 2026)
 
-Prototypes built, **not yet validated** with the counterpart. Validation meeting
-is week 6.
+First build sprint: environment, data core and access. Built so far: the
+client portal screens from the prototype, staff login with guarded routes, and
+the operational dashboard on synthetic data.
 
 **Still unknown — do not invent answers:**
 
 - Final case states and the transitions the UI must reflect
-- Exact roles and what each one may see
+- Roles beyond Administrador and Ejecutivo, and whether an Ejecutivo sees the
+  dashboard
 - Payment provider and where payment sits in the flow
 - Whether the signature step is client-initiated or automatic
 - Real document templates and whether their layout must be reproduced exactly

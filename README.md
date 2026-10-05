@@ -22,8 +22,8 @@ atiende a dos audiencias distintas:
 - **Portal de clientes** — autoatención. El usuario es un emprendedor que no
   conoce el trámite. Si el formulario no lo guía, el proceso vuelve a manos de
   un ejecutivo y el proyecto falla en su propósito.
-- **Backoffice** — personal de Easy Office: ejecutivos, supervisores y
-  administradores.
+- **Backoffice** — personal de Easy Office. Los roles confirmados son
+  Administrador y Ejecutivo.
 
 **Dentro del alcance del MVP:** portal de clientes para el flujo prioritario
 (domicilio tributario) de extremo a extremo · backoffice para usuarios, roles,
@@ -161,6 +161,14 @@ envían con `credentials: "include"` y los métodos no seguros llevan el token
 CSRF en la cabecera `X-CSRFToken`, siguiendo la convención de Django. El estado
 de la aplicación no usa `localStorage` ni `sessionStorage`.
 
+**Ingreso del personal y permisos.** El personal ingresa en
+`/backoffice/ingresar`. La sesión se obtiene de `GET /api/auth/me/` y vive
+solo en la caché de TanStack Query; al cerrar sesión la caché se vacía.
+`RequireAuth` redirige a la pantalla de ingreso a quien no tiene sesión, y
+`RequirePermission` decide según los `permisos` que devuelve `me`, no según el
+nombre del rol, de modo que un rol nuevo creado en el backend funciona sin
+cambiar el frontend. El ingreso de clientes al portal (HU-03) aún no se define.
+
 En desarrollo el servidor de Vite redirige `/api` hacia Django, de modo que el
 navegador ve un solo origen y la cookie de sesión es de primera parte. En
 producción se recomienda el mismo arreglo detrás de un único proxy inverso.
@@ -179,17 +187,53 @@ integración.
 
 ---
 
+## Panel operativo
+
+`/backoffice` muestra los indicadores de RF-14 (HU-41): total de clientes,
+clientes nuevos en el período, servicios activos, por vencer y vencidos, ventas
+totales, ventas por servicio, ventas por ejecutivo, trámites pendientes y
+documentos pendientes de firma, con filtro por período.
+
+Requiere el permiso `core.view_dashboard`, que hoy tiene solo el
+Administrador (RN-31). HU-41 habla de un "supervisor", rol no confirmado, y si
+el Ejecutivo puede ver el panel está pendiente de validar con Easy Office.
+
+**Los datos son simulados.** La pantalla lee de
+`dashboardService.getIndicators(periodo)`
+(`src/features/backoffice/PanelOperativo/dashboardService.ts`), que hoy
+devuelve datos sintéticos y deterministas. Cuando el backend exponga el
+endpoint, se cambia esa implementación y ningún componente se toca. Todos los
+montos son valores de ejemplo y la pantalla lo indica.
+
+---
+
+## API
+
+Contrato definido por el backend y documentado también en su README.
+
+| Método y ruta | Uso en el frontend |
+|---|---|
+| `GET /api/auth/csrf/` | Obtiene el token CSRF, que se guarda en memoria |
+| `POST /api/auth/login/` | Pantalla de ingreso. `400` significa credenciales inválidas |
+| `POST /api/auth/logout/` | Botón "Cerrar sesión" |
+| `GET /api/auth/me/` | Sesión actual: `id`, `email`, `name`, `rol`, `permisos`. `403` = sin sesión |
+| `GET /api/panel/indicadores/?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` | **Planificado.** Hoy lo reemplaza el servicio simulado |
+
+La respuesta de indicadores está tipada en `src/types/panel.ts` con las mismas
+claves que el backend documenta.
+
+---
+
 ## Estado actual
 
-Semana 5 de 18. Está construido el esqueleto: ruteo, un layout por audiencia y
-una pantalla marcador por cada pantalla del prototipo. Ninguna pantalla está
-implementada.
+Sprint 1 (22 de septiembre – 3 de octubre de 2026): núcleo de datos y accesos.
+Están implementados el portal de clientes según el prototipo, el ingreso del
+personal con rutas protegidas y el panel operativo con datos simulados.
 
-El prototipo que define estas pantallas es **una propuesta pendiente de
-validación con la contraparte**, agendada para la semana 6. Los estados de los
-trámites, los roles y sus permisos, el proveedor de pago y el momento exacto de
-la firma siguen sin definirse, y no se inventan: las suposiciones se marcan en
-el código como `// ASSUMPTION: pending validation with Easy Office`.
+Los estados de los trámites, los roles más allá de Administrador y Ejecutivo,
+el proveedor de pago y el momento exacto de la firma siguen sin definirse, y no
+se inventan: las suposiciones se marcan en el código como
+`// ASSUMPTION: pending validation with Easy Office`.
 
 ---
 
