@@ -21,3 +21,10 @@ export const domicilioSchema = z.object({
 });
 
 export type DomicilioForm = z.infer<typeof domicilioSchema>;
+
+export const domicilioConPlanSchema = domicilioSchema.extend({
+  plan: z.string().min(1, "Elige un plan."),
+  origen: z.string().optional(),
+});
+
+export type DomicilioConPlanForm = z.infer<typeof domicilioConPlanSchema>;

@@ -17,6 +17,7 @@ import { EstadoTramite } from "../features/portal/EstadoTramite/EstadoTramite";
 import { FormularioDomicilio } from "../features/portal/FormularioDomicilio/FormularioDomicilio";
 import { MisTramites } from "../features/portal/MisTramites/MisTramites";
 import { PrevisualizacionDocumento } from "../features/portal/PrevisualizacionDocumento/PrevisualizacionDocumento";
+import { EntradaServicio } from "../features/portal/EntradaServicio/EntradaServicio";
 import { DetalleTramite } from "../features/backoffice/DetalleTramite/DetalleTramite";
 import { PanelOperativo } from "../features/backoffice/PanelOperativo/PanelOperativo";
 import { TiposTramite } from "../features/backoffice/TiposTramite/TiposTramite";
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
       },
       { path: "/tramites/:tramiteId/pago", element: <ConfirmacionPago /> },
       { path: "/mis-tramites", element: <MisTramites /> },
+      { path: "/:servicioSlug", element: <EntradaServicio /> },
     ],
   },
   { path: RUTA_INGRESO, element: <Ingresar /> },
