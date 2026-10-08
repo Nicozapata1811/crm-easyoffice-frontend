@@ -146,7 +146,7 @@ src/
 ├── routes/       árbol de rutas
 └── features/
     ├── portal/      catálogo, domicilio tributario, documento, pago, estado, mis trámites
-    └── backoffice/  panel operativo, detalle de trámite, tipos de trámite
+    └── backoffice/  panel operativo, clientes, detalle de trámite, tipos de trámite
 ```
 
 La división es por audiencia primero y por funcionalidad después: portal y
@@ -198,12 +198,38 @@ Requiere el permiso `core.view_dashboard`, que hoy tiene solo el
 Administrador (RN-31). HU-41 habla de un "supervisor", rol no confirmado, y si
 el Ejecutivo puede ver el panel está pendiente de validar con Easy Office.
 
-**Los datos son simulados.** La pantalla lee de
-`dashboardService.getIndicators(periodo)`
-(`src/features/backoffice/PanelOperativo/dashboardService.ts`), que hoy
-devuelve datos sintéticos y deterministas. Cuando el backend exponga el
-endpoint, se cambia esa implementación y ningún componente se toca. Todos los
-montos son valores de ejemplo y la pantalla lo indica.
+**Datos.** La pantalla lee `GET /api/panel/indicadores/` a través de
+`dashboardService` (`src/features/backoffice/PanelOperativo/dashboardService.ts`).
+Los totales de clientes son reales. Servicios, ventas, trámites y documentos
+siguen siendo valores de ejemplo calculados por el backend, porque aún no
+existen en el sistema. El backend los lista en `datos_de_ejemplo` y la pantalla
+rotula solo esos.
+
+**Exportar a Excel.** El botón descarga el `.xlsx` que genera el backend para el
+período elegido (`GET /api/panel/indicadores/exportar/`), con un resumen y las
+ventas por servicio y por ejecutivo.
+
+---
+
+## Clientes
+
+`/backoffice/clientes` cubre HU-06, HU-07, HU-47, HU-49 y HU-51:
+
+- **Listado.** Busca por RUT (con o sin puntos), nombre, razón social o folio, y
+  filtra por tipo. La búsqueda queda en la URL, así que volver atrás conserva
+  los resultados.
+- **Ficha** (`/backoffice/clientes/:id`). Muestra los datos del cliente y, para
+  empresas, sus representantes legales. Servicios, documentos e historial
+  aparecerán cuando el sistema los registre.
+- **Formulario** (`/nuevo` y `/:id/editar`). Registra a una persona natural o a
+  una empresa y valida el RUT antes de enviar. Si el backend informa que el RUT
+  ya es de un cliente (HU-52), el error aparece en el campo RUT. Al editar se
+  puede desactivar al cliente, porque no se eliminan.
+
+Leer requiere `clientes.view_cliente`, crear `clientes.add_cliente` y editar
+`clientes.change_cliente`. Quien no ve el panel operativo, como hoy el
+Ejecutivo, entra directo al listado de clientes. Para tener datos con qué
+trabajar, el backend carga clientes ficticios con `seed_demo_clientes`.
 
 ---
 
@@ -217,18 +243,26 @@ Contrato definido por el backend y documentado también en su README.
 | `POST /api/auth/login/` | Pantalla de ingreso. `400` significa credenciales inválidas |
 | `POST /api/auth/logout/` | Botón "Cerrar sesión" |
 | `GET /api/auth/me/` | Sesión actual: `id`, `email`, `name`, `rol`, `permisos`. `403` = sin sesión |
-| `GET /api/panel/indicadores/?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` | **Planificado.** Hoy lo reemplaza el servicio simulado |
+| `GET /api/panel/indicadores/?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` | Panel operativo |
+| `GET /api/panel/indicadores/exportar/?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` | Botón "Exportar a Excel" |
+| `GET /api/clientes/?buscar=&tipo=&page=` | Listado de clientes |
+| `POST /api/clientes/` | Registrar cliente |
+| `GET /api/clientes/{id}/` | Ficha del cliente |
+| `PATCH /api/clientes/{id}/` | Editar cliente |
 
-La respuesta de indicadores está tipada en `src/types/panel.ts` con las mismas
-claves que el backend documenta.
+Las respuestas están tipadas en `src/types/panel.ts` y `src/types/cliente.ts`
+con las mismas claves que documenta el backend.
 
 ---
 
 ## Estado actual
 
-Sprint 1 (22 de septiembre – 3 de octubre de 2026): núcleo de datos y accesos.
-Están implementados el portal de clientes según el prototipo, el ingreso del
-personal con rutas protegidas y el panel operativo con datos simulados.
+Sprint 2 (6 – 17 de octubre de 2026). Ya están:
+
+- el portal de clientes según el prototipo;
+- el ingreso del personal con rutas protegidas;
+- el panel operativo conectado al backend y exportable a Excel;
+- la gestión de clientes: listado con búsqueda, ficha, registro y edición.
 
 Los estados de los trámites, los roles más allá de Administrador y Ejecutivo,
 el proveedor de pago y el momento exacto de la firma siguen sin definirse, y no
