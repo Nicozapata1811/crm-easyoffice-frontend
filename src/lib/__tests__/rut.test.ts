@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { computeCheckDigit, isValidRut, normalizeRut } from "../rut";
+import { computeCheckDigit, formatearRut, isValidRut, normalizeRut } from "../rut";
 
 describe("computeCheckDigit", () => {
   it.each([
@@ -34,5 +34,20 @@ describe("isValidRut", () => {
 describe("normalizeRut", () => {
   it("strips dots and upper-cases the check digit", () => {
     expect(normalizeRut("11.111.112-k")).toBe("11111112-K");
+  });
+});
+
+describe("formatearRut", () => {
+  it.each([
+    ["12345678-5", "12.345.678-5"],
+    ["11111112-k", "11.111.112-K"],
+    ["7654321-6", "7.654.321-6"],
+    ["12.345.678-5", "12.345.678-5"],
+  ])("formats %s as %s", (rut, expected) => {
+    expect(formatearRut(rut)).toBe(expected);
+  });
+
+  it("leaves a malformed value untouched", () => {
+    expect(formatearRut("no es rut")).toBe("no es rut");
   });
 });

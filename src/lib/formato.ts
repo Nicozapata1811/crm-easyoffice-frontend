@@ -19,3 +19,7 @@ export function formatearFecha(iso: string): string {
   const [anio, mes, dia] = iso.split("-").map(Number);
   return fecha.format(new Date(anio, mes - 1, dia));
 }
+
+const fechaHora = new Intl.DateTimeFormat("es-CL", { dateStyle: "medium", timeStyle: "short" });
+
+export const formatearFechaHora = (iso: string) => fechaHora.format(new Date(iso));

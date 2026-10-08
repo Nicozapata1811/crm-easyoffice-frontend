@@ -41,3 +41,12 @@ export function isValidRut(value: string): boolean {
   const [, numero, checkDigit] = match;
   return checkDigit.toUpperCase() === computeCheckDigit(numero);
 }
+
+/** Display form with thousands dots, for example 12.345.678-5. */
+export function formatearRut(value: string): string {
+  const match = RUT_PATTERN.exec(normalizeRut(value));
+  if (!match) return value;
+
+  const [, numero, checkDigit] = match;
+  return `${numero.replace(/\B(?=(\d{3})+$)/g, ".")}-${checkDigit.toUpperCase()}`;
+}
