@@ -17,11 +17,14 @@ import { EstadoTramite } from "../features/portal/EstadoTramite/EstadoTramite";
 import { FormularioDomicilio } from "../features/portal/FormularioDomicilio/FormularioDomicilio";
 import { MisTramites } from "../features/portal/MisTramites/MisTramites";
 import { PrevisualizacionDocumento } from "../features/portal/PrevisualizacionDocumento/PrevisualizacionDocumento";
+import { FichaCliente } from "../features/backoffice/Clientes/FichaCliente";
+import { FormularioCliente } from "../features/backoffice/Clientes/FormularioCliente";
+import { ListaClientes } from "../features/backoffice/Clientes/ListaClientes";
 import { DetalleTramite } from "../features/backoffice/DetalleTramite/DetalleTramite";
-import { PanelOperativo } from "../features/backoffice/PanelOperativo/PanelOperativo";
 import { TiposTramite } from "../features/backoffice/TiposTramite/TiposTramite";
 import { PERMISOS } from "../features/auth/permisos";
 import { PlaceholderScreen } from "../components/PlaceholderScreen";
+import { InicioBackoffice } from "./InicioBackoffice";
 import { NoEncontrado } from "./NoEncontrado";
 import { RequireAuth, RUTA_INGRESO } from "./RequireAuth";
 import { RequirePermission } from "./RequirePermission";
@@ -62,13 +65,38 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
+      // ASSUMPTION: pending validation with Easy Office. Whether an Ejecutivo
+      // sees the dashboard is undefined; only roles granted the permission do.
+      { index: true, element: <InicioBackoffice /> },
       {
-        index: true,
-        // ASSUMPTION: pending validation with Easy Office. Whether an Ejecutivo
-        // sees the dashboard is undefined; only roles granted the permission do.
+        path: "clientes",
         element: (
-          <RequirePermission permiso={PERMISOS.verPanelOperativo}>
-            <PanelOperativo />
+          <RequirePermission permiso={PERMISOS.verClientes}>
+            <ListaClientes />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: "clientes/nuevo",
+        element: (
+          <RequirePermission permiso={PERMISOS.crearCliente}>
+            <FormularioCliente />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: "clientes/:clienteId",
+        element: (
+          <RequirePermission permiso={PERMISOS.verClientes}>
+            <FichaCliente />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: "clientes/:clienteId/editar",
+        element: (
+          <RequirePermission permiso={PERMISOS.editarCliente}>
+            <FormularioCliente />
           </RequirePermission>
         ),
       },

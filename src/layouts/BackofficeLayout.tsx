@@ -9,11 +9,13 @@ import Typography from "@mui/material/Typography";
 import { Outlet, useNavigate } from "react-router-dom";
 
 import { NavLinks } from "../components/NavLinks";
-import { useLogout, useSesion } from "../features/auth/useSesion";
+import { PERMISOS } from "../features/auth/permisos";
+import { tienePermiso, useLogout, useSesion } from "../features/auth/useSesion";
 import { RUTA_INGRESO } from "../routes/RequireAuth";
 
-const LINKS = [
-  { to: "/backoffice", label: "Panel", end: true },
+const LINKS: { to: string; label: string; end?: boolean; permiso?: string }[] = [
+  { to: "/backoffice", label: "Panel", end: true, permiso: PERMISOS.verPanelOperativo },
+  { to: "/backoffice/clientes", label: "Clientes", permiso: PERMISOS.verClientes },
   { to: "/backoffice/tipos-tramite", label: "Tipos de trámite" },
 ];
 
@@ -32,7 +34,9 @@ export function BackofficeLayout() {
           <Typography variant="h6" component="span">
             Easy Office · Backoffice
           </Typography>
-          <NavLinks links={LINKS} />
+          <NavLinks
+            links={LINKS.filter(({ permiso }) => !permiso || tienePermiso(usuario, permiso))}
+          />
           {usuario && (
             <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 2 }}>
               <Typography sx={{ fontSize: 13.5, display: { xs: "none", sm: "block" } }}>
