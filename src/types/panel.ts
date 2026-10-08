@@ -1,5 +1,5 @@
 /**
- * Indicators of the operational dashboard (RF-14). Keys mirror the planned
+ * Indicators of the operational dashboard (RF-14). Keys mirror the
  * GET /api/panel/indicadores/ payload documented in both READMEs.
  */
 
@@ -33,4 +33,6 @@ export interface IndicadoresPanel {
   };
   tramites_pendientes: number;
   documentos_pendientes_firma: number;
+  /** Keys whose figures are examples until the system records them. */
+  datos_de_ejemplo: string[];
 }

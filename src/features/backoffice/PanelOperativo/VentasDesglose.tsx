@@ -12,7 +12,13 @@ interface Fila {
   cantidad: number;
 }
 
-export function VentasDesglose({ titulo, filas }: { titulo: string; filas: Fila[] }) {
+interface VentasDesgloseProps {
+  titulo: string;
+  filas: Fila[];
+  deEjemplo: boolean;
+}
+
+export function VentasDesglose({ titulo, filas, deEjemplo }: VentasDesgloseProps) {
   const maximo = Math.max(...filas.map(({ monto }) => monto), 1);
 
   return (
@@ -21,7 +27,9 @@ export function VentasDesglose({ titulo, filas }: { titulo: string; filas: Fila[
         <Typography variant="h2" component="h2">
           {titulo}
         </Typography>
-        <Typography sx={{ fontSize: 12.5, color: tokens.inkFaint }}>valores de ejemplo</Typography>
+        {deEjemplo && (
+          <Typography sx={{ fontSize: 12.5, color: tokens.inkFaint }}>valores de ejemplo</Typography>
+        )}
       </Box>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2.25 }}>
         {filas.map(({ nombre, monto, cantidad }) => (
