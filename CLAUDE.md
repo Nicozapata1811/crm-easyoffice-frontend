@@ -80,10 +80,19 @@ and a requirement disagree, the requirement (MRQ-001) wins.
 
 **Operational dashboard (7)** shows exactly the RF-14 indicators, not the
 mockup's: the mockup's "average case time" would imply a measured time
-reduction. It reads from `dashboardService.getIndicators(periodo)`, which is
-synthetic today. Swap that implementation for the planned
-`GET /api/panel/indicadores/`; components must not change. Requires
-`core.view_dashboard` (Administrador only, pending validation for Ejecutivo).
+reduction.
+- It reads `GET /api/panel/indicadores/` through `dashboardService`.
+- Client counts are real. The keys listed in the payload's `datos_de_ejemplo`
+  are example figures, and only those are labelled "Valor de ejemplo".
+- "Exportar a Excel" downloads the `.xlsx` the backend builds.
+- Requires `core.view_dashboard` (Administrador only, pending validation for
+  Ejecutivo).
+
+**Clients** (`features/backoffice/Clientes/`, not in the prototype) is the
+backoffice's client module: list with search, record, and create/edit form,
+against `/api/clientes/`.
+- Guards use `clientes.view_cliente`, `add_cliente` and `change_cliente`.
+- Staff without the dashboard permission land on the client list.
 
 Still to build: **case type configuration** — the screen that makes the
 configurable engine visible. It is the highest-value missing screen.
@@ -195,11 +204,13 @@ raised data protection as one of the reasons for this project.
 
 ---
 
-## Current status (Sprint 1 · 22 Sep – 3 Oct 2026)
+## Current status (Sprint 2 · 6 – 17 Oct 2026)
 
-First build sprint: environment, data core and access. Built so far: the
-client portal screens from the prototype, staff login with guarded routes, and
-the operational dashboard on synthetic data.
+Built so far:
+- the client portal screens from the prototype;
+- staff login with guarded routes;
+- the operational dashboard on the real endpoint, with its Excel export;
+- client management: list, search, record, create and edit.
 
 **Still unknown — do not invent answers:**
 

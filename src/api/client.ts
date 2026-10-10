@@ -53,6 +53,24 @@ export async function request<T>(
   return parse<T>(response);
 }
 
+export interface Descarga {
+  blob: Blob;
+  nombreArchivo: string | null;
+}
+
+/** GET a file. Errors are raised as ApiError, like any other request. */
+export async function descargar(path: string): Promise<Descarga> {
+  const response = await send(path, "GET", {});
+  if (!response.ok) {
+    await parse<never>(response);
+  }
+  const disposition = response.headers.get("content-disposition") ?? "";
+  return {
+    blob: await response.blob(),
+    nombreArchivo: /filename="([^"]+)"/.exec(disposition)?.[1] ?? null,
+  };
+}
+
 export const api = {
   get: <T>(path: string, signal?: AbortSignal) =>
     request<T>(path, { method: "GET", signal }),
@@ -61,6 +79,7 @@ export const api = {
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "PATCH", body }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  descargar,
 };
 
 async function send(
