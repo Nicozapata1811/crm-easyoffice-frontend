@@ -1,6 +1,6 @@
 import type { Pagina } from "../types/cliente";
 import type { UsuarioSesion } from "../types/sesion";
-import type { OrdenPago, Servicio, Venta } from "../types/ventas";
+import type { MedioPago, OrdenPago, Servicio, Venta } from "../types/ventas";
 import { api } from "./client";
 import { clearCsrfToken } from "./csrf";
 
@@ -34,8 +34,16 @@ export function listarVentas(signal?: AbortSignal): Promise<Pagina<Venta>> {
   return api.get("/portal/ventas/", signal);
 }
 
-export function pagarVenta(ventaId: number): Promise<OrdenPago> {
-  return api.post(`/portal/ventas/${ventaId}/pagar/`);
+export function listarMediosPago(signal?: AbortSignal): Promise<MedioPago[]> {
+  return api.get("/portal/medios-pago/", signal);
+}
+
+export function obtenerVenta(ventaId: number, signal?: AbortSignal): Promise<Venta> {
+  return api.get(`/portal/ventas/${ventaId}/`, signal);
+}
+
+export function pagarVenta(ventaId: number, proveedor: string): Promise<OrdenPago> {
+  return api.post(`/portal/ventas/${ventaId}/pagar/`, { proveedor });
 }
 
 export function obtenerOrden(ordenId: number, signal?: AbortSignal): Promise<OrdenPago> {

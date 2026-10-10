@@ -10,10 +10,11 @@ import { useNavigate } from "react-router-dom";
 
 import { crearVenta, listarServicios } from "../../../api/portal";
 import { PageHeading } from "../../../components/PageHeading";
-import { SectionHeading } from "../../../components/SectionHeading";
 import { formatearPesos } from "../../../lib/formato";
 import { tokens } from "../../../theme";
 import { mensajeDePago } from "../Pago/mensajes";
+import { PanelMedioPago } from "../Pago/PanelMedioPago";
+import { useMediosPago } from "../Pago/useMediosPago";
 import { usePagarVenta } from "../Pago/usePagarVenta";
 
 /**
@@ -32,13 +33,14 @@ export function ConfirmacionPago() {
   const [ventaId, setVentaId] = useState<number>();
   const nuevaVenta = useMutation({ mutationFn: (items: Parameters<typeof crearVenta>[0]) => crearVenta(items) });
   const pagar = usePagarVenta();
+  const medios = useMediosPago();
 
   const lineas = (servicios.data ?? []).filter(({ codigo }) =>
     SERVICIOS_DEL_TRAMITE.includes(codigo),
   );
   const total = lineas.reduce((suma, servicio) => suma + Number(servicio.precio_base), 0);
   const preciosDeEjemplo = lineas.some(({ precio_confirmado }) => !precio_confirmado);
-  const ocupado = nuevaVenta.isPending || pagar.isPending;
+  const ocupado = nuevaVenta.isPending || pagar.isPending || !medios.elegido;
   const error = nuevaVenta.error ?? pagar.error;
 
   const pagarTramite = async () => {
@@ -50,7 +52,7 @@ export function ConfirmacionPago() {
       id = venta.id;
       setVentaId(id);
     }
-    pagar.mutate(id);
+    pagar.mutate({ ventaId: id, proveedor: medios.elegido });
   };
 
   if (servicios.isPending) {
@@ -83,30 +85,7 @@ export function ConfirmacionPago() {
           alignItems: "start",
         }}
       >
-        <Paper sx={{ p: 3.25 }}>
-          <SectionHeading texto="Medio de pago" primera />
-          <Box
-            sx={{
-              border: "1px solid",
-              borderColor: tokens.primary,
-              bgcolor: tokens.primaryTint,
-              borderRadius: "3px",
-              px: 2,
-              py: 1.75,
-            }}
-          >
-            <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>
-              Tarjeta de crédito, débito o prepago
-            </Typography>
-            <Typography sx={{ fontSize: 11.8, color: tokens.inkSoft, mt: 0.25 }}>
-              Visa, Mastercard y American Express · pago seguro con Klap
-            </Typography>
-          </Box>
-          <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 2.25 }}>
-            Ambiente de prueba · no se realiza ningún cobro real. Al pagar se abre la ventana segura
-            de Klap; Easy Office no recibe los datos de tu tarjeta.
-          </Typography>
-        </Paper>
+        <PanelMedioPago {...medios} />
 
         <Paper sx={{ p: 2.75 }}>
           <Typography variant="h3" sx={{ fontSize: 14.5, mb: 1.75 }}>

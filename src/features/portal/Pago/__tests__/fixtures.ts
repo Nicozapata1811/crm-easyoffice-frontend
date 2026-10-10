@@ -1,6 +1,6 @@
 /** All data here is synthetic. */
 
-import type { OrdenPago, Servicio, Venta } from "../../../../types/ventas";
+import type { MedioPago, OrdenPago, Servicio, Venta } from "../../../../types/ventas";
 
 export const ORDEN: OrdenPago = {
   id: 41,
@@ -9,12 +9,38 @@ export const ORDEN: OrdenPago = {
   id_externo: null,
   monto: "18400",
   estado: "creando",
+  checkout: "modal",
   checkout_script_url: "https://klap.invalid/checkout.js",
+  redirect_url: "",
   created_at: "2026-10-10T12:00:00Z",
   updated_at: "2026-10-10T12:00:00Z",
 };
 
 export const ORDEN_LISTA: OrdenPago = { ...ORDEN, estado: "pendiente", id_externo: "KLAP-41" };
+
+export const ORDEN_FLOW: OrdenPago = {
+  ...ORDEN_LISTA,
+  proveedor: "flow",
+  id_externo: "3567899",
+  checkout: "redireccion",
+  checkout_script_url: null,
+  redirect_url: "https://flow.invalid/pay?token=TOK",
+};
+
+export const MEDIOS: MedioPago[] = [
+  {
+    codigo: "klap",
+    nombre: "Klap",
+    descripcion: "Tarjetas de crédito, débito y prepago",
+    checkout: { tipo: "modal", script_url: "https://klap.invalid/checkout.js" },
+  },
+  {
+    codigo: "flow",
+    nombre: "Flow",
+    descripcion: "Webpay, transferencia y otros medios",
+    checkout: { tipo: "redireccion", script_url: null },
+  },
+];
 
 export const SERVICIOS: Servicio[] = [
   {

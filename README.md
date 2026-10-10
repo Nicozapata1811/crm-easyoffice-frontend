@@ -176,26 +176,31 @@ portal que requieren cuenta (el pago, el resultado del pago y "Mis compras") y
 `RequireAuth` deja el backoffice solo al personal. El encabezado del portal
 muestra al cliente de la sesión, o los enlaces para ingresar y crear cuenta.
 
-**Pago con Klap Checkout Flex (HU-39, HU-57).** Easy Office aún no define el
-proveedor de pago; Klap es una suposición marcada en el código.
+**Pago en línea (HU-39, HU-57).** El cliente elige el medio de pago entre los que
+habilita el backend (`GET /api/portal/medios-pago/`): hoy Klap y Flow. Easy
+Office aún no define el proveedor; ambos son una suposición marcada en el
+código.
 1. "Confirma y paga" toma los precios de `GET /api/portal/servicios/`, rotulados
-   como valores de ejemplo mientras no estén confirmados.
-2. Al pagar, registra la venta, pide el pago y consulta la orden cada segundo
-   (hasta 20 s) hasta que el backend la crea en Klap.
-3. Con ese id carga el script que indica `checkout_script_url` y abre el modal
-   de Klap (`KLAP_FLEX.init`). Los datos de la tarjeta nunca pasan por la
-   aplicación.
+   como valores de ejemplo mientras no estén confirmados, y muestra el selector
+   de medio de pago (`SelectorMedioPago`, navegable con las flechas): "Pagar con"
+   y el logo oficial de cada proveedor (`public/medios-pago/`), con una línea
+   que indica qué se puede usar.
+2. Al pagar, registra la venta, pide el pago con el medio elegido y consulta la
+   orden cada segundo (hasta 20 s) hasta que el backend la crea en el proveedor.
+3. Según `checkout` de la orden: con Klap carga `checkout_script_url` y abre su
+   modal (`KLAP_FLEX.init`); con Flow redirige el navegador a `redirect_url`, la
+   página de pago de Flow. Los datos de la tarjeta nunca pasan por la aplicación.
 4. Cada desenlace tiene su página: `/pagos/{orden}/aprobado`, `rechazado`,
-   `cancelado`, `expirado`, `reembolsado` y `error`. Klap vuelve a
-   `/resultado` (o a `/cancelado` si el cliente cierra el pago), que espera el
-   estado que verifica el backend, no el que informa el modal, y redirige a la
-   página que corresponde. Salvo en un pago aprobado o devuelto, la página
-   ofrece reintentar.
+   `cancelado`, `expirado`, `reembolsado` y `error`. El proveedor devuelve al
+   cliente a `/resultado` (o a `/cancelado`), que espera el estado que verifica
+   el backend y redirige a la página que corresponde. Salvo en un pago aprobado
+   o devuelto, la página ofrece reintentar con el mismo medio o elegir otro.
 
-"Mis compras" lista las ventas del cliente. En el backoffice, "Ventas" lista y
-detalla las ventas con sus intentos de pago (`ventas.view_venta`). Para probar
-el pago de punta a punta en local, sigue la guía "Pago con Klap en local" del
-README del backend.
+"Mis compras" lista las ventas del cliente; "Pagar" en una venta pendiente
+lleva a `/mis-compras/{venta}/pagar`, con el resumen y el selector. En el
+backoffice, "Ventas" lista y detalla las ventas con sus intentos de pago
+(`ventas.view_venta`). Para probar el pago de punta a punta en local, sigue las
+guías "Pago con Klap en local" y "Pago con Flow en local" del README del backend.
 
 En desarrollo el servidor de Vite redirige `/api` hacia Django, de modo que el
 navegador ve un solo origen y la cookie de sesión es de primera parte. En
@@ -275,7 +280,9 @@ Contrato definido por el backend y documentado también en su README.
 | `GET /api/portal/servicios/` | Precios de "Confirma y paga" |
 | `POST /api/portal/ventas/` | Registrar la venta del trámite |
 | `GET /api/portal/ventas/` | "Mis compras" |
-| `POST /api/portal/ventas/{id}/pagar/` | Iniciar o retomar el pago. `409` si ya no está pendiente |
+| `GET /api/portal/medios-pago/` | Medios de pago del selector |
+| `GET /api/portal/ventas/{id}/` | Compra a pagar desde "Mis compras" |
+| `POST /api/portal/ventas/{id}/pagar/` | Iniciar o retomar el pago con `{"proveedor"}`. `409` si ya no está pendiente |
 | `GET /api/portal/ordenes/{id}/` | Esperar la orden de Klap y mostrar el resultado del pago |
 | `GET /api/ventas/?buscar=&estado=&page=` | Listado de ventas del backoffice |
 | `GET /api/ventas/{id}/` | Detalle de una venta con sus órdenes y pagos |

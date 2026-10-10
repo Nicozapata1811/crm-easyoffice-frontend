@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { obtenerOrden, pagarVenta } from "../../../../api/portal";
 import { cargarScript } from "../../../../lib/cargarScript";
-import { esperarOrdenLista, PagoNoDisponibleError, pagarConKlap } from "../checkoutKlap";
-import { ORDEN, ORDEN_LISTA } from "./fixtures";
+import { esperarOrdenLista, PagoNoDisponibleError, pagar } from "../checkout";
+import { ORDEN, ORDEN_FLOW, ORDEN_LISTA } from "./fixtures";
 
 vi.mock("../../../../api/portal", () => ({ obtenerOrden: vi.fn(), pagarVenta: vi.fn() }));
 vi.mock("../../../../lib/cargarScript", () => ({ cargarScript: vi.fn() }));
@@ -42,9 +42,11 @@ describe("esperarOrdenLista", () => {
   });
 });
 
-describe("pagarConKlap", () => {
+describe("pagar", () => {
   afterEach(() => {
     delete window.KLAP_FLEX;
+    vi.restoreAllMocks();
+    vi.mocked(cargarScript).mockReset();
   });
 
   it("opens Klap's modal with the provider's order id", async () => {
@@ -57,7 +59,9 @@ describe("pagarConKlap", () => {
     const alTerminar = vi.fn();
     const alCancelar = vi.fn();
 
-    await pagarConKlap(ORDEN.venta, { alTerminar, alCancelar });
+    await pagar(ORDEN.venta, "klap", { alTerminar, alCancelar });
+
+    expect(pagarVenta).toHaveBeenCalledWith(ORDEN.venta, "klap");
 
     expect(cargarScript).toHaveBeenCalledWith(ORDEN.checkout_script_url);
     expect(init).toHaveBeenCalledWith(
@@ -74,7 +78,20 @@ describe("pagarConKlap", () => {
     vi.mocked(obtenerOrden).mockResolvedValue({ ...ORDEN_LISTA, checkout_script_url: null });
 
     await expect(
-      pagarConKlap(ORDEN.venta, { alTerminar: vi.fn(), alCancelar: vi.fn() }),
+      pagar(ORDEN.venta, "klap", { alTerminar: vi.fn(), alCancelar: vi.fn() }),
     ).rejects.toBeInstanceOf(PagoNoDisponibleError);
+  });
+
+  it("sends the browser to Flow's page", async () => {
+    const assign = vi.fn();
+    vi.spyOn(window, "location", "get").mockReturnValue({ ...window.location, assign });
+    vi.mocked(pagarVenta).mockResolvedValue({ ...ORDEN, proveedor: "flow" });
+    vi.mocked(obtenerOrden).mockResolvedValue(ORDEN_FLOW);
+
+    await pagar(ORDEN.venta, "flow", { alTerminar: vi.fn(), alCancelar: vi.fn() });
+
+    expect(pagarVenta).toHaveBeenCalledWith(ORDEN.venta, "flow");
+    expect(assign).toHaveBeenCalledWith(ORDEN_FLOW.redirect_url);
+    expect(cargarScript).not.toHaveBeenCalled();
   });
 });

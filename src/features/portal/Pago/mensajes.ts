@@ -1,5 +1,5 @@
 import { ApiError } from "../../../api/client";
-import { PagoNoDisponibleError } from "./checkoutKlap";
+import { PagoNoDisponibleError } from "./checkout";
 
 export function mensajeDePago(error: unknown): string {
   if (error instanceof ApiError && error.status === 409) {

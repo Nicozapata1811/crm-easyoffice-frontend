@@ -8,14 +8,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { obtenerOrden } from "../../../../api/portal";
 import type { EstadoOrden } from "../../../../types/ventas";
-import { pagarConKlap } from "../../Pago/checkoutKlap";
+import { pagar } from "../../Pago/checkout";
 import { ORDEN_LISTA } from "../../Pago/__tests__/fixtures";
 import { ResultadoPago } from "../ResultadoPago";
 
 vi.mock("../../../../api/portal", () => ({ obtenerOrden: vi.fn() }));
-vi.mock("../../Pago/checkoutKlap", async (original) => ({
+vi.mock("../../Pago/checkout", async (original) => ({
   ...(await original()),
-  pagarConKlap: vi.fn(),
+  pagar: vi.fn(),
 }));
 
 function renderResultado(resultado = "resultado") {
@@ -37,7 +37,7 @@ function conEstado(estado: EstadoOrden) {
 }
 
 describe("ResultadoPago", () => {
-  beforeEach(() => vi.mocked(pagarConKlap).mockReset());
+  beforeEach(() => vi.mocked(pagar).mockReset());
 
   it.each([
     ["pagada", "aprobado", "Pago confirmado"],
@@ -73,7 +73,11 @@ describe("ResultadoPago", () => {
     await user.click(await screen.findByRole("button", { name: "Pagar ahora" }));
 
     expect(screen.getByText("Cancelaste el pago")).toBeInTheDocument();
-    expect(pagarConKlap).toHaveBeenCalledWith(ORDEN_LISTA.venta, expect.any(Object));
+    expect(pagar).toHaveBeenCalledWith(ORDEN_LISTA.venta, ORDEN_LISTA.proveedor, expect.any(Object));
+    expect(screen.getByRole("link", { name: "Elegir otro medio de pago" })).toHaveAttribute(
+      "href",
+      `/mis-compras/${ORDEN_LISTA.venta}/pagar`,
+    );
   });
 
   it("waits for the backend while the order is pending", async () => {
