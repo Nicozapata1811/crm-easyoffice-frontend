@@ -16,6 +16,7 @@ import { RUTA_INGRESO } from "../routes/RequireAuth";
 const LINKS: { to: string; label: string; end?: boolean; permiso?: string }[] = [
   { to: "/backoffice", label: "Panel", end: true, permiso: PERMISOS.verPanelOperativo },
   { to: "/backoffice/clientes", label: "Clientes", permiso: PERMISOS.verClientes },
+  { to: "/backoffice/ventas", label: "Ventas", permiso: PERMISOS.verVentas },
   { to: "/backoffice/tipos-tramite", label: "Tipos de trámite" },
 ];
 
