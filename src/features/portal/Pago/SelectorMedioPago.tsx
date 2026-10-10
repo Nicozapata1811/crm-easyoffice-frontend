@@ -32,6 +32,7 @@ export function SelectorMedioPago({ medios, elegido, onElegir }: SelectorMedioPa
             key={medio.codigo}
             role="radio"
             aria-checked={activo}
+            aria-label={`${medio.nombre}. ${medio.descripcion}`}
             tabIndex={activo ? 0 : -1}
             onClick={() => onElegir(medio.codigo)}
             onKeyDown={(event) => moverCon(event, indice)}
