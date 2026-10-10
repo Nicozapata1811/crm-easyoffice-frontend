@@ -98,14 +98,18 @@ against `/api/clientes/`.
 - Guards use `clientes.view_cliente`, `add_cliente` and `change_cliente`.
 - Staff without the dashboard permission land on the client list.
 
-**Payment** (`features/portal/Pago/`, HU-39): Klap Checkout Flex, an
-assumption until Easy Office picks a provider.
-- `pagarConKlap` asks the backend to pay a sale, polls the order until it has
-  the provider's id, loads `checkout_script_url` with `lib/cargarScript` and
-  opens `window.KLAP_FLEX.init` as a modal.
+**Payment** (`features/portal/Pago/`, HU-39): the client picks a provider
+from `GET /api/portal/medios-pago/` (today Klap and Flow, both an assumption
+until Easy Office picks one).
+- `pagar(venta, proveedor)` asks the backend to pay a sale, polls the order
+  until it has the provider's id, then opens the checkout by `orden.checkout`:
+  `modal` loads `checkout_script_url` and runs `window.KLAP_FLEX.init`;
+  `redireccion` sends the browser to `orden.redirect_url` (Flow).
+- `SelectorMedioPago` is shared by "Confirma y paga" and
+  `/mis-compras/:ventaId/pagar` (`PagarVenta`).
 - `/pagos/:ordenId/:resultado` has one page per outcome (`aprobado`,
-  `rechazado`, `cancelado`, `expirado`, `reembolsado`, `error`). Klap returns
-  to `resultado` or `cancelado`; the page waits for the backend's order state,
+  `rechazado`, `cancelado`, `expirado`, `reembolsado`, `error`). The provider
+  returns to `resultado` or `cancelado`; the page waits for the backend's order state,
   never the modal's callback, and redirects to the page for that state.
 - Which services the domicile flow charges is a constant in
   `ConfirmacionPago` until case types carry it.
