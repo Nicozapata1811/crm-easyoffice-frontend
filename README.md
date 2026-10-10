@@ -167,7 +167,14 @@ solo en la caché de TanStack Query; al cerrar sesión la caché se vacía.
 `RequireAuth` redirige a la pantalla de ingreso a quien no tiene sesión, y
 `RequirePermission` decide según los `permisos` que devuelve `me`, no según el
 nombre del rol, de modo que un rol nuevo creado en el backend funciona sin
-cambiar el frontend. El ingreso de clientes al portal (HU-03) aún no se define.
+cambiar el frontend.
+
+**Cuentas de cliente (HU-03).** Los clientes crean su cuenta en `/registro` e
+ingresan en `/ingresar`, con las mismas rutas de sesión que el personal. `me`
+indica `tipo` (`cliente` o `staff`): `RequireCliente` protege las pantallas del
+portal que requieren cuenta (hoy, el pago) y `RequireAuth` deja el backoffice
+solo al personal. El encabezado del portal muestra al cliente de la sesión, o
+los enlaces para ingresar y crear cuenta.
 
 En desarrollo el servidor de Vite redirige `/api` hacia Django, de modo que el
 navegador ve un solo origen y la cookie de sesión es de primera parte. En
@@ -242,7 +249,8 @@ Contrato definido por el backend y documentado también en su README.
 | `GET /api/auth/csrf/` | Obtiene el token CSRF, que se guarda en memoria |
 | `POST /api/auth/login/` | Pantalla de ingreso. `400` significa credenciales inválidas |
 | `POST /api/auth/logout/` | Botón "Cerrar sesión" |
-| `GET /api/auth/me/` | Sesión actual: `id`, `email`, `name`, `rol`, `permisos`. `403` = sin sesión |
+| `GET /api/auth/me/` | Sesión actual: `id`, `email`, `name`, `tipo`, `cliente`, `rol`, `permisos`. `403` = sin sesión |
+| `POST /api/portal/registro/` | Pantalla "Crea tu cuenta". `201` deja la sesión iniciada; `400` trae errores por campo o un `detail` genérico |
 | `GET /api/panel/indicadores/?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` | Panel operativo |
 | `GET /api/panel/indicadores/exportar/?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` | Botón "Exportar a Excel" |
 | `GET /api/clientes/?buscar=&tipo=&page=` | Listado de clientes |
@@ -261,6 +269,7 @@ Sprint 2 (6 – 17 de octubre de 2026). Ya están:
 
 - el portal de clientes según el prototipo;
 - el ingreso del personal con rutas protegidas;
+- el registro y el ingreso de clientes al portal (HU-03);
 - el panel operativo conectado al backend y exportable a Excel;
 - la gestión de clientes: listado con búsqueda, ficha, registro y edición.
 

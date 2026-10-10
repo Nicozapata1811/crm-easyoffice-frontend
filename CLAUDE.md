@@ -53,7 +53,11 @@ convention.
   Logout clears the whole cache.
 - `RequireAuth` guards the backoffice. `RequirePermission` checks a permission
   string from `me.permisos`, never the role name, so roles stay data.
-- Client portal login (HU-03) is not defined yet; `/ingresar` is a placeholder.
+- Clients register at `/registro` (`POST /api/portal/registro/`) and log in at
+  `/ingresar` (HU-03). `me.tipo` is `cliente` or `staff`. `RequireAuth`
+  defaults to staff; `RequireCliente` guards portal screens that need an
+  account, today the payment step. Both login screens share
+  `FormularioIngreso`.
 
 ---
 
@@ -209,6 +213,7 @@ raised data protection as one of the reasons for this project.
 Built so far:
 - the client portal screens from the prototype;
 - staff login with guarded routes;
+- client registration and login (HU-03);
 - the operational dashboard on the real endpoint, with its Excel export;
 - client management: list, search, record, create and edit.
 

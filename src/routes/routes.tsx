@@ -2,8 +2,7 @@
  * Route tree for both audiences.
  *
  * The backoffice requires a staff session and checks permissions from
- * GET /api/auth/me/. Client portal routes are not guarded yet: client
- * accounts (HU-03) are not defined.
+ * GET /api/auth/me/. In the portal, paying requires a client session (HU-03).
  */
 
 import { createBrowserRouter } from "react-router-dom";
@@ -11,6 +10,8 @@ import { createBrowserRouter } from "react-router-dom";
 import { BackofficeLayout } from "../layouts/BackofficeLayout";
 import { PortalLayout } from "../layouts/PortalLayout";
 import { Ingresar } from "../features/auth/Ingresar/Ingresar";
+import { IngresoCliente } from "../features/auth/IngresoCliente/IngresoCliente";
+import { Registro } from "../features/auth/Registro/Registro";
 import { CatalogoServicios } from "../features/portal/CatalogoServicios/CatalogoServicios";
 import { ConfirmacionPago } from "../features/portal/ConfirmacionPago/ConfirmacionPago";
 import { EstadoTramite } from "../features/portal/EstadoTramite/EstadoTramite";
@@ -23,10 +24,9 @@ import { ListaClientes } from "../features/backoffice/Clientes/ListaClientes";
 import { DetalleTramite } from "../features/backoffice/DetalleTramite/DetalleTramite";
 import { TiposTramite } from "../features/backoffice/TiposTramite/TiposTramite";
 import { PERMISOS } from "../features/auth/permisos";
-import { PlaceholderScreen } from "../components/PlaceholderScreen";
 import { InicioBackoffice } from "./InicioBackoffice";
 import { NoEncontrado } from "./NoEncontrado";
-import { RequireAuth, RUTA_INGRESO } from "./RequireAuth";
+import { RequireAuth, RequireCliente, RUTA_INGRESO, RUTA_INGRESO_CLIENTE } from "./RequireAuth";
 import { RequirePermission } from "./RequirePermission";
 
 export const router = createBrowserRouter([
@@ -34,15 +34,8 @@ export const router = createBrowserRouter([
     element: <PortalLayout />,
     children: [
       { path: "/", element: <CatalogoServicios /> },
-      {
-        path: "/ingresar",
-        element: (
-          <PlaceholderScreen
-            titulo="Ingresar"
-            descripcion="Ingreso de clientes al portal. Pendiente de definir (HU-03)."
-          />
-        ),
-      },
+      { path: RUTA_INGRESO_CLIENTE, element: <IngresoCliente /> },
+      { path: "/registro", element: <Registro /> },
       {
         path: "/tramites/domicilio-tributario/nuevo",
         element: <FormularioDomicilio />,
@@ -52,7 +45,14 @@ export const router = createBrowserRouter([
         path: "/tramites/:tramiteId/documento",
         element: <PrevisualizacionDocumento />,
       },
-      { path: "/tramites/:tramiteId/pago", element: <ConfirmacionPago /> },
+      {
+        path: "/tramites/:tramiteId/pago",
+        element: (
+          <RequireCliente>
+            <ConfirmacionPago />
+          </RequireCliente>
+        ),
+      },
       { path: "/mis-tramites", element: <MisTramites /> },
     ],
   },

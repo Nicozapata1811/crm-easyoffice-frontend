@@ -17,6 +17,8 @@ const ADMINISTRADOR: UsuarioSesion = {
   id: 1,
   email: "admin@example.test",
   name: "Administración Demo",
+  tipo: "staff",
+  cliente: null,
   rol: "Administrador",
   permisos: ["clientes.view_cliente", "core.view_dashboard"],
 };

@@ -2,11 +2,11 @@
 
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { AppHeader } from "../components/AppHeader";
 import { FolioNav } from "../components/FolioNav";
-import { CLIENTE_DEMO } from "../features/portal/datosDemo";
+import { useLogout, useSesion } from "../features/auth/useSesion";
 
 /**
  * ASSUMPTION: pending validation with Easy Office. Which step a route belongs
@@ -22,12 +22,15 @@ const PASO_POR_RUTA: { patron: RegExp; paso: number }[] = [
 export function PortalLayout() {
   const { pathname } = useLocation();
   const paso = PASO_POR_RUTA.find(({ patron }) => patron.test(pathname))?.paso;
+  const { data: usuario } = useSesion();
+  const logout = useLogout();
+  const navigate = useNavigate();
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <AppHeader
-        clienteNombre={CLIENTE_DEMO.nombre}
-        iniciales={CLIENTE_DEMO.iniciales}
+        nombre={usuario ? (usuario.cliente?.nombre ?? usuario.name) : undefined}
+        onSalir={() => logout.mutate(undefined, { onSettled: () => navigate("/") })}
       />
       {paso !== undefined && <FolioNav pasoActual={paso} />}
       <Container component="main" maxWidth="lg" sx={{ flex: 1, py: 5, px: { xs: 2, md: 4 } }}>
