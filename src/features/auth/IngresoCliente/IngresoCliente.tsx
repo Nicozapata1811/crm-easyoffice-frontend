@@ -13,7 +13,7 @@ export function IngresoCliente() {
       <FormularioIngreso
         titulo="Ingresa a tu cuenta"
         bajada="Con tu cuenta puedes pagar tus trámites y revisar tus compras."
-        destinoPorDefecto="/"
+        destinoPorDefecto="/mis-compras"
         pie={
           <Typography sx={{ fontSize: 14, textAlign: "center" }}>
             ¿Aún no tienes cuenta?{" "}
