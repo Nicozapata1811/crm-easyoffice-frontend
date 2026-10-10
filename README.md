@@ -185,9 +185,12 @@ proveedor de pago; Klap es una suposición marcada en el código.
 3. Con ese id carga el script que indica `checkout_script_url` y abre el modal
    de Klap (`KLAP_FLEX.init`). Los datos de la tarjeta nunca pasan por la
    aplicación.
-4. Al cerrarse el modal, `/pagos/{orden}/resultado` muestra el estado que
-   verifica el backend, no el que informa el modal, y permite reintentar si el
-   pago se rechazó.
+4. Cada desenlace tiene su página: `/pagos/{orden}/aprobado`, `rechazado`,
+   `cancelado`, `expirado`, `reembolsado` y `error`. Klap vuelve a
+   `/resultado` (o a `/cancelado` si el cliente cierra el pago), que espera el
+   estado que verifica el backend, no el que informa el modal, y redirige a la
+   página que corresponde. Salvo en un pago aprobado o devuelto, la página
+   ofrece reintentar.
 
 "Mis compras" lista las ventas del cliente. En el backoffice, "Ventas" lista y
 detalla las ventas con sus intentos de pago (`ventas.view_venta`). Para probar

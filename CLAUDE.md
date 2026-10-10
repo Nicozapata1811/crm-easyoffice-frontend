@@ -103,8 +103,10 @@ assumption until Easy Office picks a provider.
 - `pagarConKlap` asks the backend to pay a sale, polls the order until it has
   the provider's id, loads `checkout_script_url` with `lib/cargarScript` and
   opens `window.KLAP_FLEX.init` as a modal.
-- The result page trusts only the backend's order state, never the modal's
-  callback.
+- `/pagos/:ordenId/:resultado` has one page per outcome (`aprobado`,
+  `rechazado`, `cancelado`, `expirado`, `reembolsado`, `error`). Klap returns
+  to `resultado` or `cancelado`; the page waits for the backend's order state,
+  never the modal's callback, and redirects to the page for that state.
 - Which services the domicile flow charges is a constant in
   `ConfirmacionPago` until case types carry it.
 - Backoffice "Ventas" (`features/backoffice/Ventas/`) needs `ventas.view_venta`.
