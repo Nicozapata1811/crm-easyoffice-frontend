@@ -106,7 +106,9 @@ until Easy Office picks one).
   `modal` loads `checkout_script_url` and runs `window.KLAP_FLEX.init`;
   `redireccion` sends the browser to `orden.redirect_url` (Flow).
 - `SelectorMedioPago` is shared by "Confirma y paga" and
-  `/mis-compras/:ventaId/pagar` (`PagarVenta`).
+  `/mis-compras/:ventaId/pagar` (`PagarVenta`). Each option reads "Pagar con"
+  plus the provider's official logo (`public/medios-pago/`, mapped in
+  `Pago/logos.ts`); a provider without a logo shows its name.
 - `/pagos/:ordenId/:resultado` has one page per outcome (`aprobado`,
   `rechazado`, `cancelado`, `expirado`, `reembolsado`, `error`). The provider
   returns to `resultado` or `cancelado`; the page waits for the backend's order state,

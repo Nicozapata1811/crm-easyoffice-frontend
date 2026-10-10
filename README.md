@@ -182,7 +182,9 @@ Office aún no define el proveedor; ambos son una suposición marcada en el
 código.
 1. "Confirma y paga" toma los precios de `GET /api/portal/servicios/`, rotulados
    como valores de ejemplo mientras no estén confirmados, y muestra el selector
-   de medio de pago (`SelectorMedioPago`, navegable con las flechas).
+   de medio de pago (`SelectorMedioPago`, navegable con las flechas): "Pagar con"
+   y el logo oficial de cada proveedor (`public/medios-pago/`), con una línea
+   que indica qué se puede usar.
 2. Al pagar, registra la venta, pide el pago con el medio elegido y consulta la
    orden cada segundo (hasta 20 s) hasta que el backend la crea en el proveedor.
 3. Según `checkout` de la orden: con Klap carga `checkout_script_url` y abre su

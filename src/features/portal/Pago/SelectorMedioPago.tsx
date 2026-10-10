@@ -4,6 +4,7 @@ import type { KeyboardEvent } from "react";
 
 import { tokens } from "../../../theme";
 import type { MedioPago } from "../../../types/ventas";
+import { LOGO_MEDIO_PAGO } from "./logos";
 
 interface SelectorMedioPagoProps {
   medios: MedioPago[];
@@ -27,12 +28,13 @@ export function SelectorMedioPago({ medios, elegido, onElegir }: SelectorMedioPa
     <Box role="radiogroup" aria-label="Medio de pago" sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
       {medios.map((medio, indice) => {
         const activo = medio.codigo === elegido;
+        const logo = LOGO_MEDIO_PAGO[medio.codigo];
         return (
           <Box
             key={medio.codigo}
             role="radio"
             aria-checked={activo}
-            aria-label={`${medio.nombre}. ${medio.descripcion}`}
+            aria-label={`Pagar con ${medio.nombre}. ${medio.descripcion}`}
             tabIndex={activo ? 0 : -1}
             onClick={() => onElegir(medio.codigo)}
             onKeyDown={(event) => moverCon(event, indice)}
@@ -50,7 +52,19 @@ export function SelectorMedioPago({ medios, elegido, onElegir }: SelectorMedioPa
             }}
           >
             <Box>
-              <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>{medio.nombre}</Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 36 }}>
+                <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>Pagar con</Typography>
+                {logo ? (
+                  <Box
+                    component="img"
+                    src={logo.src}
+                    alt={medio.nombre}
+                    sx={{ height: logo.alto, width: "auto", display: "block" }}
+                  />
+                ) : (
+                  <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>{medio.nombre}</Typography>
+                )}
+              </Box>
               <Typography sx={{ fontSize: 11.8, color: tokens.inkSoft, mt: 0.25 }}>
                 {medio.descripcion}
               </Typography>

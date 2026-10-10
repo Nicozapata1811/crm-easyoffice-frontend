@@ -19,10 +19,17 @@ describe("SelectorMedioPago", () => {
     render(<Selector />);
 
     await user.tab();
-    expect(screen.getByRole("radio", { name: /Tarjeta/ })).toHaveFocus();
+    expect(screen.getByRole("radio", { name: /Klap/ })).toHaveFocus();
     await user.keyboard("{ArrowDown}");
 
     expect(screen.getByRole("radio", { name: /Flow/ })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByRole("radio", { name: /Tarjeta/ })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("radio", { name: /Klap/ })).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("shows each provider's logo", () => {
+    render(<Selector />);
+
+    expect(screen.getByRole("img", { name: "Klap" })).toHaveAttribute("src", "/medios-pago/klap.png");
+    expect(screen.getByRole("img", { name: "Flow" })).toHaveAttribute("src", "/medios-pago/flow.svg");
   });
 });

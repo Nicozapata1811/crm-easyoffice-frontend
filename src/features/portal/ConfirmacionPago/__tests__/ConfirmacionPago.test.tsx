@@ -77,7 +77,7 @@ describe("ConfirmacionPago", () => {
     renderPago();
 
     const flow = await screen.findByRole("radio", { name: /Flow/ });
-    expect(screen.getByRole("radio", { name: /Tarjeta/ })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: /Klap/ })).toHaveAttribute("aria-checked", "true");
     await user.click(flow);
     await user.click(screen.getByRole("button", { name: "Pagar y enviar a firma" }));
 

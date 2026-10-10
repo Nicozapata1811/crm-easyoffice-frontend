@@ -30,8 +30,8 @@ export const ORDEN_FLOW: OrdenPago = {
 export const MEDIOS: MedioPago[] = [
   {
     codigo: "klap",
-    nombre: "Tarjeta de crédito, débito o prepago",
-    descripcion: "Visa, Mastercard y American Express · Klap",
+    nombre: "Klap",
+    descripcion: "Tarjetas de crédito, débito y prepago",
     checkout: { tipo: "modal", script_url: "https://klap.invalid/checkout.js" },
   },
   {
