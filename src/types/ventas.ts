@@ -29,6 +29,16 @@ export type EstadoOrden =
   | "reembolsada"
   | "error";
 
+export type TipoCheckout = "modal" | "redireccion";
+
+/** A payment method the client can choose (GET /api/portal/medios-pago/). */
+export interface MedioPago {
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  checkout: { tipo: TipoCheckout; script_url: string | null };
+}
+
 export interface OrdenPago {
   id: number;
   venta: number;
@@ -36,7 +46,9 @@ export interface OrdenPago {
   id_externo: string | null;
   monto: string;
   estado: EstadoOrden;
+  checkout: TipoCheckout;
   checkout_script_url: string | null;
+  redirect_url: string;
   created_at: string;
   updated_at: string;
 }

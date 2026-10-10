@@ -91,7 +91,7 @@ export function ResultadoPago() {
     return <Alert severity="error">No encontramos este pago.</Alert>;
   }
 
-  const { estado, monto, venta } = orden.data;
+  const { estado, monto, venta, proveedor } = orden.data;
   const definitivo = RESULTADO_POR_ESTADO[estado];
   if (definitivo && definitivo !== resultado) {
     return <Navigate to={rutaPago(ordenId, definitivo)} replace />;
@@ -124,9 +124,14 @@ export function ResultadoPago() {
             <Button
               variant={resultado === "resultado" ? "text" : "contained"}
               disabled={pagar.isPending}
-              onClick={() => pagar.mutate(venta)}
+              onClick={() => pagar.mutate({ ventaId: venta, proveedor })}
             >
               {ETIQUETA_REINTENTO[resultado] ?? "Intentar de nuevo"}
+            </Button>
+          )}
+          {!SIN_REINTENTO.includes(resultado) && resultado !== "resultado" && (
+            <Button variant="outlined" component={RouterLink} to={`/mis-compras/${venta}/pagar`}>
+              Elegir otro medio de pago
             </Button>
           )}
           <Button variant="outlined" component={RouterLink} to="/mis-compras">

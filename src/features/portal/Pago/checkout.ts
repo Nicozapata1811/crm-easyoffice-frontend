@@ -26,23 +26,32 @@ export async function esperarOrdenLista(ordenId: number): Promise<OrdenPago> {
 }
 
 export interface AlCerrarCheckout {
-  /** Klap reports the payment finished, approved or not. */
+  /** The provider reports the payment finished, approved or not. */
   alTerminar: (orden: OrdenPago) => void;
-  /** The client closed the modal. */
+  /** The client closed the provider's window. */
   alCancelar: (orden: OrdenPago) => void;
 }
 
 /**
- * Start (or resume) paying a sale and open Klap's checkout modal.
+ * Start (or resume) paying a sale with `proveedor` and open its checkout:
+ * Klap's modal, or a redirect to the provider's page (Flow).
  *
- * Either callback only decides where to go next; the backend's order state,
- * not the modal's report, decides whether the sale was paid.
+ * The callbacks only decide where to go next; the backend's order state, not
+ * the provider's own report, decides whether the sale was paid.
  */
-export async function pagarConKlap(
+export async function pagar(
   ventaId: number,
+  proveedor: string,
   { alTerminar, alCancelar }: AlCerrarCheckout,
 ): Promise<OrdenPago> {
-  const orden = await esperarOrdenLista((await pagarVenta(ventaId)).id);
+  const orden = await esperarOrdenLista((await pagarVenta(ventaId, proveedor)).id);
+
+  if (orden.checkout === "redireccion") {
+    if (!orden.redirect_url) throw new PagoNoDisponibleError("El proveedor no entregó la página de pago.");
+    window.location.assign(orden.redirect_url);
+    return orden;
+  }
+
   if (!orden.checkout_script_url || !orden.id_externo) {
     throw new PagoNoDisponibleError("El pago en línea no está habilitado.");
   }

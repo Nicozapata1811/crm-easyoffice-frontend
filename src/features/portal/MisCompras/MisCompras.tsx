@@ -5,6 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
+import { Link as RouterLink } from "react-router-dom";
 
 import { listarVentas } from "../../../api/portal";
 import { EstadoPill } from "../../../components/EstadoPill";
@@ -12,15 +13,12 @@ import { PageHeading } from "../../../components/PageHeading";
 import { formatearFechaHora, formatearPesos } from "../../../lib/formato";
 import { tokens } from "../../../theme";
 import { ESTADO_VENTA } from "../Pago/estados";
-import { mensajeDePago } from "../Pago/mensajes";
-import { usePagarVenta } from "../Pago/usePagarVenta";
 
 export function MisCompras() {
   const ventas = useQuery({
     queryKey: ["portal", "ventas"],
     queryFn: ({ signal }) => listarVentas(signal),
   });
-  const pagar = usePagarVenta();
 
   return (
     <>
@@ -31,11 +29,6 @@ export function MisCompras() {
         </Box>
       )}
       {ventas.isError && <Alert severity="error">No pudimos cargar tus compras.</Alert>}
-      {pagar.isError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {mensajeDePago(pagar.error)}
-        </Alert>
-      )}
       {ventas.data?.results.length === 0 && (
         <Typography sx={{ color: tokens.inkSoft }}>Aún no tienes compras.</Typography>
       )}
@@ -75,8 +68,8 @@ export function MisCompras() {
                 <Button
                   size="small"
                   variant="contained"
-                  disabled={pagar.isPending}
-                  onClick={() => pagar.mutate(venta.id)}
+                  component={RouterLink}
+                  to={`/mis-compras/${venta.id}/pagar`}
                 >
                   Pagar
                 </Button>

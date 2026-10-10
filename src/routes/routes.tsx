@@ -17,6 +17,7 @@ import { ConfirmacionPago } from "../features/portal/ConfirmacionPago/Confirmaci
 import { EstadoTramite } from "../features/portal/EstadoTramite/EstadoTramite";
 import { FormularioDomicilio } from "../features/portal/FormularioDomicilio/FormularioDomicilio";
 import { MisCompras } from "../features/portal/MisCompras/MisCompras";
+import { PagarVenta } from "../features/portal/PagarVenta/PagarVenta";
 import { MisTramites } from "../features/portal/MisTramites/MisTramites";
 import { PrevisualizacionDocumento } from "../features/portal/PrevisualizacionDocumento/PrevisualizacionDocumento";
 import { ResultadoPago } from "../features/portal/ResultadoPago/ResultadoPago";
@@ -63,6 +64,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireCliente>
             <MisCompras />
+          </RequireCliente>
+        ),
+      },
+      {
+        path: "/mis-compras/:ventaId/pagar",
+        element: (
+          <RequireCliente>
+            <PagarVenta />
           </RequireCliente>
         ),
       },

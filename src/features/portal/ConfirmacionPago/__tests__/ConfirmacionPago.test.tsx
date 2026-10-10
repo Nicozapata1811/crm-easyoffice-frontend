@@ -6,15 +6,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { crearVenta, listarServicios } from "../../../../api/portal";
-import { pagarConKlap } from "../../Pago/checkoutKlap";
-import { ORDEN_LISTA, SERVICIOS, VENTA } from "../../Pago/__tests__/fixtures";
+import { crearVenta, listarMediosPago, listarServicios } from "../../../../api/portal";
+import { pagar } from "../../Pago/checkout";
+import { MEDIOS, ORDEN_LISTA, SERVICIOS, VENTA } from "../../Pago/__tests__/fixtures";
 import { ConfirmacionPago } from "../ConfirmacionPago";
 
-vi.mock("../../../../api/portal", () => ({ crearVenta: vi.fn(), listarServicios: vi.fn() }));
-vi.mock("../../Pago/checkoutKlap", async (original) => ({
+vi.mock("../../../../api/portal", () => ({
+  crearVenta: vi.fn(),
+  listarMediosPago: vi.fn(),
+  listarServicios: vi.fn(),
+}));
+vi.mock("../../Pago/checkout", async (original) => ({
   ...(await original()),
-  pagarConKlap: vi.fn(),
+  pagar: vi.fn(),
 }));
 
 function renderPago() {
@@ -38,7 +42,8 @@ describe("ConfirmacionPago", () => {
   beforeEach(() => {
     vi.mocked(listarServicios).mockResolvedValue(SERVICIOS);
     vi.mocked(crearVenta).mockResolvedValue(VENTA);
-    vi.mocked(pagarConKlap).mockReset();
+    vi.mocked(listarMediosPago).mockResolvedValue(MEDIOS);
+    vi.mocked(pagar).mockReset();
   });
 
   it("shows the API's prices, labelled as examples", async () => {
@@ -50,7 +55,7 @@ describe("ConfirmacionPago", () => {
   });
 
   it("records the sale once and opens the checkout", async () => {
-    vi.mocked(pagarConKlap).mockRejectedValueOnce(new Error("red")).mockResolvedValue(ORDEN_LISTA);
+    vi.mocked(pagar).mockRejectedValueOnce(new Error("red")).mockResolvedValue(ORDEN_LISTA);
     const user = userEvent.setup();
     renderPago();
 
@@ -63,6 +68,20 @@ describe("ConfirmacionPago", () => {
       { servicio: "domicilio-tributario", cantidad: 1 },
       { servicio: "firma-electronica-avanzada", cantidad: 1 },
     ]);
-    expect(pagarConKlap).toHaveBeenLastCalledWith(VENTA.id, expect.any(Object));
+    expect(pagar).toHaveBeenLastCalledWith(VENTA.id, "klap", expect.any(Object));
+  });
+
+  it("pays with the method the client picks", async () => {
+    vi.mocked(pagar).mockResolvedValue(ORDEN_LISTA);
+    const user = userEvent.setup();
+    renderPago();
+
+    const flow = await screen.findByRole("radio", { name: /Flow/ });
+    expect(screen.getByRole("radio", { name: /Tarjeta/ })).toHaveAttribute("aria-checked", "true");
+    await user.click(flow);
+    await user.click(screen.getByRole("button", { name: "Pagar y enviar a firma" }));
+
+    expect(flow).toHaveAttribute("aria-checked", "true");
+    expect(pagar).toHaveBeenLastCalledWith(VENTA.id, "flow", expect.any(Object));
   });
 });
