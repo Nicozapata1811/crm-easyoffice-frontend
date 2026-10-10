@@ -1,16 +1,17 @@
 /** All data here is synthetic. */
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getSesion } from "../../api/auth";
+import { getSesion, logout } from "../../api/auth";
 import type { UsuarioSesion } from "../../types/sesion";
 import { RequireAuth, RequireCliente, RUTA_INGRESO, RUTA_INGRESO_CLIENTE } from "../RequireAuth";
 import { RequirePermission } from "../RequirePermission";
 
-vi.mock("../../api/auth", () => ({ getSesion: vi.fn() }));
+vi.mock("../../api/auth", () => ({ getSesion: vi.fn(), logout: vi.fn() }));
 
 const ADMINISTRADOR: UsuarioSesion = {
   id: 1,
@@ -121,6 +122,18 @@ describe("route guards", () => {
     vi.mocked(getSesion).mockResolvedValue(CLIENTE);
     renderAt("/backoffice");
     expect(await screen.findByText(/para el personal de Easy Office/)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Cerrar sesión" }).length).toBeGreaterThan(0);
     expect(screen.queryByText("Contenido protegido")).not.toBeInTheDocument();
+  });
+
+  it("lets a staff session log out from the client warning", async () => {
+    vi.mocked(getSesion).mockResolvedValue(ADMINISTRADOR);
+    vi.mocked(logout).mockResolvedValue();
+    const user = userEvent.setup();
+    renderAt("/tramites/x/pago");
+
+    await user.click(await screen.findByRole("button", { name: "Cerrar sesión" }));
+
+    expect(logout).toHaveBeenCalled();
   });
 });
