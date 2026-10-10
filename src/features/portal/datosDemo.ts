@@ -126,7 +126,7 @@ export const TRAMITES_DEMO: TramiteDemo[] = [
 
 export const LINEA_TIEMPO_DEMO = [
   { titulo: "Documento generado", meta: "8 sep · 09:14", estado: "done" as const },
-  { titulo: "Pago confirmado", meta: "8 sep · 09:16 · Webpay Plus", estado: "done" as const },
+  { titulo: "Pago confirmado", meta: "8 sep · 09:16 · Tarjeta · Klap", estado: "done" as const },
   {
     titulo: "Enviado al proveedor de firma",
     meta: "8 sep · 09:17 · esperando firmante",
@@ -138,13 +138,3 @@ export const LINEA_TIEMPO_DEMO = [
     estado: "pending" as const,
   },
 ];
-
-/** Example figures only. Pricing is not confirmed by Easy Office. */
-export const COBROS_DEMO = [
-  { concepto: "Domicilio tributario", monto: 14900 },
-  { concepto: "Firma electrónica avanzada", monto: 3500 },
-];
-
-export function formatearPesos(monto: number): string {
-  return `$${monto.toLocaleString("es-CL")}`;
-}

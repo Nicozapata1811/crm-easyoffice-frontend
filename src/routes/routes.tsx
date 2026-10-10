@@ -16,13 +16,17 @@ import { CatalogoServicios } from "../features/portal/CatalogoServicios/Catalogo
 import { ConfirmacionPago } from "../features/portal/ConfirmacionPago/ConfirmacionPago";
 import { EstadoTramite } from "../features/portal/EstadoTramite/EstadoTramite";
 import { FormularioDomicilio } from "../features/portal/FormularioDomicilio/FormularioDomicilio";
+import { MisCompras } from "../features/portal/MisCompras/MisCompras";
 import { MisTramites } from "../features/portal/MisTramites/MisTramites";
 import { PrevisualizacionDocumento } from "../features/portal/PrevisualizacionDocumento/PrevisualizacionDocumento";
+import { ResultadoPago } from "../features/portal/ResultadoPago/ResultadoPago";
 import { FichaCliente } from "../features/backoffice/Clientes/FichaCliente";
 import { FormularioCliente } from "../features/backoffice/Clientes/FormularioCliente";
 import { ListaClientes } from "../features/backoffice/Clientes/ListaClientes";
 import { DetalleTramite } from "../features/backoffice/DetalleTramite/DetalleTramite";
 import { TiposTramite } from "../features/backoffice/TiposTramite/TiposTramite";
+import { DetalleVenta } from "../features/backoffice/Ventas/DetalleVenta";
+import { ListaVentas } from "../features/backoffice/Ventas/ListaVentas";
 import { PERMISOS } from "../features/auth/permisos";
 import { InicioBackoffice } from "./InicioBackoffice";
 import { NoEncontrado } from "./NoEncontrado";
@@ -54,6 +58,22 @@ export const router = createBrowserRouter([
         ),
       },
       { path: "/mis-tramites", element: <MisTramites /> },
+      {
+        path: "/mis-compras",
+        element: (
+          <RequireCliente>
+            <MisCompras />
+          </RequireCliente>
+        ),
+      },
+      {
+        path: "/pagos/:ordenId/resultado",
+        element: (
+          <RequireCliente>
+            <ResultadoPago />
+          </RequireCliente>
+        ),
+      },
     ],
   },
   { path: RUTA_INGRESO, element: <Ingresar /> },
@@ -97,6 +117,22 @@ export const router = createBrowserRouter([
         element: (
           <RequirePermission permiso={PERMISOS.editarCliente}>
             <FormularioCliente />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: "ventas",
+        element: (
+          <RequirePermission permiso={PERMISOS.verVentas}>
+            <ListaVentas />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: "ventas/:ventaId",
+        element: (
+          <RequirePermission permiso={PERMISOS.verVentas}>
+            <DetalleVenta />
           </RequirePermission>
         ),
       },

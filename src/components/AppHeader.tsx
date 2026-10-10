@@ -91,6 +91,9 @@ export function AppHeader({ nombre, onSalir }: AppHeaderProps) {
           >
             {iniciales(nombre)}
           </Box>
+          <Button size="small" component={RouterLink} to="/mis-compras">
+            Mis compras
+          </Button>
           <Button size="small" onClick={onSalir}>
             Salir
           </Button>

@@ -1,29 +1,72 @@
 import { useState } from "react";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
+import { crearVenta, listarServicios } from "../../../api/portal";
 import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
+import { formatearPesos } from "../../../lib/formato";
 import { tokens } from "../../../theme";
-import { COBROS_DEMO, formatearPesos } from "../datosDemo";
+import { mensajeDePago } from "../Pago/mensajes";
+import { usePagarVenta } from "../Pago/usePagarVenta";
 
 /**
- * ASSUMPTION: pending validation with Easy Office. Easy Office has not chosen a
- * payment provider; Transbank and Mercado Pago were both mentioned. These
- * options come from the prototype and nothing here charges anything.
+ * ASSUMPTION: pending validation with Easy Office. What the domicile flow
+ * charges belongs to the case type's configuration, which does not exist yet;
+ * these are the prototype's two lines.
  */
-const MEDIOS_PAGO = [
-  { id: "webpay", nombre: "Webpay Plus", descripcion: "Tarjeta de crédito o débito · Transbank" },
-  { id: "transferencia", nombre: "Transferencia", descripcion: "Confirmación manual, hasta 1 día hábil" },
-];
+const SERVICIOS_DEL_TRAMITE = ["domicilio-tributario", "firma-electronica-avanzada"];
 
 export function ConfirmacionPago() {
   const navigate = useNavigate();
-  const [medio, setMedio] = useState(MEDIOS_PAGO[0].id);
-  const total = COBROS_DEMO.reduce((suma, cobro) => suma + cobro.monto, 0);
+  const servicios = useQuery({
+    queryKey: ["portal", "servicios"],
+    queryFn: ({ signal }) => listarServicios(signal),
+  });
+  const [ventaId, setVentaId] = useState<number>();
+  const nuevaVenta = useMutation({ mutationFn: (items: Parameters<typeof crearVenta>[0]) => crearVenta(items) });
+  const pagar = usePagarVenta();
+
+  const lineas = (servicios.data ?? []).filter(({ codigo }) =>
+    SERVICIOS_DEL_TRAMITE.includes(codigo),
+  );
+  const total = lineas.reduce((suma, servicio) => suma + Number(servicio.precio_base), 0);
+  const preciosDeEjemplo = lineas.some(({ precio_confirmado }) => !precio_confirmado);
+  const ocupado = nuevaVenta.isPending || pagar.isPending;
+  const error = nuevaVenta.error ?? pagar.error;
+
+  const pagarTramite = async () => {
+    let id = ventaId;
+    if (id === undefined) {
+      const venta = await nuevaVenta.mutateAsync(
+        lineas.map(({ codigo }) => ({ servicio: codigo, cantidad: 1 })),
+      );
+      id = venta.id;
+      setVentaId(id);
+    }
+    pagar.mutate(id);
+  };
+
+  if (servicios.isPending) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
+        <CircularProgress aria-label="Cargando precios" />
+      </Box>
+    );
+  }
+  if (servicios.isError || lineas.length === 0) {
+    return (
+      <Alert severity="error">
+        No pudimos cargar los precios del trámite. Recarga la página o intenta más tarde.
+      </Alert>
+    );
+  }
 
   return (
     <>
@@ -42,55 +85,26 @@ export function ConfirmacionPago() {
       >
         <Paper sx={{ p: 3.25 }}>
           <SectionHeading texto="Medio de pago" primera />
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
-            {MEDIOS_PAGO.map((opcion) => {
-              const elegido = opcion.id === medio;
-              return (
-                <Box
-                  key={opcion.id}
-                  role="radio"
-                  aria-checked={elegido}
-                  tabIndex={0}
-                  onClick={() => setMedio(opcion.id)}
-                  onKeyDown={(event) => event.key === "Enter" && setMedio(opcion.id)}
-                  sx={{
-                    border: "1px solid",
-                    borderColor: elegido ? tokens.primary : tokens.borderStrong,
-                    bgcolor: elegido ? tokens.primaryTint : "transparent",
-                    borderRadius: "3px",
-                    px: 2,
-                    py: 1.75,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Box>
-                    <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>{opcion.nombre}</Typography>
-                    <Typography sx={{ fontSize: 11.8, color: tokens.inkSoft, mt: 0.25 }}>
-                      {opcion.descripcion}
-                    </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: "50%",
-                      flex: "none",
-                      border: "1.5px solid",
-                      borderColor: elegido ? tokens.primary : tokens.borderStrong,
-                      background: elegido
-                        ? `radial-gradient(circle, ${tokens.primary} 0 5px, transparent 6px)`
-                        : "none",
-                    }}
-                  />
-                </Box>
-              );
-            })}
+          <Box
+            sx={{
+              border: "1px solid",
+              borderColor: tokens.primary,
+              bgcolor: tokens.primaryTint,
+              borderRadius: "3px",
+              px: 2,
+              py: 1.75,
+            }}
+          >
+            <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>
+              Tarjeta de crédito, débito o prepago
+            </Typography>
+            <Typography sx={{ fontSize: 11.8, color: tokens.inkSoft, mt: 0.25 }}>
+              Visa, Mastercard y American Express · pago seguro con Klap
+            </Typography>
           </Box>
           <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 2.25 }}>
-            Ambiente de prueba · el proveedor de pago aún no está definido y no se realiza ningún cobro.
+            Ambiente de prueba · no se realiza ningún cobro real. Al pagar se abre la ventana segura
+            de Klap; Easy Office no recibe los datos de tu tarjeta.
           </Typography>
         </Paper>
 
@@ -98,13 +112,13 @@ export function ConfirmacionPago() {
           <Typography variant="h3" sx={{ fontSize: 14.5, mb: 1.75 }}>
             Resumen
           </Typography>
-          {COBROS_DEMO.map((cobro) => (
+          {lineas.map((servicio) => (
             <Box
-              key={cobro.concepto}
+              key={servicio.codigo}
               sx={{ display: "flex", justifyContent: "space-between", fontSize: 13, py: 1.125 }}
             >
-              <span>{cobro.concepto}</span>
-              <span>{formatearPesos(cobro.monto)}</span>
+              <span>{servicio.nombre}</span>
+              <span>{formatearPesos(Number(servicio.precio_base))}</span>
             </Box>
           ))}
           <Box
@@ -122,17 +136,25 @@ export function ConfirmacionPago() {
             <span>{formatearPesos(total)}</span>
           </Box>
 
-          <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 1.5, lineHeight: 1.5 }}>
-            Valores de ejemplo. Easy Office aún no confirma los precios.
-          </Typography>
+          {preciosDeEjemplo && (
+            <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 1.5, lineHeight: 1.5 }}>
+              Valores de ejemplo. Easy Office aún no confirma los precios.
+            </Typography>
+          )}
 
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {mensajeDePago(error)}
+            </Alert>
+          )}
           <Button
             fullWidth
             variant="contained"
             sx={{ mt: 2.25 }}
-            onClick={() => navigate("/tramites/0148")}
+            disabled={ocupado}
+            onClick={() => void pagarTramite().catch(() => undefined)}
           >
-            Pagar y enviar a firma
+            {ocupado ? "Preparando el pago…" : "Pagar y enviar a firma"}
           </Button>
           <Button
             fullWidth
