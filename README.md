@@ -172,9 +172,27 @@ cambiar el frontend.
 **Cuentas de cliente (HU-03).** Los clientes crean su cuenta en `/registro` e
 ingresan en `/ingresar`, con las mismas rutas de sesión que el personal. `me`
 indica `tipo` (`cliente` o `staff`): `RequireCliente` protege las pantallas del
-portal que requieren cuenta (hoy, el pago) y `RequireAuth` deja el backoffice
-solo al personal. El encabezado del portal muestra al cliente de la sesión, o
-los enlaces para ingresar y crear cuenta.
+portal que requieren cuenta (el pago, el resultado del pago y "Mis compras") y
+`RequireAuth` deja el backoffice solo al personal. El encabezado del portal
+muestra al cliente de la sesión, o los enlaces para ingresar y crear cuenta.
+
+**Pago con Klap Checkout Flex (HU-39, HU-57).** Easy Office aún no define el
+proveedor de pago; Klap es una suposición marcada en el código.
+1. "Confirma y paga" toma los precios de `GET /api/portal/servicios/`, rotulados
+   como valores de ejemplo mientras no estén confirmados.
+2. Al pagar, registra la venta, pide el pago y consulta la orden cada segundo
+   (hasta 20 s) hasta que el backend la crea en Klap.
+3. Con ese id carga el script que indica `checkout_script_url` y abre el modal
+   de Klap (`KLAP_FLEX.init`). Los datos de la tarjeta nunca pasan por la
+   aplicación.
+4. Al cerrarse el modal, `/pagos/{orden}/resultado` muestra el estado que
+   verifica el backend, no el que informa el modal, y permite reintentar si el
+   pago se rechazó.
+
+"Mis compras" lista las ventas del cliente. En el backoffice, "Ventas" lista y
+detalla las ventas con sus intentos de pago (`ventas.view_venta`). Para probar
+el pago de punta a punta en local, sigue la guía "Pago con Klap en local" del
+README del backend.
 
 En desarrollo el servidor de Vite redirige `/api` hacia Django, de modo que el
 navegador ve un solo origen y la cookie de sesión es de primera parte. En
@@ -251,6 +269,13 @@ Contrato definido por el backend y documentado también en su README.
 | `POST /api/auth/logout/` | Botón "Cerrar sesión" |
 | `GET /api/auth/me/` | Sesión actual: `id`, `email`, `name`, `tipo`, `cliente`, `rol`, `permisos`. `403` = sin sesión |
 | `POST /api/portal/registro/` | Pantalla "Crea tu cuenta". `201` deja la sesión iniciada; `400` trae errores por campo o un `detail` genérico |
+| `GET /api/portal/servicios/` | Precios de "Confirma y paga" |
+| `POST /api/portal/ventas/` | Registrar la venta del trámite |
+| `GET /api/portal/ventas/` | "Mis compras" |
+| `POST /api/portal/ventas/{id}/pagar/` | Iniciar o retomar el pago. `409` si ya no está pendiente |
+| `GET /api/portal/ordenes/{id}/` | Esperar la orden de Klap y mostrar el resultado del pago |
+| `GET /api/ventas/?buscar=&estado=&page=` | Listado de ventas del backoffice |
+| `GET /api/ventas/{id}/` | Detalle de una venta con sus órdenes y pagos |
 | `GET /api/panel/indicadores/?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` | Panel operativo |
 | `GET /api/panel/indicadores/exportar/?desde=AAAA-MM-DD&hasta=AAAA-MM-DD` | Botón "Exportar a Excel" |
 | `GET /api/clientes/?buscar=&tipo=&page=` | Listado de clientes |
@@ -258,8 +283,8 @@ Contrato definido por el backend y documentado también en su README.
 | `GET /api/clientes/{id}/` | Ficha del cliente |
 | `PATCH /api/clientes/{id}/` | Editar cliente |
 
-Las respuestas están tipadas en `src/types/panel.ts` y `src/types/cliente.ts`
-con las mismas claves que documenta el backend.
+Las respuestas están tipadas en `src/types/panel.ts`, `src/types/cliente.ts` y
+`src/types/ventas.ts` con las mismas claves que documenta el backend.
 
 ---
 
@@ -270,11 +295,14 @@ Sprint 2 (6 – 17 de octubre de 2026). Ya están:
 - el portal de clientes según el prototipo;
 - el ingreso del personal con rutas protegidas;
 - el registro y el ingreso de clientes al portal (HU-03);
+- el pago con Klap Checkout Flex en su ambiente de pruebas, "Mis compras" y las
+  ventas en el backoffice (HU-39, HU-57);
 - el panel operativo conectado al backend y exportable a Excel;
 - la gestión de clientes: listado con búsqueda, ficha, registro y edición.
 
 Los estados de los trámites, los roles más allá de Administrador y Ejecutivo,
-el proveedor de pago y el momento exacto de la firma siguen sin definirse, y no
+la confirmación del proveedor de pago y de los precios, y el momento exacto de
+la firma siguen sin definirse, y no
 se inventan: las suposiciones se marcan en el código como
 `// ASSUMPTION: pending validation with Easy Office`.
 
