@@ -25,15 +25,22 @@ export async function esperarOrdenLista(ordenId: number): Promise<OrdenPago> {
   }
 }
 
+export interface AlCerrarCheckout {
+  /** Klap reports the payment finished, approved or not. */
+  alTerminar: (orden: OrdenPago) => void;
+  /** The client closed the modal. */
+  alCancelar: (orden: OrdenPago) => void;
+}
+
 /**
  * Start (or resume) paying a sale and open Klap's checkout modal.
  *
- * `alTerminar` runs when the modal closes, paid or not; the backend's order
- * state, not the modal's callback, decides whether the sale was paid.
+ * Either callback only decides where to go next; the backend's order state,
+ * not the modal's report, decides whether the sale was paid.
  */
 export async function pagarConKlap(
   ventaId: number,
-  alTerminar: (orden: OrdenPago) => void,
+  { alTerminar, alCancelar }: AlCerrarCheckout,
 ): Promise<OrdenPago> {
   const orden = await esperarOrdenLista((await pagarVenta(ventaId)).id);
   if (!orden.checkout_script_url || !orden.id_externo) {
@@ -46,7 +53,7 @@ export async function pagarConKlap(
     orderId: orden.id_externo,
     useModal: true,
     callbackFunction: () => alTerminar(orden),
-    closeModalFunction: () => alTerminar(orden),
+    closeModalFunction: () => alCancelar(orden),
   });
   return orden;
 }

@@ -2,13 +2,15 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 import { pagarConKlap } from "./checkoutKlap";
-
-export const rutaResultado = (ordenId: number) => `/pagos/${ordenId}/resultado`;
+import { rutaPago } from "./estados";
 
 export function usePagarVenta() {
   const navigate = useNavigate();
   return useMutation({
     mutationFn: (ventaId: number) =>
-      pagarConKlap(ventaId, (orden) => navigate(rutaResultado(orden.id))),
+      pagarConKlap(ventaId, {
+        alTerminar: (orden) => navigate(rutaPago(orden.id, "resultado")),
+        alCancelar: (orden) => navigate(rutaPago(orden.id, "cancelado")),
+      }),
   });
 }

@@ -55,21 +55,26 @@ describe("pagarConKlap", () => {
       window.KLAP_FLEX = { init };
     });
     const alTerminar = vi.fn();
+    const alCancelar = vi.fn();
 
-    await pagarConKlap(ORDEN.venta, alTerminar);
+    await pagarConKlap(ORDEN.venta, { alTerminar, alCancelar });
 
     expect(cargarScript).toHaveBeenCalledWith(ORDEN.checkout_script_url);
     expect(init).toHaveBeenCalledWith(
       expect.objectContaining({ orderId: "KLAP-41", useModal: true }),
     );
-    init.mock.calls[0][0].closeModalFunction();
+    init.mock.calls[0][0].callbackFunction({ status: "ok" });
     expect(alTerminar).toHaveBeenCalledWith(ORDEN_LISTA);
+    init.mock.calls[0][0].closeModalFunction();
+    expect(alCancelar).toHaveBeenCalledWith(ORDEN_LISTA);
   });
 
   it("refuses when the backend offers no checkout", async () => {
     vi.mocked(pagarVenta).mockResolvedValue(ORDEN);
     vi.mocked(obtenerOrden).mockResolvedValue({ ...ORDEN_LISTA, checkout_script_url: null });
 
-    await expect(pagarConKlap(ORDEN.venta, vi.fn())).rejects.toBeInstanceOf(PagoNoDisponibleError);
+    await expect(
+      pagarConKlap(ORDEN.venta, { alTerminar: vi.fn(), alCancelar: vi.fn() }),
+    ).rejects.toBeInstanceOf(PagoNoDisponibleError);
   });
 });

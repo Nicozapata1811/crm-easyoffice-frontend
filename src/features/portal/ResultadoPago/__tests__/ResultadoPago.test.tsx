@@ -18,10 +18,10 @@ vi.mock("../../Pago/checkoutKlap", async (original) => ({
   pagarConKlap: vi.fn(),
 }));
 
-function renderResultado() {
+function renderResultado(resultado = "resultado") {
   const router = createMemoryRouter(
-    [{ path: "/pagos/:ordenId/resultado", element: <ResultadoPago /> }],
-    { initialEntries: [`/pagos/${ORDEN_LISTA.id}/resultado`] },
+    [{ path: "/pagos/:ordenId/:resultado", element: <ResultadoPago /> }],
+    { initialEntries: [`/pagos/${ORDEN_LISTA.id}/${resultado}`] },
   );
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
@@ -29,6 +29,7 @@ function renderResultado() {
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
+  return router;
 }
 
 function conEstado(estado: EstadoOrden) {
@@ -38,26 +39,46 @@ function conEstado(estado: EstadoOrden) {
 describe("ResultadoPago", () => {
   beforeEach(() => vi.mocked(pagarConKlap).mockReset());
 
-  it("confirms a paid order without offering to pay again", async () => {
-    conEstado("pagada");
-    renderResultado();
+  it.each([
+    ["pagada", "aprobado", "Pago confirmado"],
+    ["rechazada", "rechazado", "El pago fue rechazado"],
+    ["cancelada", "cancelado", "Cancelaste el pago"],
+    ["expirada", "expirado", "El plazo para pagar venció"],
+    ["reembolsada", "reembolsado", "El pago fue devuelto"],
+    ["error", "error", "No pudimos completar el pago"],
+  ] as const)("sends a %s order to /%s", async (estado, ruta, titulo) => {
+    conEstado(estado);
 
-    expect(await screen.findByText("Pago confirmado")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Intentar de nuevo/ })).not.toBeInTheDocument();
+    const router = renderResultado();
+
+    expect(await screen.findByText(titulo)).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/pagos/${ORDEN_LISTA.id}/${ruta}`);
   });
 
-  it("offers a retry on the same sale after a rejection", async () => {
-    conEstado("rechazada");
+  it("corrects a cancel page when the backend says it was paid", async () => {
+    conEstado("pagada");
+
+    const router = renderResultado("cancelado");
+
+    expect(await screen.findByText("Pago confirmado")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/pagos/${ORDEN_LISTA.id}/aprobado`);
+    expect(screen.queryByRole("button", { name: /Intentar|Pagar/ })).not.toBeInTheDocument();
+  });
+
+  it("shows a cancelled checkout while the order is still open", async () => {
+    conEstado("pendiente");
     const user = userEvent.setup();
-    renderResultado();
 
-    await user.click(await screen.findByRole("button", { name: "Intentar de nuevo" }));
+    renderResultado("cancelado");
+    await user.click(await screen.findByRole("button", { name: "Pagar ahora" }));
 
-    expect(pagarConKlap).toHaveBeenCalledWith(ORDEN_LISTA.venta, expect.any(Function));
+    expect(screen.getByText("Cancelaste el pago")).toBeInTheDocument();
+    expect(pagarConKlap).toHaveBeenCalledWith(ORDEN_LISTA.venta, expect.any(Object));
   });
 
   it("waits for the backend while the order is pending", async () => {
     conEstado("pendiente");
+
     renderResultado();
 
     expect(await screen.findByText("Estamos confirmando tu pago")).toBeInTheDocument();

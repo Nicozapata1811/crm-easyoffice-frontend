@@ -67,7 +67,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/pagos/:ordenId/resultado",
+        path: "/pagos/:ordenId/:resultado",
         element: (
           <RequireCliente>
             <ResultadoPago />

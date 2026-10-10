@@ -21,7 +21,7 @@ function renderPago() {
   const router = createMemoryRouter(
     [
       { path: "/tramites/:tramiteId/pago", element: <ConfirmacionPago /> },
-      { path: "/pagos/:ordenId/resultado", element: <p>Resultado</p> },
+      { path: "/pagos/:ordenId/:resultado", element: <p>Resultado</p> },
     ],
     { initialEntries: ["/tramites/domicilio-tributario/pago"] },
   );
@@ -63,6 +63,6 @@ describe("ConfirmacionPago", () => {
       { servicio: "domicilio-tributario", cantidad: 1 },
       { servicio: "firma-electronica-avanzada", cantidad: 1 },
     ]);
-    expect(pagarConKlap).toHaveBeenLastCalledWith(VENTA.id, expect.any(Function));
+    expect(pagarConKlap).toHaveBeenLastCalledWith(VENTA.id, expect.any(Object));
   });
 });

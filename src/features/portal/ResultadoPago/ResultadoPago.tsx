@@ -5,47 +5,73 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { Navigate, Link as RouterLink, useParams } from "react-router-dom";
 
 import { obtenerOrden } from "../../../api/portal";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearPesos } from "../../../lib/formato";
-import type { EstadoOrden } from "../../../types/ventas";
-import { ORDEN_ABIERTA } from "../Pago/estados";
+import {
+  ORDEN_ABIERTA,
+  RESULTADO_POR_ESTADO,
+  rutaPago,
+  type ResultadoPago as Resultado,
+} from "../Pago/estados";
 import { mensajeDePago } from "../Pago/mensajes";
 import { usePagarVenta } from "../Pago/usePagarVenta";
 
 export const CONSULTA_CADA_MS = 2000;
 
-const TEXTOS: Partial<Record<EstadoOrden, { titulo: string; bajada: string }>> = {
-  pagada: {
+const TEXTOS: Record<Resultado, { titulo: string; bajada: string }> = {
+  resultado: {
+    titulo: "Estamos confirmando tu pago",
+    bajada: "Esto toma unos segundos. No cierres esta página.",
+  },
+  aprobado: {
     titulo: "Pago confirmado",
     bajada: "Recibimos tu pago. Seguimos con tu trámite y te avisaremos por correo.",
   },
-  rechazada: {
+  rechazado: {
     titulo: "El pago fue rechazado",
     bajada: "No se hizo ningún cargo. Puedes intentarlo de nuevo con otra tarjeta.",
   },
-  expirada: {
+  cancelado: {
+    titulo: "Cancelaste el pago",
+    bajada: "No se hizo ningún cargo. Puedes pagar cuando quieras desde aquí o desde Mis compras.",
+  },
+  expirado: {
     titulo: "El plazo para pagar venció",
     bajada: "No se hizo ningún cargo. Puedes iniciar el pago otra vez.",
   },
-  cancelada: {
-    titulo: "El pago se canceló",
-    bajada: "No se hizo ningún cargo. Puedes iniciar el pago otra vez.",
+  reembolsado: {
+    titulo: "El pago fue devuelto",
+    bajada: "Devolvimos el monto a tu tarjeta. Si tienes dudas, escríbenos.",
   },
   error: {
     titulo: "No pudimos completar el pago",
     bajada: "Si ves un cargo en tu tarjeta, escríbenos y lo revisamos.",
   },
-  pendiente: {
-    titulo: "Estamos confirmando tu pago",
-    bajada: "Esto toma unos segundos. Si cerraste la ventana de pago sin pagar, puedes abrirla otra vez.",
-  },
 };
 
+const SIN_REINTENTO: Resultado[] = ["aprobado", "reembolsado"];
+
+const ETIQUETA_REINTENTO: Partial<Record<Resultado, string>> = {
+  resultado: "Abrir el pago otra vez",
+  cancelado: "Pagar ahora",
+};
+
+function esResultado(valor: string | undefined): valor is Resultado {
+  return valor !== undefined && valor in TEXTOS;
+}
+
+/**
+ * One page per payment outcome. Klap sends the client to /resultado or
+ * /cancelado; once the backend knows the order's final state, the page moves to
+ * the URL of that state, so what is shown always matches what was charged.
+ */
 export function ResultadoPago() {
-  const ordenId = Number(useParams().ordenId);
+  const params = useParams();
+  const ordenId = Number(params.ordenId);
+  const resultado = esResultado(params.resultado) ? params.resultado : "resultado";
   const orden = useQuery({
     queryKey: ["portal", "orden", ordenId],
     queryFn: ({ signal }) => obtenerOrden(ordenId, signal),
@@ -66,8 +92,13 @@ export function ResultadoPago() {
   }
 
   const { estado, monto, venta } = orden.data;
-  const texto = TEXTOS[estado] ?? TEXTOS.pendiente!;
-  const reintentable = estado !== "pagada" && estado !== "reembolsada";
+  const definitivo = RESULTADO_POR_ESTADO[estado];
+  if (definitivo && definitivo !== resultado) {
+    return <Navigate to={rutaPago(ordenId, definitivo)} replace />;
+  }
+
+  const abierta = ORDEN_ABIERTA.includes(estado);
+  const texto = TEXTOS[resultado];
 
   return (
     <Box sx={{ maxWidth: 560, mx: "auto" }}>
@@ -77,7 +108,7 @@ export function ResultadoPago() {
           <Typography sx={{ fontSize: 14 }}>Monto</Typography>
           <Typography sx={{ fontSize: 15, fontWeight: 700 }}>{formatearPesos(Number(monto))}</Typography>
         </Box>
-        {ORDEN_ABIERTA.includes(estado) && (
+        {abierta && resultado === "resultado" && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 2 }}>
             <CircularProgress size={18} aria-label="Esperando confirmación" />
             <Typography sx={{ fontSize: 13 }}>Esperando la confirmación de Klap…</Typography>
@@ -89,9 +120,13 @@ export function ResultadoPago() {
           </Alert>
         )}
         <Box sx={{ display: "flex", gap: 1, mt: 3, flexWrap: "wrap" }}>
-          {reintentable && (
-            <Button variant="contained" disabled={pagar.isPending} onClick={() => pagar.mutate(venta)}>
-              {estado === "pendiente" ? "Abrir el pago otra vez" : "Intentar de nuevo"}
+          {!SIN_REINTENTO.includes(resultado) && (
+            <Button
+              variant={resultado === "resultado" ? "text" : "contained"}
+              disabled={pagar.isPending}
+              onClick={() => pagar.mutate(venta)}
+            >
+              {ETIQUETA_REINTENTO[resultado] ?? "Intentar de nuevo"}
             </Button>
           )}
           <Button variant="outlined" component={RouterLink} to="/mis-compras">
