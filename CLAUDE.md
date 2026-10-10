@@ -56,7 +56,7 @@ convention.
 - Clients register at `/registro` (`POST /api/portal/registro/`) and log in at
   `/ingresar` (HU-03). `me.tipo` is `cliente` or `staff`. `RequireAuth`
   defaults to staff; `RequireCliente` guards portal screens that need an
-  account, today the payment step. Both login screens share
+  account (payment, its result, "Mis compras"). Both login screens share
   `FormularioIngreso`.
 
 ---
@@ -97,6 +97,19 @@ backoffice's client module: list with search, record, and create/edit form,
 against `/api/clientes/`.
 - Guards use `clientes.view_cliente`, `add_cliente` and `change_cliente`.
 - Staff without the dashboard permission land on the client list.
+
+**Payment** (`features/portal/Pago/`, HU-39): Klap Checkout Flex, an
+assumption until Easy Office picks a provider.
+- `pagarConKlap` asks the backend to pay a sale, polls the order until it has
+  the provider's id, loads `checkout_script_url` with `lib/cargarScript` and
+  opens `window.KLAP_FLEX.init` as a modal.
+- `/pagos/:ordenId/:resultado` has one page per outcome (`aprobado`,
+  `rechazado`, `cancelado`, `expirado`, `reembolsado`, `error`). Klap returns
+  to `resultado` or `cancelado`; the page waits for the backend's order state,
+  never the modal's callback, and redirects to the page for that state.
+- Which services the domicile flow charges is a constant in
+  `ConfirmacionPago` until case types carry it.
+- Backoffice "Ventas" (`features/backoffice/Ventas/`) needs `ventas.view_venta`.
 
 Still to build: **case type configuration** — the screen that makes the
 configurable engine visible. It is the highest-value missing screen.
@@ -214,6 +227,8 @@ Built so far:
 - the client portal screens from the prototype;
 - staff login with guarded routes;
 - client registration and login (HU-03);
+- payment with Klap Checkout Flex (sandbox), "Mis compras", and sales in the
+  backoffice (HU-39, HU-57);
 - the operational dashboard on the real endpoint, with its Excel export;
 - client management: list, search, record, create and edit.
 
@@ -222,7 +237,8 @@ Built so far:
 - Final case states and the transitions the UI must reflect
 - Roles beyond Administrador and Ejecutivo, and whether an Ejecutivo sees the
   dashboard
-- Payment provider and where payment sits in the flow
+- Payment provider (Klap is implemented as an assumption), prices, and where
+  payment sits in the flow
 - Whether the signature step is client-initiated or automatic
 - Real document templates and whether their layout must be reproduced exactly
 
