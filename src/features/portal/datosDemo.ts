@@ -17,7 +17,6 @@ import type { TonoEstado } from "../../components/EstadoPill";
 
 export const CLIENTE_DEMO = {
   nombre: "Constructora Ríos Ltda.",
-  iniciales: "CR",
   rut: "76245891-8",
   representante: "Marcela Ríos Fuentes",
 };

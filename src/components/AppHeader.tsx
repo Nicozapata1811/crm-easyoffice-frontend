@@ -1,17 +1,27 @@
-/** Product header: wordmark on the left, the signed-in client on the right. */
+/** Product header: wordmark on the left, the signed-in client or the login links on the right. */
 
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 
 import { tokens } from "../theme";
 
 interface AppHeaderProps {
-  clienteNombre: string;
-  iniciales: string;
+  nombre?: string;
+  onSalir?: () => void;
 }
 
-export function AppHeader({ clienteNombre, iniciales }: AppHeaderProps) {
+function iniciales(nombre: string): string {
+  return nombre
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((palabra) => palabra[0].toUpperCase())
+    .join("");
+}
+
+export function AppHeader({ nombre, onSalir }: AppHeaderProps) {
   return (
     <Box
       component="header"
@@ -56,30 +66,45 @@ export function AppHeader({ clienteNombre, iniciales }: AppHeaderProps) {
         Easy Office
       </Box>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
-        <Typography
-          sx={{ fontSize: 13.5, color: tokens.inkSoft, display: { xs: "none", sm: "block" } }}
-        >
-          {clienteNombre}
-        </Typography>
-        <Box
-          sx={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            bgcolor: tokens.primaryTint,
-            color: tokens.primaryDark,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 12.5,
-            fontWeight: 600,
-            fontFamily: tokens.serif,
-          }}
-        >
-          {iniciales}
+      {nombre ? (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
+          <Typography
+            sx={{ fontSize: 13.5, color: tokens.inkSoft, display: { xs: "none", sm: "block" } }}
+          >
+            {nombre}
+          </Typography>
+          <Box
+            aria-hidden
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              bgcolor: tokens.primaryTint,
+              color: tokens.primaryDark,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 12.5,
+              fontWeight: 600,
+              fontFamily: tokens.serif,
+            }}
+          >
+            {iniciales(nombre)}
+          </Box>
+          <Button size="small" onClick={onSalir}>
+            Salir
+          </Button>
         </Box>
-      </Box>
+      ) : (
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button size="small" component={RouterLink} to="/ingresar">
+            Ingresar
+          </Button>
+          <Button size="small" variant="outlined" component={RouterLink} to="/registro">
+            Crear cuenta
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 }

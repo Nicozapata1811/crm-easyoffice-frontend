@@ -10,6 +10,8 @@ export const EJECUTIVO: UsuarioSesion = {
   id: 2,
   email: "ejecutivo@example.test",
   name: "Ejecutivo Demo",
+  tipo: "staff",
+  cliente: null,
   rol: "Ejecutivo",
   permisos: ["clientes.add_cliente", "clientes.change_cliente", "clientes.view_cliente"],
 };

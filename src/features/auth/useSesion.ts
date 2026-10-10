@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getSesion, login, logout } from "../../api/auth";
+import { registrar } from "../../api/portal";
 import type { UsuarioSesion } from "../../types/sesion";
 
 const SESION_KEY = ["sesion"] as const;
@@ -17,6 +18,14 @@ export function useLogin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: login,
+    onSuccess: (usuario) => queryClient.setQueryData(SESION_KEY, usuario),
+  });
+}
+
+export function useRegistro() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: registrar,
     onSuccess: (usuario) => queryClient.setQueryData(SESION_KEY, usuario),
   });
 }

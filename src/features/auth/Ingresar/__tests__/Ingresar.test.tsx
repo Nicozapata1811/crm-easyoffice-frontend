@@ -56,6 +56,8 @@ describe("Ingresar", () => {
       id: 1,
       email: "persona@example.test",
       name: "Persona Demo",
+      tipo: "staff",
+      cliente: null,
       rol: "Administrador",
       permisos: [],
     });
@@ -76,6 +78,8 @@ describe("Ingresar", () => {
       id: 1,
       email: "persona@example.test",
       name: "",
+      tipo: "staff",
+      cliente: null,
       rol: null,
       permisos: [],
     });
