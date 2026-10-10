@@ -29,7 +29,7 @@ export function PortalLayout() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <AppHeader
-        nombre={usuario ? (usuario.cliente?.nombre ?? usuario.name) : undefined}
+        nombre={usuario ? usuario.cliente?.nombre || usuario.name || usuario.email : undefined}
         onSalir={() => logout.mutate(undefined, { onSettled: () => navigate("/") })}
       />
       {paso !== undefined && <FolioNav pasoActual={paso} />}

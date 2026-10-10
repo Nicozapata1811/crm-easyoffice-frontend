@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import { Navigate, useLocation } from "react-router-dom";
 
-import { useSesion } from "../features/auth/useSesion";
+import { useLogout, useSesion } from "../features/auth/useSesion";
 import type { TipoUsuario } from "../types/sesion";
 
 export const RUTA_INGRESO = "/backoffice/ingresar";
@@ -15,8 +16,8 @@ const RUTA_POR_TIPO: Record<TipoUsuario, string> = {
   cliente: RUTA_INGRESO_CLIENTE,
 };
 
-const OTRO_TIPO: Record<TipoUsuario, string> = {
-  staff: "Esta sección es para el personal de Easy Office.",
+const OTRA_SESION: Record<TipoUsuario, string> = {
+  staff: "Esta sección es para el personal de Easy Office. Cierra tu sesión de cliente para continuar.",
   cliente: "Esta sección es para clientes. Cierra la sesión del personal para continuar.",
 };
 
@@ -27,6 +28,7 @@ interface RequireAuthProps {
 
 export function RequireAuth({ children, tipo = "staff" }: RequireAuthProps) {
   const { data: usuario, isPending, isError } = useSesion();
+  const logout = useLogout();
   const { pathname, search } = useLocation();
 
   if (isPending) {
@@ -49,8 +51,16 @@ export function RequireAuth({ children, tipo = "staff" }: RequireAuthProps) {
   }
   if (usuario.tipo !== tipo) {
     return (
-      <Alert severity="warning" sx={{ m: 4 }}>
-        {OTRO_TIPO[tipo]}
+      <Alert
+        severity="warning"
+        sx={{ m: 4 }}
+        action={
+          <Button color="inherit" size="small" disabled={logout.isPending} onClick={() => logout.mutate()}>
+            Cerrar sesión
+          </Button>
+        }
+      >
+        {OTRA_SESION[tipo]}
       </Alert>
     );
   }
