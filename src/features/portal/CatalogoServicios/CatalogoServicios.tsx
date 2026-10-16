@@ -10,9 +10,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Link as RouterLink } from "react-router-dom";
 
 import { listarServicios } from "../../../api/portal";
+import { listarTramites } from "../../../api/tramites";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearPesos } from "../../../lib/formato";
 import { tokens } from "../../../theme";
+import { useSesion } from "../../auth/useSesion";
 import type { Servicio } from "../../../types/ventas";
 import { rutaDeServicio } from "./rutas";
 
@@ -133,6 +135,24 @@ export function CatalogoServicios() {
         </>
       )}
 
+      <TramitesEnCurso />
+    </>
+  );
+}
+
+/** For a logged-in client: how many of their cases are under way. */
+function TramitesEnCurso() {
+  const { data: usuario } = useSesion();
+  const esCliente = usuario?.tipo === "cliente";
+  const tramites = useQuery({
+    queryKey: ["portal", "tramites", "lista"],
+    queryFn: ({ signal }) => listarTramites(signal),
+    enabled: esCliente,
+  });
+  const enCurso = (tramites.data?.results ?? []).filter((tramite) => tramite.estado !== "completado").length;
+  if (!esCliente || enCurso === 0) return null;
+
+  return (
       <Box
         sx={{
           display: "flex",
@@ -144,7 +164,7 @@ export function CatalogoServicios() {
         }}
       >
         <Typography sx={{ fontSize: 12.5, color: tokens.inkSoft }}>
-          Tienes 2 trámites en curso —
+          {enCurso === 1 ? "Tienes 1 trámite en curso —" : `Tienes ${enCurso} trámites en curso —`}
         </Typography>
         <Box
           component={RouterLink}
@@ -163,7 +183,6 @@ export function CatalogoServicios() {
           Ver mis trámites →
         </Box>
       </Box>
-    </>
   );
 }
 

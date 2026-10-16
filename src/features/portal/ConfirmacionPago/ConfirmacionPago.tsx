@@ -1,14 +1,13 @@
-import { useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Link as RouterLink, useParams } from "react-router-dom";
 
-import { crearVenta, listarServicios } from "../../../api/portal";
+import { obtenerTramite } from "../../../api/tramites";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearPesos } from "../../../lib/formato";
 import { tokens } from "../../../theme";
@@ -18,86 +17,57 @@ import { useMediosPago } from "../Pago/useMediosPago";
 import { usePagarVenta } from "../Pago/usePagarVenta";
 
 /**
- * ASSUMPTION: pending validation with Easy Office. What the domicile flow
- * charges belongs to the case type's configuration, which does not exist yet;
- * these are the prototype's two lines.
+ * Pay the sale created when the client confirmed the draft (RN-40). What it
+ * charges comes from the plan chosen: the backend built the sale's lines.
  */
-const SERVICIOS_DEL_TRAMITE = ["domicilio-tributario", "firma-electronica-avanzada"];
-
 export function ConfirmacionPago() {
-  const navigate = useNavigate();
-  const servicios = useQuery({
-    queryKey: ["portal", "servicios"],
-    queryFn: ({ signal }) => listarServicios(signal),
+  const id = Number(useParams().tramiteId);
+  const tramite = useQuery({
+    queryKey: ["portal", "tramites", id],
+    queryFn: ({ signal }) => obtenerTramite(id, signal),
   });
-  const [ventaId, setVentaId] = useState<number>();
-  const nuevaVenta = useMutation({ mutationFn: (items: Parameters<typeof crearVenta>[0]) => crearVenta(items) });
   const pagar = usePagarVenta();
   const medios = useMediosPago();
 
-  const lineas = (servicios.data ?? []).filter(({ codigo }) =>
-    SERVICIOS_DEL_TRAMITE.includes(codigo),
-  );
-  const total = lineas.reduce((suma, servicio) => suma + Number(servicio.precio_base), 0);
-  const preciosDeEjemplo = lineas.some(({ precio_confirmado }) => !precio_confirmado);
-  const ocupado = nuevaVenta.isPending || pagar.isPending || !medios.elegido;
-  const error = nuevaVenta.error ?? pagar.error;
-
-  const pagarTramite = async () => {
-    let id = ventaId;
-    if (id === undefined) {
-      const venta = await nuevaVenta.mutateAsync(
-        lineas.map(({ codigo }) => ({ servicio: codigo, cantidad: 1 })),
-      );
-      id = venta.id;
-      setVentaId(id);
-    }
-    pagar.mutate({ ventaId: id, proveedor: medios.elegido });
-  };
-
-  if (servicios.isPending) {
+  if (tramite.isPending) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
-        <CircularProgress aria-label="Cargando precios" />
+        <CircularProgress aria-label="Cargando el resumen" />
       </Box>
     );
   }
-  if (servicios.isError || lineas.length === 0) {
+  const venta = tramite.data?.venta;
+  if (tramite.isError || !venta || venta.estado !== "pendiente_pago") {
     return (
-      <Alert severity="error">
-        No pudimos cargar los precios del trámite. Recarga la página o intenta más tarde.
+      <Alert severity="info">
+        Este trámite no tiene un pago pendiente.{" "}
+        <RouterLink to={`/tramites/${id}`}>Ver el estado del trámite</RouterLink>
       </Alert>
     );
   }
+  const ocupado = pagar.isPending || !medios.elegido;
 
   return (
     <>
       <PageHeading
         titulo="Confirma y paga"
-        bajada="El documento se envía a firma electrónica avanzada apenas se confirme el pago."
+        bajada="Cuando se confirme el pago, gestionamos la firma electrónica avanzada del contrato."
       />
 
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "1fr 320px" },
-          gap: 3,
-          alignItems: "start",
-        }}
-      >
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 320px" }, gap: 3, alignItems: "start" }}>
         <PanelMedioPago {...medios} />
 
         <Paper sx={{ p: 2.75 }}>
           <Typography variant="h3" sx={{ fontSize: 14.5, mb: 1.75 }}>
             Resumen
           </Typography>
-          {lineas.map((servicio) => (
+          {venta.items.map((item) => (
             <Box
-              key={servicio.codigo}
-              sx={{ display: "flex", justifyContent: "space-between", fontSize: 13, py: 1.125 }}
+              key={item.servicio}
+              sx={{ display: "flex", justifyContent: "space-between", gap: 2, fontSize: 13, py: 1.125 }}
             >
-              <span>{servicio.nombre}</span>
-              <span>{formatearPesos(Number(servicio.precio_base))}</span>
+              <span>{item.nombre}</span>
+              <span>{formatearPesos(Number(item.subtotal))}</span>
             </Box>
           ))}
           <Box
@@ -112,18 +82,15 @@ export function ConfirmacionPago() {
             }}
           >
             <span>Total</span>
-            <span>{formatearPesos(total)}</span>
+            <span>{formatearPesos(Number(venta.total))}</span>
           </Box>
+          <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 1.5, lineHeight: 1.5 }}>
+            Valores de ejemplo. Easy Office aún no confirma los precios.
+          </Typography>
 
-          {preciosDeEjemplo && (
-            <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 1.5, lineHeight: 1.5 }}>
-              Valores de ejemplo. Easy Office aún no confirma los precios.
-            </Typography>
-          )}
-
-          {error && (
+          {pagar.error && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              {mensajeDePago(error)}
+              {mensajeDePago(pagar.error)}
             </Alert>
           )}
           <Button
@@ -131,17 +98,12 @@ export function ConfirmacionPago() {
             variant="contained"
             sx={{ mt: 2.25 }}
             disabled={ocupado}
-            onClick={() => void pagarTramite().catch(() => undefined)}
+            onClick={() => pagar.mutate({ ventaId: venta.id, proveedor: medios.elegido })}
           >
-            {ocupado ? "Preparando el pago…" : "Pagar y enviar a firma"}
+            {pagar.isPending ? "Preparando el pago…" : "Pagar y enviar a firma"}
           </Button>
-          <Button
-            fullWidth
-            variant="outlined"
-            sx={{ mt: 1 }}
-            onClick={() => navigate("/tramites/domicilio-tributario/documento")}
-          >
-            Volver
+          <Button fullWidth variant="outlined" sx={{ mt: 1 }} component={RouterLink} to={`/tramites/${id}/documento`}>
+            Volver al borrador
           </Button>
         </Paper>
       </Box>
