@@ -8,9 +8,9 @@
  * yet. This module exists so the screens can be built and validated with the
  * counterpart, and it is deleted once the endpoints land.
  *
- * ASSUMPTION: pending validation with Easy Office. Services, prices, states
- * and timeline steps all come from the prototype and none of them is
- * confirmed.
+ * ASSUMPTION: pending validation with Easy Office. Clients, states and
+ * timeline steps all come from the prototype and none of them is confirmed.
+ * The service catalogue comes from the API (GET /api/portal/servicios/).
  */
 
 import type { TonoEstado } from "../../components/EstadoPill";
@@ -20,60 +20,6 @@ export const CLIENTE_DEMO = {
   rut: "76245891-8",
   representante: "Marcela Ríos Fuentes",
 };
-
-export interface ServicioDemo {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  disponible: boolean;
-  metaEtiqueta: string;
-  metaValor: string;
-  ruta?: string;
-}
-
-export const SERVICIOS_DEMO: ServicioDemo[] = [
-  {
-    id: "domicilio-tributario",
-    nombre: "Domicilio tributario",
-    descripcion: "Formaliza o cambia el domicilio tributario de tu empresa ante el SII.",
-    disponible: true,
-    metaEtiqueta: "Tiempo estimado",
-    metaValor: "< 10 min",
-    ruta: "/tramites/domicilio-tributario/nuevo",
-  },
-  {
-    id: "inicio-actividades",
-    nombre: "Inicio de actividades",
-    descripcion: "Formulario configurado para declarar inicio de actividades comerciales.",
-    disponible: true,
-    metaEtiqueta: "Tiempo estimado",
-    metaValor: "~15 min",
-  },
-  {
-    id: "poder-simple",
-    nombre: "Poder simple notarial",
-    descripcion: "Genera un poder simple con firma electrónica avanzada de las partes.",
-    disponible: true,
-    metaEtiqueta: "Tiempo estimado",
-    metaValor: "~8 min",
-  },
-  {
-    id: "renovacion-patente",
-    nombre: "Renovación de patente",
-    descripcion: "Se incorporará al motor configurable en una próxima etapa.",
-    disponible: false,
-    metaEtiqueta: "Estado",
-    metaValor: "Fuera del MVP",
-  },
-  {
-    id: "constitucion-empresa",
-    nombre: "Constitución de empresa",
-    descripcion: "Requiere siempre revisión de un ejecutivo Easy Office.",
-    disponible: false,
-    metaEtiqueta: "Estado",
-    metaValor: "Con intervención humana",
-  },
-];
 
 export interface TramiteDemo {
   folio: string;

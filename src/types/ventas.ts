@@ -1,12 +1,23 @@
 /** Sales and payments as GET /api/portal/* and /api/ventas/ return them. */
 
+/**
+ * A service as GET /api/portal/servicios/ lists it: the landing's cards
+ * (`visible_en_portal`) and anything bookable online (`se_vende_en_portal`).
+ * The two flags are independent: a bookable add-on may be hidden, and a
+ * visible service may not be bookable yet. Only bookable services always
+ * have a price.
+ */
 export interface Servicio {
   id: number;
   codigo: string;
   nombre: string;
   descripcion: string;
-  precio_base: string;
+  precio_base: string | null;
+  precio_incluye_iva: boolean;
   precio_confirmado: boolean;
+  ciclo_pago_default: string | null;
+  visible_en_portal: boolean;
+  se_vende_en_portal: boolean;
 }
 
 export interface ItemVenta {

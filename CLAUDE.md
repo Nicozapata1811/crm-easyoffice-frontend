@@ -92,6 +92,19 @@ reduction.
 - Requires `core.view_dashboard` (Administrador only, pending validation for
   Ejecutivo).
 
+**Service catalogue (1)** (`features/portal/CatalogoServicios/`) reads
+`GET /api/portal/servicios/` and shows the services with `visible_en_portal`,
+in the backend's order.
+- A card is "Disponible ahora" and links to its flow only when the service
+  has `se_vende_en_portal` and a route in `CatalogoServicios/rutas.ts`
+  (service `codigo` → route; the backend holds no frontend routes). Any
+  other card is dimmed "Próximamente". A bookable service with no route
+  warns in the console while developing.
+- Prices read "Precio referencial", or "Por confirmar" when there is none,
+  with the "Valores de ejemplo" note while any shown price is unconfirmed.
+- The search box filters the cards client-side by name and description,
+  ignoring case and accents.
+
 **Clients** (`features/backoffice/Clientes/`, not in the prototype) is the
 backoffice's client module: list with search, record, and create/edit form,
 against `/api/clientes/`.
