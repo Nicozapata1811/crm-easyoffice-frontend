@@ -71,15 +71,38 @@ export async function descargar(path: string): Promise<Descarga> {
   };
 }
 
+/**
+ * POST a multipart form (a file upload). The browser sets the boundary, so
+ * no Content-Type is given; the CSRF token goes in its header as usual.
+ */
+export async function enviarFormulario<T>(path: string, formulario: FormData): Promise<T> {
+  const enviar = async () =>
+    fetch(apiUrl(path), {
+      method: "POST",
+      headers: { Accept: "application/json", "X-CSRFToken": await getCsrfToken() },
+      credentials: "include",
+      body: formulario,
+    });
+  const response = await enviar();
+  if (response.status === 403) {
+    clearCsrfToken();
+    return parse<T>(await enviar());
+  }
+  return parse<T>(response);
+}
+
 export const api = {
   get: <T>(path: string, signal?: AbortSignal) =>
     request<T>(path, { method: "GET", signal }),
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "POST", body }),
+  put: <T>(path: string, body?: unknown) =>
+    request<T>(path, { method: "PUT", body }),
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "PATCH", body }),
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
   descargar,
+  enviarFormulario,
 };
 
 async function send(

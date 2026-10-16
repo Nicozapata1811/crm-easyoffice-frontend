@@ -25,6 +25,7 @@ import { FichaCliente } from "../features/backoffice/Clientes/FichaCliente";
 import { FormularioCliente } from "../features/backoffice/Clientes/FormularioCliente";
 import { ListaClientes } from "../features/backoffice/Clientes/ListaClientes";
 import { DetalleTramite } from "../features/backoffice/DetalleTramite/DetalleTramite";
+import { ListaTramites } from "../features/backoffice/Tramites/ListaTramites";
 import { TiposTramite } from "../features/backoffice/TiposTramite/TiposTramite";
 import { DetalleVenta } from "../features/backoffice/Ventas/DetalleVenta";
 import { ListaVentas } from "../features/backoffice/Ventas/ListaVentas";
@@ -43,12 +44,35 @@ export const router = createBrowserRouter([
       { path: "/registro", element: <Registro /> },
       {
         path: "/tramites/domicilio-tributario/nuevo",
-        element: <FormularioDomicilio />,
+        element: (
+          <RequireCliente>
+            <FormularioDomicilio />
+          </RequireCliente>
+        ),
       },
-      { path: "/tramites/:tramiteId", element: <EstadoTramite /> },
+      {
+        path: "/tramites/:tramiteId",
+        element: (
+          <RequireCliente>
+            <EstadoTramite />
+          </RequireCliente>
+        ),
+      },
+      {
+        path: "/tramites/:tramiteId/editar",
+        element: (
+          <RequireCliente>
+            <FormularioDomicilio />
+          </RequireCliente>
+        ),
+      },
       {
         path: "/tramites/:tramiteId/documento",
-        element: <PrevisualizacionDocumento />,
+        element: (
+          <RequireCliente>
+            <PrevisualizacionDocumento />
+          </RequireCliente>
+        ),
       },
       {
         path: "/tramites/:tramiteId/pago",
@@ -58,7 +82,14 @@ export const router = createBrowserRouter([
           </RequireCliente>
         ),
       },
-      { path: "/mis-tramites", element: <MisTramites /> },
+      {
+        path: "/mis-tramites",
+        element: (
+          <RequireCliente>
+            <MisTramites />
+          </RequireCliente>
+        ),
+      },
       {
         path: "/mis-compras",
         element: (
@@ -145,7 +176,22 @@ export const router = createBrowserRouter([
           </RequirePermission>
         ),
       },
-      { path: "tramites/:tramiteId", element: <DetalleTramite /> },
+      {
+        path: "tramites",
+        element: (
+          <RequirePermission permiso={PERMISOS.verTramites}>
+            <ListaTramites />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: "tramites/:tramiteId",
+        element: (
+          <RequirePermission permiso={PERMISOS.verTramites}>
+            <DetalleTramite />
+          </RequirePermission>
+        ),
+      },
       { path: "tipos-tramite", element: <TiposTramite /> },
     ],
   },
