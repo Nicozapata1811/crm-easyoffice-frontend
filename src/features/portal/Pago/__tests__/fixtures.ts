@@ -49,7 +49,11 @@ export const SERVICIOS: Servicio[] = [
     nombre: "Domicilio tributario",
     descripcion: "",
     precio_base: "14900",
+    precio_incluye_iva: true,
     precio_confirmado: false,
+    ciclo_pago_default: "anual",
+    visible_en_portal: true,
+    se_vende_en_portal: true,
   },
   {
     id: 2,
@@ -57,7 +61,11 @@ export const SERVICIOS: Servicio[] = [
     nombre: "Firma electrónica avanzada",
     descripcion: "",
     precio_base: "3500",
+    precio_incluye_iva: true,
     precio_confirmado: false,
+    ciclo_pago_default: null,
+    visible_en_portal: false,
+    se_vende_en_portal: true,
   },
 ];
 
