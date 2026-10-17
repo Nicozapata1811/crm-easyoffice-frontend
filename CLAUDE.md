@@ -56,7 +56,8 @@ convention.
 - Clients register at `/registro` (`POST /api/portal/registro/`) and log in at
   `/ingresar` (HU-03). `me.tipo` is `cliente` or `staff`. `RequireAuth`
   defaults to staff; `RequireCliente` guards portal screens that need an
-  account (payment, its result, "Mis compras"). Both login screens share
+  account (the domicile request, its draft, payment and status, "Mis
+  trámites", "Mis compras"). Both login screens share
   `FormularioIngreso`.
 
 ---
@@ -126,9 +127,36 @@ until Easy Office picks one).
   `rechazado`, `cancelado`, `expirado`, `reembolsado`, `error`). The provider
   returns to `resultado` or `cancelado`; the page waits for the backend's order state,
   never the modal's callback, and redirects to the page for that state.
-- Which services the domicile flow charges is a constant in
-  `ConfirmacionPago` until case types carry it.
+- "Confirma y paga" pays the case's own sale (`tramite.venta`), whose lines
+  the backend built from the chosen plan.
 - Backoffice "Ventas" (`features/backoffice/Ventas/`) needs `ventas.view_venta`.
+
+**Tax domicile (2–6)** (HU-24, against `/api/portal/tramites/`):
+- **Form** (`FormularioDomicilio`, also `/tramites/:id/editar`): the PLT-01
+  fields the client supplies (company, legal representative, personería,
+  notice contact), pre-filled only from the client's own records via
+  `…/domicilio/formulario/`, blank otherwise. The domicile is an Easy Office
+  branch chosen from the cards the backend offers (its address and rol are
+  never typed); the plan (anual / semestral) and a start date between today
+  and 30 days ahead. Field errors from the backend are shown on their field.
+- **Draft** (`PrevisualizacionDocumento`): polls while the document is
+  generated, then shows the real PDF (fetched with the session and shown from
+  an object URL), the contract summary and the signers. "Editar datos"
+  regenerates a new version; confirming creates the sale and goes to
+  payment. A passed start date asks for a new one.
+- **Status** (`EstadoTramite`): the real state and reason (`features/tramites/estados.ts`),
+  the timeline from the case's events, the signers, the signed PDF once
+  completed, and the new start date form when the backend asks for it.
+- **Mis trámites** lists the client's cases; the landing counts those in
+  course for a logged-in client.
+
+**Trámites** (`features/backoffice/Tramites/`, `DetalleTramite`): list with
+search and filters by state and pending reason, and the case detail: client,
+contract, sale, pending reason with the internal detail, document versions
+with PDF/Word downloads and their SHA-256, the upload of the signed PDF
+(assisted signature), retrying a document after completing missing data, and
+the history. Guards: `tramites.view_tramite`, `documentos.view_documento`,
+`documentos.subir_documento_firmado`, `tramites.gestionar_tramite`.
 
 Still to build: **case type configuration** — the screen that makes the
 configurable engine visible. It is the highest-value missing screen.
@@ -166,7 +194,7 @@ procedure: plain wording, no legal jargon unless the document itself requires it
 - **RUT**: validate format and check digit client-side for immediate feedback.
   The backend validates again. Do **not** claim the RUT is verified against any
   government registry — there is no such integration and it is not in scope.
-- **Rol de avalúo**: expected format `0000-00`.
+- **Rol de avalúo** belongs to Easy Office's branch: the client never types it.
 - The form must block document generation when required fields are missing or
   inconsistent. Preventing a bad document is the point; the current manual
   process produces errors precisely because nothing checks before generating.
@@ -252,17 +280,20 @@ Built so far:
 - payment with Klap Checkout Flex (sandbox), "Mis compras", and sales in the
   backoffice (HU-39, HU-57);
 - the operational dashboard on the real endpoint, with its Excel export;
-- client management: list, search, record, create and edit.
+- client management: list, search, record, create and edit;
+- the tax domicile flow end to end on the real PLT-01 (HU-24): form, real
+  draft, payment of the plan, status, and the backoffice case list and detail
+  with the signed upload. No demo data remains in the portal.
 
 **Still unknown — do not invent answers:**
 
-- Final case states and the transitions the UI must reflect
+- The closed list of pending reasons (TA-13) and the signing order (RN-39)
 - Roles beyond Administrador and Ejecutivo, and whether an Ejecutivo sees the
   dashboard
 - Payment provider (Klap is implemented as an assumption), prices, and where
   payment sits in the flow
 - Whether the signature step is client-initiated or automatic
-- Real document templates and whether their layout must be reproduced exactly
+- Whether the PDF (LibreOffice) must reproduce Word's layout exactly
 
 If a task depends on one of these, say so rather than assuming. Mark assumptions
 in code as `// ASSUMPTION: pending validation with Easy Office`.

@@ -1,167 +1,220 @@
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 
+import {
+  confirmarTramite,
+  descargarDocumento,
+  listarDocumentos,
+  obtenerTramite,
+} from "../../../api/tramites";
 import { PageHeading } from "../../../components/PageHeading";
+import { guardarArchivo } from "../../../lib/descargar";
+import { formatearFecha, formatearPesos } from "../../../lib/formato";
 import { tokens } from "../../../theme";
-import { CLIENTE_DEMO } from "../datosDemo";
+import type { Documento, Tramite } from "../../../types/tramites";
+import { codigoDeConflicto } from "../../tramites/errores";
+import { useArchivo } from "../../tramites/useArchivo";
 
-const RESUMEN = [
-  ["Servicio", "Domicilio tributario"],
-  ["Folio", "N° 0148"],
-  ["Requiere pago", "Sí"],
-  ["Requiere firma", "Sí"],
-  ["Firmantes", "1"],
-];
+const CONSULTAR_CADA_MS = 2000;
 
-/** Highlighted value filled in from the trámite's data. */
-function Dato({ children }: { children: React.ReactNode }) {
-  return (
-    <Box
-      component="span"
-      sx={{
-        bgcolor: tokens.goldTint,
-        px: 0.5,
-        borderBottom: `1px solid ${tokens.gold}`,
-        fontWeight: 600,
-      }}
-    >
-      {children}
-    </Box>
-  );
+const ROL_FIRMANTE: Record<Documento["firmantes"][number]["rol"], string> = {
+  cliente_representante: "Representante legal de tu empresa",
+  autorizante: "Propietario de la oficina (autoriza el domicilio)",
+};
+
+/** The real generated draft (HU-26) and the client's confirmation (HU-27). */
+export function PrevisualizacionDocumento() {
+  const id = Number(useParams().tramiteId);
+  const tramite = useQuery({
+    queryKey: ["portal", "tramites", id],
+    queryFn: ({ signal }) => obtenerTramite(id, signal),
+    // The document is generated in the background: wait for it.
+    refetchInterval: (query) => (query.state.data?.estado === "iniciado" ? CONSULTAR_CADA_MS : false),
+  });
+  const listo = tramite.data !== undefined && tramite.data.estado !== "iniciado";
+  const documentos = useQuery({
+    queryKey: ["portal", "tramites", id, "documentos", tramite.data?.eventos.length],
+    queryFn: ({ signal }) => listarDocumentos(id, signal),
+    enabled: listo,
+  });
+  const vigente = documentos.data?.find((documento) => documento.estado !== "reemplazado");
+
+  if (tramite.isError) {
+    return <Alert severity="error">No encontramos este trámite.</Alert>;
+  }
+  if (!tramite.data || tramite.data.estado === "iniciado") {
+    return (
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, py: 10 }}>
+        <CircularProgress aria-label="Generando el borrador" />
+        <Typography sx={{ color: tokens.inkSoft }}>Estamos generando el borrador de tu contrato…</Typography>
+      </Box>
+    );
+  }
+  if (tramite.data.motivo?.codigo === "falta_informacion") {
+    return (
+      <Box sx={{ maxWidth: 760, mx: "auto" }}>
+        <PageHeading titulo={`Trámite ${tramite.data.folio}`} />
+        <Alert severity="info">
+          {tramite.data.motivo.texto_cliente}{" "}
+          <RouterLink to={`/tramites/${id}`}>Ver el estado del trámite</RouterLink>
+        </Alert>
+      </Box>
+    );
+  }
+  return <Borrador tramite={tramite.data} documento={vigente} cargando={documentos.isPending} />;
 }
 
-export function PrevisualizacionDocumento() {
+function Borrador({
+  tramite,
+  documento,
+  cargando,
+}: {
+  tramite: Tramite;
+  documento?: Documento;
+  cargando: boolean;
+}) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const pdf = useArchivo(
+    ["tramite", tramite.id, "documento", documento?.id, "pdf"],
+    () => descargarDocumento(tramite.id, documento!.id, "pdf"),
+    documento !== undefined,
+  );
+  const word = useMutation({
+    mutationFn: () => descargarDocumento(tramite.id, documento!.id, "docx"),
+    onSuccess: ({ blob, nombreArchivo }) => guardarArchivo(blob, nombreArchivo ?? "contrato.docx"),
+  });
+  const confirmar = useMutation({
+    mutationFn: () => confirmarTramite(tramite.id),
+    onSuccess: (actualizado) => {
+      queryClient.setQueryData(["portal", "tramites", tramite.id], actualizado);
+      navigate(`/tramites/${tramite.id}/pago`);
+    },
+  });
+  const contrato = tramite.contrato;
+  const conflicto = codigoDeConflicto(confirmar.error);
 
   return (
     <>
       <PageHeading
-        titulo="Revisa el documento"
-        bajada="Verifica que los datos sean correctos. Una vez confirmado, se generará la versión final para firma."
+        titulo="Revisa el borrador de tu contrato"
+        bajada="Es el documento real que se firmará. Si algo no está bien, edita los datos y lo generamos de nuevo."
       />
-
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "1fr 300px" },
-          gap: 3,
-          alignItems: "start",
-        }}
-      >
-        <Paper
-          sx={{
-            p: { xs: 3, md: "52px 48px" },
-            fontFamily: tokens.serif,
-            boxShadow: "0 1px 3px rgba(20,30,25,.06)",
-          }}
-        >
-          <Typography
-            sx={{
-              fontSize: 10.5,
-              color: tokens.inkFaint,
-              letterSpacing: ".03em",
-              textAlign: "right",
-              fontFamily: tokens.sans,
-              mb: 3,
-            }}
-          >
-            Plantilla v3 · Folio provisorio N° 0148
-          </Typography>
-
-          <Typography variant="h2" sx={{ textAlign: "center", mb: 0.5 }}>
-            Declaración de Cambio de Domicilio Tributario
-          </Typography>
-          <Typography
-            sx={{
-              textAlign: "center",
-              fontSize: 11.5,
-              color: tokens.inkSoft,
-              fontFamily: tokens.sans,
-              mb: 4,
-            }}
-          >
-            Servicio de Impuestos Internos — Formulario de aviso
-          </Typography>
-
-          <Box sx={{ "& p": { fontSize: 13.5, lineHeight: 1.85, textAlign: "justify", mb: 2 } }}>
-            <p>
-              En San Bernardo, con fecha 8 de septiembre de 2026, comparece{" "}
-              <Dato>{CLIENTE_DEMO.representante}</Dato>, en representación de{" "}
-              <Dato>{CLIENTE_DEMO.nombre}</Dato>, RUT <Dato>76.245.891-8</Dato>, quien viene en
-              informar el cambio de domicilio tributario de la empresa.
-            </p>
-            <p>
-              El nuevo domicilio tributario queda fijado en{" "}
-              <Dato>Av. Portales 1450, oficina 302, San Bernardo</Dato>, correspondiente al rol de
-              avalúo <Dato>4021-15</Dato>, dejándose constancia para los efectos legales y
-              tributarios correspondientes.
-            </p>
-          </Box>
-
-          <Box
-            sx={{
-              mt: 7,
-              pt: 1.25,
-              borderTop: `1px solid ${tokens.ink}`,
-              width: 220,
-              fontFamily: tokens.sans,
-              fontSize: 11,
-              color: tokens.inkSoft,
-            }}
-          >
-            Firma representante legal
-          </Box>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 320px" }, gap: 3, alignItems: "start" }}>
+        <Paper sx={{ p: 1, minHeight: 480 }}>
+          {pdf.url ? (
+            <Box
+              component="iframe"
+              title="Borrador del contrato"
+              src={pdf.url}
+              sx={{ width: "100%", height: "75vh", border: 0 }}
+            />
+          ) : pdf.isError ? (
+            <Alert severity="error">No pudimos mostrar el borrador. Descárgalo en Word para revisarlo.</Alert>
+          ) : (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
+              <CircularProgress aria-label="Cargando el borrador" />
+            </Box>
+          )}
         </Paper>
 
         <Paper sx={{ p: 2.75 }}>
-          <Typography variant="h3" sx={{ fontSize: 14.5, mb: 1.75 }}>
-            Resumen del trámite
+          <Typography variant="h3" sx={{ fontSize: 14.5, mb: 1.5 }}>
+            Resumen
           </Typography>
-          {RESUMEN.map(([clave, valor]) => (
-            <Box
-              key={clave}
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: 12.8,
-                py: 1.125,
-                borderBottom: `1px solid ${tokens.border}`,
-              }}
-            >
-              <Box component="span" sx={{ color: tokens.inkSoft }}>
-                {clave}
-              </Box>
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                {valor}
-              </Box>
+          {contrato && (
+            <Box component="dl" sx={{ m: 0, fontSize: 13, "& dt": { color: tokens.inkSoft, mt: 1.25 }, "& dd": { m: 0 } }}>
+              <dt>Contrato</dt>
+              <dd>{contrato.folio}</dd>
+              <dt>Servicio</dt>
+              <dd>
+                {contrato.servicio} · {contrato.duracion_meses} meses
+              </dd>
+              <dt>Domicilio</dt>
+              <dd>{contrato.sucursal ? `${contrato.sucursal.nombre}: ${contrato.sucursal.direccion}` : "—"}</dd>
+              <dt>Vigencia</dt>
+              <dd>
+                {formatearFecha(contrato.fecha_inicio)} al {formatearFecha(contrato.fecha_vencimiento)}
+              </dd>
+              {contrato.precio && (
+                <>
+                  <dt>Precio del servicio</dt>
+                  <dd>
+                    {formatearPesos(Number(contrato.precio))}, pago {contrato.ciclo_pago.toLowerCase()}
+                  </dd>
+                </>
+              )}
             </Box>
-          ))}
+          )}
+          {documento && (
+            <>
+              <Typography sx={{ fontSize: 13, color: tokens.inkSoft, mt: 2 }}>Firmarán</Typography>
+              {documento.firmantes.map((firmante) => (
+                <Typography key={firmante.orden} sx={{ fontSize: 13 }}>
+                  {firmante.nombre} — {ROL_FIRMANTE[firmante.rol]}
+                </Typography>
+              ))}
+              <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 1.5 }}>
+                Versión {documento.version}. El total a pagar aparece en el siguiente paso.
+              </Typography>
+            </>
+          )}
+          {cargando && !documento && <CircularProgress size={20} aria-label="Cargando el documento" />}
 
-          <Typography
-            sx={{
-              fontSize: 11.5,
-              color: tokens.inkFaint,
-              mt: 2,
-              pt: 1.75,
-              lineHeight: 1.5,
-              borderTop: `1px dashed ${tokens.border}`,
-            }}
+          {conflicto === "fecha_inicio_vencida" && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              La fecha de inicio ya pasó.{" "}
+              <RouterLink to={`/tramites/${tramite.id}/editar`}>Elige una nueva</RouterLink>.
+            </Alert>
+          )}
+          {confirmar.isError && conflicto !== "fecha_inicio_vencida" && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              No pudimos confirmar el borrador. Intenta nuevamente.
+            </Alert>
+          )}
+
+          {tramite.accion_cliente === "revisar_borrador" && (
+            <>
+              <Button
+                fullWidth
+                variant="contained"
+                sx={{ mt: 2.25 }}
+                disabled={confirmar.isPending || !documento}
+                onClick={() => confirmar.mutate()}
+              >
+                {confirmar.isPending ? "Confirmando…" : "Los datos están correctos, continuar al pago"}
+              </Button>
+              <Button
+                fullWidth
+                variant="outlined"
+                sx={{ mt: 1 }}
+                component={RouterLink}
+                to={`/tramites/${tramite.id}/editar`}
+              >
+                Editar datos
+              </Button>
+            </>
+          )}
+          {tramite.accion_cliente === "pagar" && (
+            <Button fullWidth variant="contained" sx={{ mt: 2.25 }} component={RouterLink} to={`/tramites/${tramite.id}/pago`}>
+              Ir al pago
+            </Button>
+          )}
+          <Button
+            fullWidth
+            variant="text"
+            sx={{ mt: 1 }}
+            disabled={!documento || word.isPending}
+            onClick={() => word.mutate()}
           >
-            Este documento aún no tiene validez legal. Se marca como definitivo solo tras el pago y
-            la firma electrónica avanzada.
-          </Typography>
-
-          <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, mt: 2.5 }}>
-            <Button variant="outlined" onClick={() => navigate("/tramites/domicilio-tributario/nuevo")}>
-              Editar datos
-            </Button>
-            <Button variant="contained" onClick={() => navigate("/tramites/domicilio-tributario/pago")}>
-              Confirmar
-            </Button>
-          </Box>
+            Descargar en Word
+          </Button>
         </Paper>
       </Box>
     </>

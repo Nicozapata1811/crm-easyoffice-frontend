@@ -4,4 +4,8 @@ export const PERMISOS = {
   crearCliente: "clientes.add_cliente",
   editarCliente: "clientes.change_cliente",
   verVentas: "ventas.view_venta",
+  verTramites: "tramites.view_tramite",
+  gestionarTramites: "tramites.gestionar_tramite",
+  verDocumentos: "documentos.view_documento",
+  subirDocumentoFirmado: "documentos.subir_documento_firmado",
 } as const;
