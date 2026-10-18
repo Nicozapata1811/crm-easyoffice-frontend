@@ -122,18 +122,33 @@ describe("route guards", () => {
     vi.mocked(getSesion).mockResolvedValue(CLIENTE);
     renderAt("/backoffice");
     expect(await screen.findByText(/para el personal de Easy Office/)).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Cerrar sesión" }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Ingresar como personal" })).toBeInTheDocument();
     expect(screen.queryByText("Contenido protegido")).not.toBeInTheDocument();
   });
 
-  it("lets a staff session log out from the client warning", async () => {
+  it("closes a staff session and goes to the client login from the portal", async () => {
     vi.mocked(getSesion).mockResolvedValue(ADMINISTRADOR);
     vi.mocked(logout).mockResolvedValue();
     const user = userEvent.setup();
-    renderAt("/tramites/x/pago");
+    const router = renderAt("/tramites/x/pago");
 
-    await user.click(await screen.findByRole("button", { name: "Cerrar sesión" }));
+    await user.click(await screen.findByRole("button", { name: "Ingresar como cliente" }));
 
     expect(logout).toHaveBeenCalled();
+    expect(await screen.findByText("Ingreso de clientes")).toBeInTheDocument();
+    expect(router.state.location.search).toBe("?siguiente=%2Ftramites%2Fx%2Fpago");
+  });
+
+  it("closes a client session and goes to the staff login from the backoffice", async () => {
+    vi.mocked(getSesion).mockResolvedValue(CLIENTE);
+    vi.mocked(logout).mockResolvedValue();
+    const user = userEvent.setup();
+    const router = renderAt("/backoffice");
+
+    await user.click(await screen.findByRole("button", { name: "Ingresar como personal" }));
+
+    expect(logout).toHaveBeenCalled();
+    expect(await screen.findByText("Pantalla de ingreso")).toBeInTheDocument();
+    expect(router.state.location.search).toBe("?siguiente=%2Fbackoffice");
   });
 });

@@ -15,6 +15,7 @@ import { Navigate, Link as RouterLink, useSearchParams } from "react-router-dom"
 
 import { ApiError } from "../../../api/client";
 import { PageHeading } from "../../../components/PageHeading";
+import { AvisoOtraSesion } from "../AvisoOtraSesion";
 import { destinoSeguro } from "../destino";
 import { useRegistro, useSesion } from "../useSesion";
 import { aDatosRegistro, registroSchema, type RegistroForm } from "./schema";
@@ -59,7 +60,7 @@ export function Registro() {
   });
   const tipo = useWatch({ control, name: "tipo" });
 
-  if (usuario) return <Navigate to={destino} replace />;
+  if (usuario?.tipo === "cliente") return <Navigate to={destino} replace />;
 
   const enviar = handleSubmit((datos) => {
     setErrorGeneral(undefined);
@@ -97,6 +98,7 @@ export function Registro() {
           bajada="Con tu cuenta puedes pagar tus trámites y revisar tus compras."
         />
         <Stack component="form" spacing={1.5} onSubmit={enviar} noValidate>
+          {usuario && <AvisoOtraSesion tipoActivo={usuario.tipo} alContinuar="Al crear tu cuenta" />}
           {errorGeneral && <Alert severity="error">{errorGeneral}</Alert>}
           <Controller
             control={control}

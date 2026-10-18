@@ -108,6 +108,28 @@ describe("Registro", () => {
     vi.mocked(registrar).mockReset();
   });
 
+  it("sends a client session on to where it was going", async () => {
+    vi.mocked(getSesion).mockResolvedValue(CLIENTE);
+
+    renderRegistro();
+
+    expect(await screen.findByText("Pago")).toBeInTheDocument();
+  });
+
+  it("lets a staff session create a client account, warning it will close", async () => {
+    vi.mocked(getSesion).mockResolvedValue({
+      ...CLIENTE,
+      tipo: "staff",
+      cliente: null,
+      rol: "Ejecutivo",
+    });
+
+    renderRegistro();
+
+    expect(await screen.findByText(/Tienes abierta una sesión del personal/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Crear cuenta" })).toBeInTheDocument();
+  });
+
   it("creates the account and continues where the client was going", async () => {
     vi.mocked(registrar).mockResolvedValue(CLIENTE);
 

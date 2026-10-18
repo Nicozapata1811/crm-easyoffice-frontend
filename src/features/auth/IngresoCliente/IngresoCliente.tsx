@@ -14,6 +14,7 @@ export function IngresoCliente() {
         titulo="Ingresa a tu cuenta"
         bajada="Con tu cuenta puedes pagar tus trámites y revisar tus compras."
         destinoPorDefecto="/mis-compras"
+        tipo="cliente"
         pie={
           <Typography sx={{ fontSize: 14, textAlign: "center" }}>
             ¿Aún no tienes cuenta?{" "}
