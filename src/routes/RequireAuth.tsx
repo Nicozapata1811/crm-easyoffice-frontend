@@ -3,7 +3,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { useLogout, useSesion } from "../features/auth/useSesion";
 import type { TipoUsuario } from "../types/sesion";
@@ -16,9 +16,15 @@ const RUTA_POR_TIPO: Record<TipoUsuario, string> = {
   cliente: RUTA_INGRESO_CLIENTE,
 };
 
-const OTRA_SESION: Record<TipoUsuario, string> = {
-  staff: "Esta sección es para el personal de Easy Office. Cierra tu sesión de cliente para continuar.",
-  cliente: "Esta sección es para clientes. Cierra la sesión del personal para continuar.",
+const OTRA_SESION: Record<TipoUsuario, { mensaje: string; accion: string }> = {
+  staff: {
+    mensaje: "Esta sección es para el personal de Easy Office y tienes abierta una sesión de cliente. Al continuar se cerrará.",
+    accion: "Ingresar como personal",
+  },
+  cliente: {
+    mensaje: "Esta sección es para clientes y tienes abierta una sesión del personal. Al continuar se cerrará.",
+    accion: "Ingresar como cliente",
+  },
 };
 
 interface RequireAuthProps {
@@ -29,7 +35,9 @@ interface RequireAuthProps {
 export function RequireAuth({ children, tipo = "staff" }: RequireAuthProps) {
   const { data: usuario, isPending, isError } = useSesion();
   const logout = useLogout();
+  const navigate = useNavigate();
   const { pathname, search } = useLocation();
+  const ingreso = `${RUTA_POR_TIPO[tipo]}?siguiente=${encodeURIComponent(`${pathname}${search}`)}`;
 
   if (isPending) {
     return (
@@ -46,8 +54,7 @@ export function RequireAuth({ children, tipo = "staff" }: RequireAuthProps) {
     );
   }
   if (!usuario) {
-    const siguiente = encodeURIComponent(`${pathname}${search}`);
-    return <Navigate to={`${RUTA_POR_TIPO[tipo]}?siguiente=${siguiente}`} replace />;
+    return <Navigate to={ingreso} replace />;
   }
   if (usuario.tipo !== tipo) {
     return (
@@ -55,12 +62,19 @@ export function RequireAuth({ children, tipo = "staff" }: RequireAuthProps) {
         severity="warning"
         sx={{ m: 4 }}
         action={
-          <Button color="inherit" size="small" disabled={logout.isPending} onClick={() => logout.mutate()}>
-            Cerrar sesión
+          <Button
+            color="inherit"
+            size="small"
+            disabled={logout.isPending}
+            onClick={() =>
+              logout.mutate(undefined, { onSettled: () => navigate(ingreso, { replace: true }) })
+            }
+          >
+            {OTRA_SESION[tipo].accion}
           </Button>
         }
       >
-        {OTRA_SESION[tipo]}
+        {OTRA_SESION[tipo].mensaje}
       </Alert>
     );
   }

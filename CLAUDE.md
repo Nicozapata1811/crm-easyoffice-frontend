@@ -59,6 +59,11 @@ convention.
   account (the domicile request, its draft, payment and status, "Mis
   trámites", "Mis compras"). Both login screens share
   `FormularioIngreso`.
+- Staff and clients share one session in the SPA (the Django admin has its own
+  cookie). On a screen for the other type, `RequireAuth` offers "Ingresar como
+  cliente/personal": it logs out and goes to that login with `?siguiente=`. The
+  login screens and `/registro` redirect only a session of their own type; for
+  the other type they show `AvisoOtraSesion` and signing in replaces it.
 
 ---
 

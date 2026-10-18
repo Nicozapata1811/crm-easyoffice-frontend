@@ -11,6 +11,8 @@ import { z } from "zod";
 
 import { ApiError } from "../../api/client";
 import { PageHeading } from "../../components/PageHeading";
+import type { TipoUsuario } from "../../types/sesion";
+import { AvisoOtraSesion } from "./AvisoOtraSesion";
 import { destinoSeguro } from "./destino";
 import { useLogin, useSesion } from "./useSesion";
 
@@ -32,10 +34,11 @@ interface FormularioIngresoProps {
   titulo: string;
   bajada: string;
   destinoPorDefecto: string;
+  tipo: TipoUsuario;
   pie?: ReactNode;
 }
 
-export function FormularioIngreso({ titulo, bajada, destinoPorDefecto, pie }: FormularioIngresoProps) {
+export function FormularioIngreso({ titulo, bajada, destinoPorDefecto, tipo, pie }: FormularioIngresoProps) {
   const [params] = useSearchParams();
   const destino = destinoSeguro(params.get("siguiente"), destinoPorDefecto);
   const { data: usuario } = useSesion();
@@ -46,7 +49,7 @@ export function FormularioIngreso({ titulo, bajada, destinoPorDefecto, pie }: Fo
     formState: { errors },
   } = useForm<IngresoForm>({ resolver: zodResolver(ingresoSchema) });
 
-  if (usuario) return <Navigate to={destino} replace />;
+  if (usuario?.tipo === tipo) return <Navigate to={destino} replace />;
 
   const ingresar = handleSubmit((credenciales) => login.mutate(credenciales));
 
@@ -54,6 +57,7 @@ export function FormularioIngreso({ titulo, bajada, destinoPorDefecto, pie }: Fo
     <Paper sx={{ p: { xs: 3, sm: 5 }, width: "100%", maxWidth: 420 }}>
       <PageHeading titulo={titulo} bajada={bajada} />
       <Stack component="form" spacing={2} onSubmit={ingresar} noValidate>
+        {usuario && <AvisoOtraSesion tipoActivo={usuario.tipo} alContinuar="Al ingresar" />}
         {login.isError && <Alert severity="error">{mensajeDeError(login.error)}</Alert>}
         <TextField
           label="Correo electrónico"

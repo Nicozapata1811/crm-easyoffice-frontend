@@ -12,6 +12,7 @@ export function Ingresar() {
         titulo="Ingreso del personal"
         bajada="Usa tu correo y contraseña de Easy Office."
         destinoPorDefecto="/backoffice"
+        tipo="staff"
       />
     </Box>
   );

@@ -8,9 +8,28 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getSesion, login } from "../../../../api/auth";
 import { ApiError } from "../../../../api/client";
+import type { UsuarioSesion } from "../../../../types/sesion";
 import { Ingresar } from "../Ingresar";
 
 vi.mock("../../../../api/auth", () => ({ getSesion: vi.fn(), login: vi.fn() }));
+
+const STAFF: UsuarioSesion = {
+  id: 1,
+  email: "persona@example.test",
+  name: "Persona Demo",
+  tipo: "staff",
+  cliente: null,
+  rol: "Administrador",
+  permisos: [],
+};
+const CLIENTE: UsuarioSesion = {
+  ...STAFF,
+  id: 3,
+  email: "cliente@example.test",
+  tipo: "cliente",
+  cliente: { id: 7, folio: "CLI-000007", nombre: "Camila Soto" },
+  rol: null,
+};
 
 function renderIngresar(path = "/backoffice/ingresar") {
   const router = createMemoryRouter(
@@ -40,6 +59,23 @@ describe("Ingresar", () => {
   beforeEach(() => {
     vi.mocked(getSesion).mockResolvedValue(null);
     vi.mocked(login).mockReset();
+  });
+
+  it("sends a staff session straight to the backoffice", async () => {
+    vi.mocked(getSesion).mockResolvedValue(STAFF);
+
+    renderIngresar();
+
+    expect(await screen.findByText("Backoffice")).toBeInTheDocument();
+  });
+
+  it("lets a client session sign in as staff, warning it will close", async () => {
+    vi.mocked(getSesion).mockResolvedValue(CLIENTE);
+
+    renderIngresar();
+
+    expect(await screen.findByText(/Tienes abierta una sesión de cliente/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Correo electrónico/)).toBeInTheDocument();
   });
 
   it("shows one generic message when the credentials are rejected", async () => {
