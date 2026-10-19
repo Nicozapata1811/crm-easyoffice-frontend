@@ -227,16 +227,19 @@ clientes nuevos en el período, servicios activos, por vencer y vencidos, ventas
 totales, ventas por servicio, ventas por ejecutivo, trámites pendientes y
 documentos pendientes de firma, con filtro por período.
 
-Requiere el permiso `core.view_dashboard`, que hoy tiene solo el
-Administrador (RN-31). HU-41 habla de un "supervisor", rol no confirmado, y si
-el Ejecutivo puede ver el panel está pendiente de validar con Easy Office.
+Requiere el permiso `core.view_dashboard`, que tienen el Administrador y el
+Ejecutivo (RN-32; Easy Office lo confirmó en `ACTA-002`, D2-06).
 
 **Datos.** La pantalla lee `GET /api/panel/indicadores/` a través de
 `dashboardService` (`src/features/backoffice/PanelOperativo/dashboardService.ts`).
-Los totales de clientes son reales. Servicios, ventas, trámites y documentos
-siguen siendo valores de ejemplo calculados por el backend, porque aún no
-existen en el sistema. El backend los lista en `datos_de_ejemplo` y la pantalla
-rotula solo esos.
+Todas las cifras son reales. Clientes nuevos y ventas cubren el período; los
+servicios (contados por contrato), los trámites pendientes y los documentos por
+firmar se leen a `fecha_referencia` (el fin del período, u hoy si es posterior),
+y la tarjeta lo indica ("Al …"). Trámites pendientes muestra el desglose por
+motivo (RF-47). Las ventas son solo las pagadas en línea: las que no tienen
+ejecutivo aparecen como "En línea (sin ejecutivo)", y una nota aclara que los
+contratos del backoffice sin pago en línea no se cuentan. `datos_de_ejemplo`
+llega vacío y la pantalla ya no lo usa.
 
 **Exportar a Excel.** El botón descarga el `.xlsx` que genera el backend para el
 período elegido (`GET /api/panel/indicadores/exportar/`), con un resumen y las
