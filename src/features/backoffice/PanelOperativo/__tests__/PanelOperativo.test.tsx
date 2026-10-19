@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { formatearFecha } from "../../../../lib/formato";
 import type { IndicadoresPanel, Periodo } from "../../../../types/panel";
 import { dashboardService } from "../dashboardService";
 import { PanelOperativo } from "../PanelOperativo";
@@ -23,20 +24,29 @@ const INDICADORES_RF14 = [
   "Documentos pendientes de firma",
 ];
 
-function indicadores(periodo: Periodo, datosDeEjemplo: string[]): IndicadoresPanel {
+function indicadores(periodo: Periodo, cambios: Partial<IndicadoresPanel> = {}): IndicadoresPanel {
   return {
     periodo,
+    fecha_referencia: periodo.hasta,
     clientes: { total: 40, nuevos: 5 },
     servicios: { activos: 96, por_vencer: 7, vencidos: 4, dias_aviso: 30 },
     ventas: {
       moneda: "CLP",
       total: 90_000,
       por_servicio: [{ servicio: "Domicilio tributario", monto: 90_000, cantidad: 2 }],
-      por_ejecutivo: [{ ejecutivo: "Ejecutivo/a de ejemplo 1", monto: 90_000, cantidad: 2 }],
+      por_ejecutivo: [
+        { ejecutivo: "Ejecutiva de Prueba", monto: 50_000, cantidad: 1 },
+        { ejecutivo: "En línea (sin ejecutivo)", monto: 40_000, cantidad: 1 },
+      ],
     },
     tramites_pendientes: 18,
+    tramites_pendientes_por_motivo: [
+      { motivo: "firma", nombre: "Firma pendiente", cantidad: 6 },
+      { motivo: "pago", nombre: "Pago pendiente", cantidad: 12 },
+    ],
     documentos_pendientes_firma: 6,
-    datos_de_ejemplo: datosDeEjemplo,
+    datos_de_ejemplo: [],
+    ...cambios,
   };
 }
 
@@ -54,7 +64,7 @@ function renderPanel() {
 describe("PanelOperativo", () => {
   beforeEach(() => {
     vi.spyOn(dashboardService, "getIndicators").mockImplementation(async (periodo) =>
-      indicadores(periodo, ["servicios", "ventas"]),
+      indicadores(periodo),
     );
   });
   afterEach(() => vi.restoreAllMocks());
@@ -67,23 +77,56 @@ describe("PanelOperativo", () => {
     }
   });
 
-  it("labels only the indicators the backend flags as example data", async () => {
-    renderPanel();
-
-    const ventas = await screen.findByRole("region", { name: "Ventas totales" });
-    const clientes = screen.getByRole("region", { name: "Total de clientes" });
-    expect(within(ventas).getByText("Valor de ejemplo · en el período")).toBeInTheDocument();
-    expect(within(clientes).queryByText(/ejemplo/)).not.toBeInTheDocument();
-  });
-
-  it("hides the example notice once every figure is real", async () => {
-    vi.mocked(dashboardService.getIndicators).mockImplementation(async (periodo) =>
-      indicadores(periodo, []),
-    );
+  it("shows no example labels", async () => {
     renderPanel();
 
     await screen.findByRole("region", { name: "Ventas totales" });
-    expect(screen.queryByText(/valores de ejemplo/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ejemplo/i)).not.toBeInTheDocument();
+  });
+
+  it("dates the point-in-time figures", async () => {
+    renderPanel();
+
+    const vencidos = await screen.findByRole("region", { name: "Servicios vencidos" });
+    const hasta = resolverPeriodo("mes-actual").hasta;
+    expect(within(vencidos).getByText(`Al ${formatearFecha(hasta)}`)).toBeInTheDocument();
+  });
+
+  it("breaks pending cases down by reason", async () => {
+    renderPanel();
+
+    const tramites = await screen.findByRole("region", { name: "Trámites pendientes" });
+    const motivos = within(tramites).getByRole("list", { name: "Pendientes por motivo" });
+    const filas = within(motivos).getAllByRole("listitem");
+    expect(filas.map((fila) => fila.textContent)).toEqual(["Firma pendiente6", "Pago pendiente12"]);
+  });
+
+  it("shows the online sales group and the note on backoffice contracts", async () => {
+    renderPanel();
+
+    const porEjecutivo = await screen.findByRole("region", { name: "Ventas por ejecutivo" });
+    expect(within(porEjecutivo).getByText("En línea (sin ejecutivo)")).toBeInTheDocument();
+    expect(screen.getByText(/Solo ventas pagadas en línea/)).toBeInTheDocument();
+  });
+
+  it("shows an empty period without breaking", async () => {
+    vi.mocked(dashboardService.getIndicators).mockImplementation(async (periodo) =>
+      indicadores(periodo, {
+        servicios: { activos: 0, por_vencer: 0, vencidos: 0, dias_aviso: 30 },
+        ventas: { moneda: "CLP", total: 0, por_servicio: [], por_ejecutivo: [] },
+        tramites_pendientes: 0,
+        tramites_pendientes_por_motivo: [],
+        documentos_pendientes_firma: 0,
+      }),
+    );
+    renderPanel();
+
+    for (const titulo of ["Ventas por servicio", "Ventas por ejecutivo"]) {
+      const desglose = await screen.findByRole("region", { name: titulo });
+      expect(within(desglose).getByText("Sin ventas en el período.")).toBeInTheDocument();
+    }
+    const tramites = screen.getByRole("region", { name: "Trámites pendientes" });
+    expect(within(tramites).queryByRole("list")).not.toBeInTheDocument();
   });
 
   it("asks for the indicators of the selected period", async () => {
