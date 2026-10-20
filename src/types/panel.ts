@@ -21,9 +21,19 @@ export interface VentaPorEjecutivo {
   cantidad: number;
 }
 
+/** Cases pending for one reason (RF-47). */
+export interface PendientesPorMotivo {
+  motivo: string;
+  nombre: string;
+  cantidad: number;
+}
+
 export interface IndicadoresPanel {
   periodo: Periodo;
+  /** Day the point-in-time figures are read at: `hasta`, or today if later. */
+  fecha_referencia: string;
   clientes: { total: number; nuevos: number };
+  /** Counted per contract (folio), at `fecha_referencia`. */
   servicios: { activos: number; por_vencer: number; vencidos: number; dias_aviso: number };
   ventas: {
     moneda: "CLP";
@@ -32,7 +42,8 @@ export interface IndicadoresPanel {
     por_ejecutivo: VentaPorEjecutivo[];
   };
   tramites_pendientes: number;
+  tramites_pendientes_por_motivo: PendientesPorMotivo[];
   documentos_pendientes_firma: number;
-  /** Keys whose figures are examples until the system records them. */
+  /** @deprecated Always empty: every figure is real. Removed in the next release. */
   datos_de_ejemplo: string[];
 }

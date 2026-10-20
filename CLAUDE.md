@@ -92,11 +92,16 @@ and a requirement disagree, the requirement (MRQ-001) wins.
 mockup's: the mockup's "average case time" would imply a measured time
 reduction.
 - It reads `GET /api/panel/indicadores/` through `dashboardService`.
-- Client counts are real. The keys listed in the payload's `datos_de_ejemplo`
-  are example figures, and only those are labelled "Valor de ejemplo".
+- Every figure is real. Clients and sales cover the period; services
+  (counted per contract), pending cases and documents to sign are read at
+  `fecha_referencia`, and their cards say "Al …". "Trámites pendientes" lists
+  `tramites_pendientes_por_motivo` (RF-47). Sales are paid online only:
+  "En línea (sin ejecutivo)" groups those without an executive, and a note
+  says backoffice contracts without an online payment are not counted.
+  `datos_de_ejemplo` is always empty (deprecated) and not read.
 - "Exportar a Excel" downloads the `.xlsx` the backend builds.
-- Requires `core.view_dashboard` (Administrador only, pending validation for
-  Ejecutivo).
+- Requires `core.view_dashboard`, held by Administrador and Ejecutivo
+  (ACTA-002, D2-06).
 
 **Service catalogue (1)** (`features/portal/CatalogoServicios/`) reads
 `GET /api/portal/servicios/` and shows the services with `visible_en_portal`,
@@ -284,7 +289,7 @@ Built so far:
 - client registration and login (HU-03);
 - payment with Klap Checkout Flex (sandbox), "Mis compras", and sales in the
   backoffice (HU-39, HU-57);
-- the operational dashboard on the real endpoint, with its Excel export;
+- the operational dashboard with real figures (HU-41), with its Excel export;
 - client management: list, search, record, create and edit;
 - the tax domicile flow end to end on the real PLT-01 (HU-24): form, real
   draft, payment of the plan, status, and the backoffice case list and detail
@@ -293,8 +298,7 @@ Built so far:
 **Still unknown — do not invent answers:**
 
 - The closed list of pending reasons (TA-13) and the signing order (RN-39)
-- Roles beyond Administrador and Ejecutivo, and whether an Ejecutivo sees the
-  dashboard
+- Roles beyond Administrador and Ejecutivo
 - Payment provider (Klap is implemented as an assumption), prices, and where
   payment sits in the flow
 - Whether the signature step is client-initiated or automatic

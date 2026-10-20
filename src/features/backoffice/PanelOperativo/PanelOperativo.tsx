@@ -6,16 +6,19 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearEntero, formatearFecha, formatearPesos } from "../../../lib/formato";
+import { tokens } from "../../../theme";
 import { dashboardService } from "./dashboardService";
 import { IndicadorCard } from "./IndicadorCard";
 import { PERIODOS, resolverPeriodo, type PeriodoId } from "./periodos";
 import { VentasDesglose } from "./VentasDesglose";
 
-const VALOR_DE_EJEMPLO = "Valor de ejemplo";
+const NOTA_VENTAS =
+  "Solo ventas pagadas en línea. Los contratos registrados en el backoffice sin pago en línea no se cuentan.";
 
 export function PanelOperativo() {
   const [periodoId, setPeriodoId] = useState<PeriodoId>("mes-actual");
@@ -27,11 +30,7 @@ export function PanelOperativo() {
   });
   const exportar = useMutation({ mutationFn: () => dashboardService.exportIndicators(periodo) });
 
-  const deEjemplo = new Set(data?.datos_de_ejemplo);
-  const detalle = (clave: string, texto?: string) => {
-    if (!deEjemplo.has(clave)) return texto;
-    return texto ? `${VALOR_DE_EJEMPLO} · ${texto.toLowerCase()}` : VALOR_DE_EJEMPLO;
-  };
+  const al = data ? `Al ${formatearFecha(data.fecha_referencia)}` : "";
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto" }}>
@@ -73,12 +72,6 @@ export function PanelOperativo() {
           No pudimos generar el archivo Excel. Intenta nuevamente.
         </Alert>
       )}
-      {deEjemplo.size > 0 && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          Los clientes son datos reales del sistema. Servicios, ventas, trámites y documentos
-          todavía son valores de ejemplo, no cifras reales.
-        </Alert>
-      )}
 
       {isPending && (
         <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
@@ -102,50 +95,73 @@ export function PanelOperativo() {
             <IndicadorCard
               etiqueta="Total de clientes"
               valor={formatearEntero(data.clientes.total)}
-              detalle={detalle("clientes")}
             />
             <IndicadorCard
               etiqueta="Clientes nuevos"
               valor={formatearEntero(data.clientes.nuevos)}
-              detalle={detalle("clientes", "En el período")}
+              detalle="En el período"
             />
             <IndicadorCard
               etiqueta="Servicios activos"
               valor={formatearEntero(data.servicios.activos)}
-              detalle={detalle("servicios")}
+              detalle={`Contratos vigentes · ${al.toLowerCase()}`}
             />
             <IndicadorCard
               etiqueta="Servicios por vencer"
               valor={formatearEntero(data.servicios.por_vencer)}
-              detalle={detalle("servicios", `En los próximos ${data.servicios.dias_aviso} días`)}
+              detalle={`En los próximos ${data.servicios.dias_aviso} días · ${al.toLowerCase()}`}
               tono="atencion"
             />
             <IndicadorCard
               etiqueta="Servicios vencidos"
               valor={formatearEntero(data.servicios.vencidos)}
-              detalle={detalle("servicios")}
+              detalle={al}
             />
             <IndicadorCard
               etiqueta="Ventas totales"
               valor={formatearPesos(data.ventas.total)}
-              detalle={detalle("ventas", "En el período")}
+              detalle="Pagadas en línea, en el período"
             />
             <IndicadorCard
               etiqueta="Trámites pendientes"
               valor={formatearEntero(data.tramites_pendientes)}
-              detalle={detalle("tramites_pendientes")}
-            />
+              detalle={al}
+            >
+              {data.tramites_pendientes_por_motivo.length > 0 && (
+                <Box
+                  component="ul"
+                  aria-label="Pendientes por motivo"
+                  sx={{ m: 0, mt: 1, p: 0, listStyle: "none" }}
+                >
+                  {data.tramites_pendientes_por_motivo.map(({ motivo, nombre, cantidad }) => (
+                    <Box
+                      component="li"
+                      key={motivo}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 1,
+                        fontSize: 12.5,
+                        color: tokens.inkSoft,
+                      }}
+                    >
+                      <span>{nombre}</span>
+                      <span>{formatearEntero(cantidad)}</span>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </IndicadorCard>
             <IndicadorCard
               etiqueta="Documentos pendientes de firma"
               valor={formatearEntero(data.documentos_pendientes_firma)}
-              detalle={detalle("documentos_pendientes_firma")}
+              detalle={al}
             />
           </Box>
 
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2.5 }}>
             <VentasDesglose
               titulo="Ventas por servicio"
-              deEjemplo={deEjemplo.has("ventas")}
               filas={data.ventas.por_servicio.map(({ servicio, ...venta }) => ({
                 nombre: servicio,
                 ...venta,
@@ -153,13 +169,13 @@ export function PanelOperativo() {
             />
             <VentasDesglose
               titulo="Ventas por ejecutivo"
-              deEjemplo={deEjemplo.has("ventas")}
               filas={data.ventas.por_ejecutivo.map(({ ejecutivo, ...venta }) => ({
                 nombre: ejecutivo,
                 ...venta,
               }))}
             />
           </Box>
+          <Typography sx={{ mt: 1.5, fontSize: 12.5, color: tokens.inkFaint }}>{NOTA_VENTAS}</Typography>
         </>
       )}
     </Box>

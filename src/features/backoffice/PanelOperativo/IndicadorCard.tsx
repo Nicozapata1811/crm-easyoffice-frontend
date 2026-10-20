@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 
@@ -10,9 +11,17 @@ interface IndicadorCardProps {
   valor: string;
   detalle?: string;
   tono?: keyof typeof COLOR_DETALLE;
+  /** Small breakdown under the detail. */
+  children?: ReactNode;
 }
 
-export function IndicadorCard({ etiqueta, valor, detalle, tono = "normal" }: IndicadorCardProps) {
+export function IndicadorCard({
+  etiqueta,
+  valor,
+  detalle,
+  tono = "normal",
+  children,
+}: IndicadorCardProps) {
   return (
     <Paper component="section" aria-label={etiqueta} sx={{ p: 3 }}>
       <Typography sx={{ fontSize: 13.5, color: tokens.inkSoft }}>{etiqueta}</Typography>
@@ -24,6 +33,7 @@ export function IndicadorCard({ etiqueta, valor, detalle, tono = "normal" }: Ind
       {detalle && (
         <Typography sx={{ fontSize: 12.5, color: COLOR_DETALLE[tono] }}>{detalle}</Typography>
       )}
+      {children}
     </Paper>
   );
 }
