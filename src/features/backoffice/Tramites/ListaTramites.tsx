@@ -20,7 +20,6 @@ import { listarTiposIniciables, listarTramitesBackoffice } from "../../../api/tr
 import { EstadoPill } from "../../../components/EstadoPill";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearFechaHora } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import type { EstadoTramite } from "../../../types/tramites";
 import { PERMISOS } from "../../auth/permisos";
 import { tienePermiso, useSesion } from "../../auth/useSesion";
@@ -131,7 +130,7 @@ export function ListaTramites() {
                   onClick={() => navigate(`/backoffice/tramites/${tramite.id}`)}
                   sx={{ cursor: "pointer" }}
                 >
-                  <TableCell sx={{ whiteSpace: "nowrap", color: tokens.inkSoft }}>{tramite.folio}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary" }}>{tramite.folio}</TableCell>
                   <TableCell>{tramite.cliente.nombre}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>{tramite.contrato?.folio ?? "—"}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>{formatearFechaHora(tramite.created_at)}</TableCell>
@@ -142,7 +141,7 @@ export function ListaTramites() {
               ))}
               {data.results.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} sx={{ color: tokens.inkSoft }}>
+                  <TableCell colSpan={5} sx={{ color: "text.secondary" }}>
                     No hay trámites con estos filtros.
                   </TableCell>
                 </TableRow>

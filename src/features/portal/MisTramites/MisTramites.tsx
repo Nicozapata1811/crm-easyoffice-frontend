@@ -17,7 +17,6 @@ import { listarTramites } from "../../../api/tramites";
 import { EstadoPill } from "../../../components/EstadoPill";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearFechaHora } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import type { Tramite } from "../../../types/tramites";
 import { etiquetaCliente } from "../../tramites/estados";
 
@@ -44,7 +43,7 @@ export function MisTramites() {
       <Tabs
         value={filtro}
         onChange={(_, valor: number) => setFiltro(valor)}
-        sx={{ mb: 2.75, borderBottom: `1px solid ${tokens.border}`, minHeight: 0 }}
+        sx={{ mb: 2.75, borderBottom: 1, borderColor: "divider", minHeight: 0 }}
       >
         {FILTROS.map(({ nombre }) => (
           <Tab key={nombre} label={nombre} sx={{ fontSize: 13.5, minHeight: 0, py: 1.25 }} />
@@ -77,7 +76,7 @@ export function MisTramites() {
                   onClick={() => navigate(`/tramites/${tramite.id}`)}
                   sx={{ cursor: "pointer" }}
                 >
-                  <TableCell sx={{ fontFamily: tokens.serif, fontWeight: 600, color: tokens.primaryDark, whiteSpace: "nowrap" }}>
+                  <TableCell sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                     {tramite.folio}
                   </TableCell>
                   <TableCell>{tramite.tipo}</TableCell>
@@ -90,7 +89,7 @@ export function MisTramites() {
               ))}
               {filas.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} sx={{ color: tokens.inkSoft }}>
+                  <TableCell colSpan={5} sx={{ color: "text.secondary" }}>
                     No tienes trámites aquí todavía.
                   </TableCell>
                 </TableRow>

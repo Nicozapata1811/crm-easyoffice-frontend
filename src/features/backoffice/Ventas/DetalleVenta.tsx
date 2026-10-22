@@ -17,7 +17,6 @@ import { EstadoPill } from "../../../components/EstadoPill";
 import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
 import { formatearFechaHora, formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import { ESTADO_VENTA } from "../../portal/Pago/estados";
 import { ETIQUETA_ORDEN } from "./etiquetas";
 
@@ -49,7 +48,7 @@ export function DetalleVenta() {
         <Link component={RouterLink} to={`/backoffice/clientes/${venta.cliente.id}`}>
           {venta.cliente.nombre}
         </Link>{" "}
-        <Typography component="span" sx={{ color: tokens.inkSoft, fontSize: 13 }}>
+        <Typography component="span" sx={{ color: "text.secondary", fontSize: 13 }}>
           {venta.cliente.folio}
         </Typography>
 
@@ -67,7 +66,7 @@ export function DetalleVenta() {
             display: "flex",
             justifyContent: "space-between",
             fontWeight: 700,
-            borderTop: `1px solid ${tokens.border}`,
+            borderTop: 1, borderColor: "divider",
             mt: 1,
             pt: 1.25,
           }}
@@ -93,11 +92,11 @@ export function DetalleVenta() {
               <TableRow key={orden.id}>
                 <TableCell sx={{ whiteSpace: "nowrap" }}>{formatearFechaHora(orden.created_at)}</TableCell>
                 <TableCell>{orden.proveedor}</TableCell>
-                <TableCell sx={{ color: tokens.inkSoft }}>{orden.id_externo ?? "—"}</TableCell>
+                <TableCell sx={{ color: "text.secondary" }}>{orden.id_externo ?? "—"}</TableCell>
                 <TableCell>
                   {ETIQUETA_ORDEN[orden.estado]}
                   {orden.detalle_error && (
-                    <Typography sx={{ fontSize: 12, color: tokens.stamp }}>{orden.detalle_error}</Typography>
+                    <Typography sx={{ fontSize: 12, color: "error.strong" }}>{orden.detalle_error}</Typography>
                   )}
                 </TableCell>
                 <TableCell>
@@ -115,7 +114,7 @@ export function DetalleVenta() {
             ))}
             {venta.ordenes.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} sx={{ color: tokens.inkSoft }}>
+                <TableCell colSpan={5} sx={{ color: "text.secondary" }}>
                   El cliente aún no intenta pagar.
                 </TableCell>
               </TableRow>

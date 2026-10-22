@@ -20,7 +20,6 @@ import { TAMANO_PAGINA_CLIENTES } from "../../../api/clientes";
 import { EstadoPill } from "../../../components/EstadoPill";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearRut } from "../../../lib/rut";
-import { tokens } from "../../../theme";
 import type { TipoCliente } from "../../../types/cliente";
 import { PERMISOS } from "../../auth/permisos";
 import { tienePermiso, useSesion } from "../../auth/useSesion";
@@ -141,7 +140,7 @@ export function ListaClientes() {
                   onClick={() => navigate(`/backoffice/clientes/${cliente.id}`)}
                   sx={{ cursor: "pointer" }}
                 >
-                  <TableCell sx={{ whiteSpace: "nowrap", color: tokens.inkSoft }}>
+                  <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary" }}>
                     {cliente.folio}
                   </TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>{formatearRut(cliente.rut)}</TableCell>
@@ -158,21 +157,21 @@ export function ListaClientes() {
                   <TableCell>{ETIQUETA_TIPO[cliente.tipo]}</TableCell>
                   <TableCell>
                     <Typography sx={{ fontSize: "inherit" }}>{cliente.email || "—"}</Typography>
-                    <Typography sx={{ fontSize: 12.5, color: tokens.inkFaint }}>
+                    <Typography sx={{ fontSize: 12.5, color: "text.hint" }}>
                       {cliente.telefono}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <EstadoPill
                       etiqueta={cliente.activo ? "Activo" : "Inactivo"}
-                      tono={cliente.activo ? "completo" : "espera"}
+                      tono={cliente.activo ? "completo" : "neutro"}
                     />
                   </TableCell>
                 </TableRow>
               ))}
               {data.results.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} sx={{ py: 5, textAlign: "center", color: tokens.inkSoft }}>
+                  <TableCell colSpan={6} sx={{ py: 5, textAlign: "center", color: "text.secondary" }}>
                     {buscar || tipo
                       ? "No encontramos clientes con esos criterios."
                       : "Aún no hay clientes registrados."}

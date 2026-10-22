@@ -29,7 +29,6 @@ import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
 import { guardarArchivo } from "../../../lib/descargar";
 import { formatearFecha, formatearFechaHora, formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import type { ArchivoDocumento, Documento, TramiteBackoffice } from "../../../types/tramites";
 import { PERMISOS } from "../../auth/permisos";
 import { tienePermiso, useSesion } from "../../auth/useSesion";
@@ -121,7 +120,7 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
         <Link component={RouterLink} to={`/backoffice/clientes/${tramite.cliente.id}`}>
           {tramite.cliente.nombre}
         </Link>{" "}
-        <Typography component="span" sx={{ color: tokens.inkSoft, fontSize: 13 }}>
+        <Typography component="span" sx={{ color: "text.secondary", fontSize: 13 }}>
           {tramite.cliente.codigo} · RUT {tramite.cliente.rut}
         </Typography>
 
@@ -133,12 +132,12 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
               {formatearFecha(contrato.fecha_vencimiento)}
             </Typography>
             {contrato.servicios.map((linea) => (
-              <Typography key={linea.nombre} sx={{ fontSize: 13, color: tokens.inkSoft }}>
+              <Typography key={linea.nombre} sx={{ fontSize: 13, color: "text.secondary" }}>
                 {linea.nombre} · {formatearPesos(Number(linea.precio))} {linea.ciclo_pago.toLowerCase()}
                 {linea.inmueble ? ` · ${linea.inmueble.nombre}: ${linea.inmueble.direccion}` : ""}
               </Typography>
             ))}
-            <Typography sx={{ fontSize: 13, color: tokens.inkSoft }}>
+            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
               Avisos: {contrato.email_aviso} · +56 {contrato.movil_aviso}
             </Typography>
           </>
@@ -149,7 +148,7 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
             <Link component={RouterLink} to={`/backoffice/ventas/${tramite.venta.id}`}>
               {tramite.venta.folio}
             </Link>{" "}
-            <Typography component="span" sx={{ fontSize: 13, color: tokens.inkSoft }}>
+            <Typography component="span" sx={{ fontSize: 13, color: "text.secondary" }}>
               {formatearPesos(Number(tramite.venta.total))} · {tramite.venta.estado.replace("_", " ")}
             </Typography>
           </>
@@ -169,7 +168,7 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
           <SectionHeading texto="Documentos" primera />
           {documentos.isPending && <CircularProgress size={22} aria-label="Cargando documentos" />}
           {documentos.data?.length === 0 && (
-            <Typography sx={{ fontSize: 13, color: tokens.inkSoft }}>Aún no hay documentos.</Typography>
+            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>Aún no hay documentos.</Typography>
           )}
           {documentos.data?.map((documento) => (
             <FilaDocumento
@@ -202,7 +201,7 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
               <TableRow key={`${evento.fecha}-${indice}`}>
                 <TableCell sx={{ whiteSpace: "nowrap" }}>{formatearFechaHora(evento.fecha)}</TableCell>
                 <TableCell>{tituloEvento(evento.estado_nuevo, evento.motivo_nuevo, indice === 0)}</TableCell>
-                <TableCell sx={{ whiteSpace: "pre-line", color: tokens.inkSoft }}>{evento.detalle || "—"}</TableCell>
+                <TableCell sx={{ whiteSpace: "pre-line", color: "text.secondary" }}>{evento.detalle || "—"}</TableCell>
                 <TableCell>{evento.usuario ?? "Sistema"}</TableCell>
               </TableRow>
             ))}
@@ -236,7 +235,7 @@ function Borrador({
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <SectionHeading texto="Borrador para revisar con el cliente" primera />
-      <Box sx={{ border: `1px solid ${tokens.border}`, mb: 2 }}>
+      <Box sx={{ border: 1, borderColor: "divider", mb: 2 }}>
         <VisorPdf
           clave={["tramite", tramite.id, "documento", documentoId, "pdf"]}
           obtener={() => descargarDocumentoBackoffice(tramite.id, documentoId!, "pdf")}
@@ -315,16 +314,16 @@ function FilaDocumento({
   const errorArchivo = erroresDeCampo(subir.error)[0]?.[1];
 
   return (
-    <Box sx={{ py: 1.5, borderBottom: `1px solid ${tokens.border}` }}>
+    <Box sx={{ py: 1.5, borderBottom: 1, borderColor: "divider" }}>
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1.5 }}>
         <Typography sx={{ fontWeight: 600, fontSize: 13.5 }}>
           Versión {documento.version} · {documento.plantilla}
         </Typography>
         <EstadoPill
           etiqueta={ESTADO_DOCUMENTO[documento.estado]}
-          tono={documento.estado === "firmado" ? "completo" : documento.estado === "generado" ? "progreso" : "espera"}
+          tono={documento.estado === "firmado" ? "completo" : documento.estado === "generado" ? "progreso" : "neutro"}
         />
-        <Typography sx={{ fontSize: 12, color: tokens.inkSoft }}>{formatearFechaHora(documento.generado_en)}</Typography>
+        <Typography sx={{ fontSize: 12, color: "text.secondary" }}>{formatearFechaHora(documento.generado_en)}</Typography>
         <Box sx={{ flex: 1 }} />
         <Button size="small" onClick={() => descargar.mutate("pdf")}>
           PDF
@@ -338,11 +337,11 @@ function FilaDocumento({
           </Button>
         )}
       </Box>
-      <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, fontFamily: "monospace", wordBreak: "break-all" }}>
+      <Typography sx={{ fontSize: 11.5, color: "text.hint", fontFamily: "monospace", wordBreak: "break-all" }}>
         SHA-256 PDF {documento.sha256_pdf}
         {documento.sha256_firmado && ` · firmado ${documento.sha256_firmado}`}
       </Typography>
-      <Typography sx={{ fontSize: 12.5, color: tokens.inkSoft, mt: 0.5 }}>
+      <Typography sx={{ fontSize: 12.5, color: "text.secondary", mt: 0.5 }}>
         Firmantes:{" "}
         {documento.firmantes
           .map((f) => `${f.nombre} (${f.rol === "autorizante" ? "autorizante" : "representante"}${f.firmado_en ? ", firmó" : ""})`)

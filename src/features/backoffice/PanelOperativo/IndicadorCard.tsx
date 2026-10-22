@@ -2,9 +2,8 @@ import type { ReactNode } from "react";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 
-import { tokens } from "../../../theme";
-
-const COLOR_DETALLE = { normal: tokens.inkFaint, atencion: tokens.gold };
+/** Detail text colour per tone; the detail text always says what it means. */
+const COLOR_DETALLE = { normal: "text.hint", atencion: "warning.strong", alerta: "error.strong" };
 
 interface IndicadorCardProps {
   etiqueta: string;
@@ -24,9 +23,9 @@ export function IndicadorCard({
 }: IndicadorCardProps) {
   return (
     <Paper component="section" aria-label={etiqueta} sx={{ p: 3 }}>
-      <Typography sx={{ fontSize: 13.5, color: tokens.inkSoft }}>{etiqueta}</Typography>
+      <Typography sx={{ fontSize: 13.5, color: "text.secondary" }}>{etiqueta}</Typography>
       <Typography
-        sx={{ fontFamily: tokens.serif, fontWeight: 600, fontSize: 34, color: tokens.primaryDark, my: 0.5 }}
+        sx={{ fontWeight: 700, fontSize: 34, color: "text.primary", my: 0.5 }}
       >
         {valor}
       </Typography>

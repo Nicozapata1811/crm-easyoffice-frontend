@@ -4,7 +4,6 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 
 import { formatearEntero, formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 
 interface Fila {
   nombre: string;
@@ -26,14 +25,14 @@ export function VentasDesglose({ titulo, filas }: VentasDesgloseProps) {
         {titulo}
       </Typography>
       {filas.length === 0 && (
-        <Typography sx={{ fontSize: 14, color: tokens.inkFaint }}>Sin ventas en el período.</Typography>
+        <Typography sx={{ fontSize: 14, color: "text.hint" }}>Sin ventas en el período.</Typography>
       )}
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2.25 }}>
         {filas.map(({ nombre, monto, cantidad }) => (
           <Box key={nombre}>
             <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, mb: 0.75 }}>
               <Typography sx={{ fontSize: 14 }}>{nombre}</Typography>
-              <Typography sx={{ fontSize: 14, color: tokens.inkSoft, whiteSpace: "nowrap" }}>
+              <Typography sx={{ fontSize: 14, color: "text.secondary", whiteSpace: "nowrap" }}>
                 {formatearPesos(monto)} · {formatearEntero(cantidad)}{" "}
                 {cantidad === 1 ? "venta" : "ventas"}
               </Typography>
@@ -42,7 +41,7 @@ export function VentasDesglose({ titulo, filas }: VentasDesgloseProps) {
               variant="determinate"
               value={(monto / maximo) * 100}
               aria-label={nombre}
-              sx={{ height: 8, borderRadius: 4, bgcolor: tokens.primaryTint }}
+              sx={{ height: 8, borderRadius: 4 }}
             />
           </Box>
         ))}

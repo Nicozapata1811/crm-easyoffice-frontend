@@ -10,7 +10,6 @@ import { Navigate, Link as RouterLink, useParams } from "react-router-dom";
 import { obtenerVenta } from "../../../api/portal";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import { mensajeDePago } from "../Pago/mensajes";
 import { PanelMedioPago } from "../Pago/PanelMedioPago";
 import { useMediosPago } from "../Pago/useMediosPago";
@@ -67,7 +66,7 @@ export function PagarVenta() {
               justifyContent: "space-between",
               fontSize: 15,
               fontWeight: 700,
-              borderTop: `1px solid ${tokens.border}`,
+              borderTop: 1, borderColor: "divider",
               mt: 0.75,
               pt: 1.75,
             }}

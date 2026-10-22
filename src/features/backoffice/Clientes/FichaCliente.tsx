@@ -17,7 +17,6 @@ import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
 import { formatearFecha, formatearFechaHora } from "../../../lib/formato";
 import { formatearRut } from "../../../lib/rut";
-import { tokens } from "../../../theme";
 import type { FichaCliente as Ficha } from "../../../types/cliente";
 import { PERMISOS } from "../../auth/permisos";
 import { tienePermiso, useSesion } from "../../auth/useSesion";
@@ -69,7 +68,7 @@ export function FichaCliente() {
           <SectionHeading texto="Datos del cliente" primera />
           <EstadoPill
             etiqueta={ficha.activo ? "Activo" : "Inactivo"}
-            tono={ficha.activo ? "completo" : "espera"}
+            tono={ficha.activo ? "completo" : "neutro"}
           />
         </Box>
         <Datos filas={filasDe(ficha)} />
@@ -79,7 +78,7 @@ export function FichaCliente() {
         <Paper component="section" aria-label="Representantes legales" sx={{ p: 4, mb: 3 }}>
           <SectionHeading texto="Representantes legales" primera />
           {ficha.representantes.length === 0 ? (
-            <Typography sx={{ color: tokens.inkSoft }}>Sin representantes registrados.</Typography>
+            <Typography sx={{ color: "text.secondary" }}>Sin representantes registrados.</Typography>
           ) : (
             <Table size="small">
               <TableHead>
@@ -113,7 +112,7 @@ export function FichaCliente() {
 
       <Paper component="section" aria-label="Servicios, documentos e historial" sx={{ p: 4 }}>
         <SectionHeading texto="Servicios, documentos e historial" primera />
-        <Typography sx={{ color: tokens.inkSoft }}>
+        <Typography sx={{ color: "text.secondary" }}>
           Aparecerán aquí cuando el sistema registre servicios contratados (HU-48), documentos y
           el historial de cambios (RF-15).
         </Typography>
@@ -132,7 +131,7 @@ function Datos({ filas }: { filas: [string, string][] }) {
         columnGap: 3,
         rowGap: 1.25,
         m: 0,
-        "& dt": { color: tokens.inkSoft, fontSize: 14 },
+        "& dt": { color: "text.secondary", fontSize: 14 },
         "& dd": { m: 0, mb: { xs: 1, sm: 0 } },
       }}
     >

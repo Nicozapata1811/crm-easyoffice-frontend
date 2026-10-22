@@ -7,7 +7,6 @@ import TextField, { type TextFieldProps } from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { type FieldValues, type Path, useFormContext } from "react-hook-form";
 
-import { tokens } from "../../../theme";
 
 /** Two columns from the small breakpoint on, as the request forms lay out. */
 export function Grilla({ children }: { children: ReactNode }) {
@@ -39,7 +38,7 @@ export function Opcion({
         label={
           <Box>
             <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>{titulo}</Typography>
-            <Typography sx={{ fontSize: 12.5, color: tokens.inkSoft }}>{detalle}</Typography>
+            <Typography sx={{ fontSize: 12.5, color: "text.secondary" }}>{detalle}</Typography>
           </Box>
         }
         sx={{ width: "100%", m: 0 }}

@@ -4,7 +4,6 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 
 import { SectionHeading } from "../../../components/SectionHeading";
-import { tokens } from "../../../theme";
 import { SelectorMedioPago } from "./SelectorMedioPago";
 import type { useMediosPago } from "./useMediosPago";
 
@@ -24,7 +23,7 @@ export function PanelMedioPago({ medios, elegido, elegir }: ReturnType<typeof us
       {medios.data && medios.data.length > 0 && (
         <SelectorMedioPago medios={medios.data} elegido={elegido} onElegir={elegir} />
       )}
-      <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 2.25 }}>
+      <Typography sx={{ fontSize: 11.5, color: "text.hint", mt: 2.25 }}>
         Ambiente de prueba · no se realiza ningún cobro real. El pago se hace en la página segura
         del medio elegido; Easy Office no recibe los datos de tu tarjeta.
       </Typography>

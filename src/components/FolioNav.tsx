@@ -8,8 +8,6 @@
 
 import Box from "@mui/material/Box";
 
-import { tokens } from "../theme";
-
 const PASOS = [
   "Catálogo",
   "Formulario",
@@ -28,7 +26,7 @@ export function FolioNav({ pasoActual }: FolioNavProps) {
     <Box
       component="nav"
       sx={{
-        bgcolor: tokens.primaryDark,
+        bgcolor: "dark.background",
         display: "flex",
         px: { xs: 2, md: 4 },
         overflowX: "auto",
@@ -52,8 +50,8 @@ export function FolioNav({ pasoActual }: FolioNavProps) {
               alignItems: "center",
               gap: 1,
               borderBottom: "2px solid",
-              borderBottomColor: current ? tokens.gold : "transparent",
-              color: current ? "#fff" : done ? "#CFE0D5" : "#8FA398",
+              borderBottomColor: current ? "primary.main" : "transparent",
+              color: current ? "dark.text" : done ? "dark.done" : "dark.upcoming",
             }}
           >
             <Box
@@ -66,10 +64,10 @@ export function FolioNav({ pasoActual }: FolioNavProps) {
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: 10.5,
-                fontFamily: tokens.serif,
-                bgcolor: done ? tokens.gold : "transparent",
-                borderColor: done ? tokens.gold : current ? "#fff" : "#567362",
-                color: done ? "#3A2E0C" : current ? "#fff" : "inherit",
+                fontWeight: 600,
+                bgcolor: done ? "primary.main" : "transparent",
+                borderColor: done ? "primary.main" : current ? "dark.text" : "dark.upcoming",
+                color: done ? "primary.contrastText" : current ? "dark.text" : "inherit",
               }}
             >
               {done ? "✓" : numero}

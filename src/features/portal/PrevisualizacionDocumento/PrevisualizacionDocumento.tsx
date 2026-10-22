@@ -16,7 +16,6 @@ import {
 import { PageHeading } from "../../../components/PageHeading";
 import { guardarArchivo } from "../../../lib/descargar";
 import { formatearFecha, formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import type { Documento, Tramite } from "../../../types/tramites";
 import { codigoDeConflicto } from "../../tramites/errores";
 import { bodegaDe, esBodega } from "../../tramites/contrato";
@@ -55,7 +54,7 @@ export function PrevisualizacionDocumento() {
     return (
       <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, py: 10 }}>
         <CircularProgress aria-label="Generando el borrador" />
-        <Typography sx={{ color: tokens.inkSoft }}>Estamos generando el borrador de tu contrato…</Typography>
+        <Typography sx={{ color: "text.secondary" }}>Estamos generando el borrador de tu contrato…</Typography>
       </Box>
     );
   }
@@ -120,7 +119,7 @@ function Borrador({
             Resumen
           </Typography>
           {contrato && (
-            <Box component="dl" sx={{ m: 0, fontSize: 13, "& dt": { color: tokens.inkSoft, mt: 1.25 }, "& dd": { m: 0 } }}>
+            <Box component="dl" sx={{ m: 0, fontSize: 13, "& dt": { color: "text.secondary", mt: 1.25 }, "& dd": { m: 0 } }}>
               <dt>Contrato</dt>
               <dd>{contrato.folio}</dd>
               <dt>Servicio</dt>
@@ -153,13 +152,13 @@ function Borrador({
           )}
           {documento && (
             <>
-              <Typography sx={{ fontSize: 13, color: tokens.inkSoft, mt: 2 }}>Firmarán</Typography>
+              <Typography sx={{ fontSize: 13, color: "text.secondary", mt: 2 }}>Firmarán</Typography>
               {documento.firmantes.map((firmante) => (
                 <Typography key={firmante.orden} sx={{ fontSize: 13 }}>
                   {firmante.nombre} — {rolFirmante(firmante.rol, tramite)}
                 </Typography>
               ))}
-              <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 1.5 }}>
+              <Typography sx={{ fontSize: 11.5, color: "text.hint", mt: 1.5 }}>
                 Versión {documento.version}. El total a pagar aparece en el siguiente paso.
               </Typography>
             </>

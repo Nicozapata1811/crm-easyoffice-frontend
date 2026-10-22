@@ -11,7 +11,6 @@ import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearEntero, formatearFecha, formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import { dashboardService } from "./dashboardService";
 import { IndicadorCard } from "./IndicadorCard";
 import { PERIODOS, resolverPeriodo, type PeriodoId } from "./periodos";
@@ -116,6 +115,7 @@ export function PanelOperativo() {
               etiqueta="Servicios vencidos"
               valor={formatearEntero(data.servicios.vencidos)}
               detalle={al}
+              tono="alerta"
             />
             <IndicadorCard
               etiqueta="Ventas totales"
@@ -142,7 +142,7 @@ export function PanelOperativo() {
                         justifyContent: "space-between",
                         gap: 1,
                         fontSize: 12.5,
-                        color: tokens.inkSoft,
+                        color: "text.secondary",
                       }}
                     >
                       <span>{nombre}</span>
@@ -175,7 +175,7 @@ export function PanelOperativo() {
               }))}
             />
           </Box>
-          <Typography sx={{ mt: 1.5, fontSize: 12.5, color: tokens.inkFaint }}>{NOTA_VENTAS}</Typography>
+          <Typography sx={{ mt: 1.5, fontSize: 12.5, color: "text.hint" }}>{NOTA_VENTAS}</Typography>
         </>
       )}
     </Box>

@@ -10,7 +10,6 @@ import { Link as RouterLink, useParams } from "react-router-dom";
 import { obtenerTramite } from "../../../api/tramites";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import { mensajeDePago } from "../Pago/mensajes";
 import { PanelMedioPago } from "../Pago/PanelMedioPago";
 import { useMediosPago } from "../Pago/useMediosPago";
@@ -76,7 +75,7 @@ export function ConfirmacionPago() {
               justifyContent: "space-between",
               fontSize: 15,
               fontWeight: 700,
-              borderTop: `1px solid ${tokens.border}`,
+              borderTop: 1, borderColor: "divider",
               mt: 0.75,
               pt: 1.75,
             }}
@@ -84,7 +83,7 @@ export function ConfirmacionPago() {
             <span>Total</span>
             <span>{formatearPesos(Number(venta.total))}</span>
           </Box>
-          <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 1.5, lineHeight: 1.5 }}>
+          <Typography sx={{ fontSize: 11.5, color: "text.hint", mt: 1.5, lineHeight: 1.5 }}>
             Valores de ejemplo. Easy Office aún no confirma los precios.
           </Typography>
 

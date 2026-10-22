@@ -2,7 +2,6 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { KeyboardEvent } from "react";
 
-import { tokens } from "../../../theme";
 import type { MedioPago } from "../../../types/ventas";
 import { LOGO_MEDIO_PAGO } from "./logos";
 
@@ -40,9 +39,9 @@ export function SelectorMedioPago({ medios, elegido, onElegir }: SelectorMedioPa
             onKeyDown={(event) => moverCon(event, indice)}
             sx={{
               border: "1px solid",
-              borderColor: activo ? tokens.primary : tokens.borderStrong,
-              bgcolor: activo ? tokens.primaryTint : "transparent",
-              borderRadius: "3px",
+              borderColor: activo ? "primary.strong" : "inputBorder",
+              bgcolor: activo ? "primary.soft" : "transparent",
+              borderRadius: 1,
               px: 2,
               py: 1.75,
               display: "flex",
@@ -65,7 +64,7 @@ export function SelectorMedioPago({ medios, elegido, onElegir }: SelectorMedioPa
                   <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>{medio.nombre}</Typography>
                 )}
               </Box>
-              <Typography sx={{ fontSize: 11.8, color: tokens.inkSoft, mt: 0.25 }}>
+              <Typography sx={{ fontSize: 11.8, color: "text.secondary", mt: 0.25 }}>
                 {medio.descripcion}
               </Typography>
             </Box>
@@ -76,8 +75,9 @@ export function SelectorMedioPago({ medios, elegido, onElegir }: SelectorMedioPa
                 borderRadius: "50%",
                 flex: "none",
                 border: "1.5px solid",
-                borderColor: activo ? tokens.primary : tokens.borderStrong,
-                background: activo ? `radial-gradient(circle, ${tokens.primary} 0 5px, transparent 6px)` : "none",
+                borderColor: activo ? "primary.strong" : "inputBorder",
+                background: (theme) =>
+                  activo ? `radial-gradient(circle, ${theme.palette.primary.strong} 0 5px, transparent 6px)` : "none",
               }}
             />
           </Box>
