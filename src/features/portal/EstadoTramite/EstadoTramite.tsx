@@ -1,10 +1,8 @@
-import { useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link as RouterLink, useParams } from "react-router-dom";
@@ -24,7 +22,7 @@ import { formatearFecha, formatearFechaHora } from "../../../lib/formato";
 import { tokens } from "../../../theme";
 import type { Tramite } from "../../../types/tramites";
 import { etiquetaCliente, tituloEvento } from "../../tramites/estados";
-import { erroresDeCampo } from "../../tramites/errores";
+import { FormularioNuevaFecha } from "../../tramites/FormularioNuevaFecha";
 
 const CONSULTAR_CADA_MS = 4000;
 
@@ -176,44 +174,13 @@ function NuevaFecha({ tramite }: { tramite: Tramite }) {
     queryKey: ["portal", "tramites", "formulario-domicilio"],
     queryFn: ({ signal }) => obtenerFormularioDomicilio(signal),
   });
-  const [fecha, setFecha] = useState("");
-  const cambiar = useMutation({
-    mutationFn: () => cambiarFechaInicio(tramite.id, fecha),
-    onSuccess: (actualizado) => queryClient.setQueryData(["portal", "tramites", tramite.id], actualizado),
-  });
-  const errorFecha = erroresDeCampo(cambiar.error).find(([ruta]) => ruta === "fecha_inicio")?.[1];
-
   return (
-    <Box
-      component="form"
-      sx={{ display: "flex", gap: 1.5, alignItems: "flex-start", mt: 2, flexWrap: "wrap" }}
-      onSubmit={(event) => {
-        event.preventDefault();
-        cambiar.mutate();
-      }}
-    >
-      <TextField
-        type="date"
-        size="small"
-        label="Nueva fecha de inicio"
-        value={fecha}
-        onChange={(event) => setFecha(event.target.value)}
-        error={Boolean(errorFecha)}
-        helperText={errorFecha ?? " "}
-        slotProps={{
-          inputLabel: { shrink: true },
-          htmlInput: { min: limites.data?.fecha_min, max: limites.data?.fecha_max },
-        }}
-      />
-      <Button type="submit" variant="contained" disabled={!fecha || cambiar.isPending}>
-        Guardar fecha
-      </Button>
-      {cambiar.isError && !errorFecha && (
-        <Alert severity="error" sx={{ width: "100%" }}>
-          No pudimos guardar la fecha. Intenta nuevamente.
-        </Alert>
-      )}
-    </Box>
+    <FormularioNuevaFecha
+      fechaMin={limites.data?.fecha_min}
+      fechaMax={limites.data?.fecha_max}
+      guardar={(fecha) => cambiarFechaInicio(tramite.id, fecha)}
+      alGuardar={(actualizado: Tramite) => queryClient.setQueryData(["portal", "tramites", tramite.id], actualizado)}
+    />
   );
 }
 
