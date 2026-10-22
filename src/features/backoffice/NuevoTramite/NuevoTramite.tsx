@@ -33,8 +33,10 @@ import type { FormularioTramite, TramiteBackoffice } from "../../../types/tramit
 import { codigoDeConflicto, erroresDeCampo } from "../../tramites/errores";
 import { CampoTexto, Grilla, Opcion } from "../../tramites/formulario/campos";
 import { SeccionesContratante } from "../../tramites/formulario/SeccionesContratante";
+import { SelectorPlan } from "../../tramites/formulario/selectores";
 import {
   aSolicitudTramite,
+  conPlanes,
   crearTramiteSchema,
   ROLES,
   rolesDe,
@@ -190,7 +192,8 @@ function Contenido({
     defaultValues: valoresIniciales(formulario, tramite),
   });
   const { control, handleSubmit, setError } = form;
-  const roles = rolesDe(formulario);
+  const roles = rolesDe(formulario.inmuebles);
+  const planes = conPlanes(formulario);
 
   const enviar = useMutation({
     mutationFn: (datos: TramiteForm) => {
@@ -212,7 +215,14 @@ function Contenido({
       }
     },
   });
-  const camposDelFormulario = new Set(["fecha_inicio", "duracion_meses", "email_aviso", "movil_aviso", ...roles]);
+  const camposDelFormulario = new Set([
+    "fecha_inicio",
+    "duracion_meses",
+    "plan",
+    "email_aviso",
+    "movil_aviso",
+    ...roles,
+  ]);
   const erroresGenerales = erroresDeCampo(enviar.error).filter(
     ([ruta]) => !camposDelFormulario.has(ruta) && !/^(empresa|representante|personeria)\./.test(ruta),
   );
@@ -271,8 +281,10 @@ function Contenido({
             />
           ))}
 
-          <SectionHeading texto="Servicios" />
-          {formulario.lineas.map((linea, indice) => (
+          {planes && <SelectorPlan<TramiteEntrada> planes={formulario.planes} />}
+
+          {!planes && <SectionHeading texto="Servicios" />}
+          {!planes && formulario.lineas.map((linea, indice) => (
             <Box key={linea.servicio} sx={{ mb: 1.5 }}>
               <Typography sx={{ fontSize: 13.5, fontWeight: 600 }}>{linea.nombre}</Typography>
               <Grilla>
@@ -315,26 +327,28 @@ function Contenido({
           ))}
 
           <Grilla>
-            <Controller
-              control={control}
-              name="duracion_meses"
-              render={({ field, fieldState }) => (
-                <TextField
-                  select
-                  label="Duración"
-                  size="small"
-                  {...field}
-                  error={Boolean(fieldState.error)}
-                  helperText={fieldState.error?.message ?? "Se renueva automáticamente por igual período."}
-                >
-                  {formulario.duraciones.map((meses) => (
-                    <MenuItem key={meses} value={String(meses)}>
-                      {meses} {meses === 1 ? "mes" : "meses"}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              )}
-            />
+            {!planes && (
+              <Controller
+                control={control}
+                name="duracion_meses"
+                render={({ field, fieldState }) => (
+                  <TextField
+                    select
+                    label="Duración"
+                    size="small"
+                    {...field}
+                    error={Boolean(fieldState.error)}
+                    helperText={fieldState.error?.message ?? "Se renueva automáticamente por igual período."}
+                  >
+                    {formulario.duraciones.map((meses) => (
+                      <MenuItem key={meses} value={String(meses)}>
+                        {meses} {meses === 1 ? "mes" : "meses"}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
+            )}
             <CampoTexto<TramiteEntrada>
               nombre="fecha_inicio"
               etiqueta="Fecha de inicio del contrato"

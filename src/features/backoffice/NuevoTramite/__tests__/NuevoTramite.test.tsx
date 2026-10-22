@@ -12,7 +12,7 @@ import {
   obtenerFormularioTramite,
   obtenerTramiteBackoffice,
 } from "../../../../api/tramites";
-import { FORMULARIO_BODEGA, TRAMITE_BODEGA } from "../../../tramites/__tests__/fixtures";
+import { FORMULARIO_BODEGA, FORMULARIO_BODEGA_PLANES, TRAMITE_BODEGA } from "../../../tramites/__tests__/fixtures";
 import { renderEn } from "../../Clientes/__tests__/renderConSesion";
 import { NuevoTramite } from "../NuevoTramite";
 
@@ -159,5 +159,24 @@ describe("NuevoTramite", () => {
       8,
       expect.objectContaining({ bodega: 10, duracion_meses: 6 }),
     );
+  });
+
+  it("picks a plan instead of a term and prices when the type is sold by plan", async () => {
+    vi.mocked(obtenerFormularioTramite).mockResolvedValue(FORMULARIO_BODEGA_PLANES);
+    vi.mocked(crearTramiteBackoffice).mockResolvedValue(TRAMITE_BODEGA);
+    const user = userEvent.setup();
+    renderNuevo();
+    await elegirEmpresa(user);
+
+    expect(screen.queryByLabelText("Precio acordado")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Duración")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: /Bodega de Ejemplo Costa/ }));
+    await user.click(screen.getByRole("radio", { name: /Plan trimestral/ }));
+    await user.click(screen.getByRole("button", { name: "Generar el borrador del contrato" }));
+
+    const solicitud = vi.mocked(crearTramiteBackoffice).mock.calls[0][0];
+    expect(solicitud).toMatchObject({ tipo: "bodega", cliente: 41, plan: "trimestral", bodega: 10 });
+    expect(solicitud).not.toHaveProperty("lineas");
+    expect(solicitud).not.toHaveProperty("duracion_meses");
   });
 });
