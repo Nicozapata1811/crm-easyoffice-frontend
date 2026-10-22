@@ -1,9 +1,12 @@
 /**
- * The Easy Office wordmark, shared by both shells. This is the logo slot.
+ * The Easy Office mark, shared by both shells: the "eo" symbol and the name.
  *
- * ASSUMPTION: pending validation with Easy Office. A text wordmark until the
- * official logo arrives (TA-06); then replace the monogram and the name here
- * with `<Box component="img" src="/marca/logo.svg" alt="Easy Office" />`.
+ * The symbol (`public/marca/isotipo.png`) is cut from the logo the team
+ * provided; at header height the logo's own lettering would be unreadable,
+ * so the name is set as text beside it.
+ *
+ * ASSUMPTION: pending validation with Easy Office. The logo came as a small
+ * bitmap; ask for the official vector file (TA-06) and swap it in here.
  */
 
 import Box from "@mui/material/Box";
@@ -14,23 +17,8 @@ export function Marca({ contexto }: { contexto?: string }) {
       component="span"
       sx={{ display: "flex", alignItems: "center", gap: 1.125, fontWeight: 700, fontSize: 18, color: "text.primary" }}
     >
-      <Box
-        aria-hidden
-        component="span"
-        sx={{
-          width: 26,
-          height: 26,
-          borderRadius: 1,
-          bgcolor: "primary.main",
-          color: "primary.contrastText",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 11.5,
-        }}
-      >
-        EO
-      </Box>
+      {/* Decorative: the name next to it already says "Easy Office". */}
+      <Box component="img" src="/marca/isotipo.png" alt="" sx={{ height: 28, width: "auto", display: "block" }} />
       Easy Office
       {contexto && (
         <Box component="span" sx={{ fontWeight: 500, color: "text.secondary" }}>
