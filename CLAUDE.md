@@ -160,12 +160,36 @@ until Easy Office picks one).
 - **Mis trámites** lists the client's cases; the landing counts those in
   course for a logged-in client.
 
+**Warehouse case (PLT-02)** (`features/backoffice/NuevoTramite/`): an
+executive starts it for a company client.
+- Entry point: `/backoffice/tramites/nuevo/:tipo`, from the "Nuevo trámite"
+  buttons that `GET /api/tramites/tipos/` lists. Guard:
+  `tramites.iniciar_tramite`.
+- Steps: pick the company, then the form `GET /api/tramites/formulario/`
+  describes:
+  - the shared contracting-party sections;
+  - one property per role (`sucursal`, `bodega`);
+  - each line's cycle, and its agreed price when it has no list price;
+  - duration and start date.
+- `/backoffice/tramites/:id/editar` reuses the same screen
+  (`tramites.gestionar_tramite`).
+- Missing data: staff see the backend's `problemas`.
+
+The pieces both request forms share live in `features/tramites/`:
+`formulario/SeccionesContratante` (through `FormProvider`), `CampoTexto`,
+`Grilla`, `Opcion`, `formulario/schema.ts` (`camposContratante`,
+`aContratante`), `VisorPdf` and `FormularioNuevaFecha`.
+
 **Trámites** (`features/backoffice/Tramites/`, `DetalleTramite`): list with
 search and filters by state and pending reason, and the case detail: client,
 contract, sale, pending reason with the internal detail, document versions
 with PDF/Word downloads and their SHA-256, the upload of the signed PDF
 (assisted signature), retrying a document after completing missing data, and
-the history. Guards: `tramites.view_tramite`, `documentos.view_documento`,
+the history. It lists every contract line. For a case started in the
+backoffice (`canal`), the executive:
+- previews the draft (`VisorPdf`);
+- records the client's confirmation, or edits the data;
+- sets a new start date when the chosen one passed. Guards: `tramites.view_tramite`, `documentos.view_documento`,
 `documentos.subir_documento_firmado`, `tramites.gestionar_tramite`.
 
 Still to build: **case type configuration** — the screen that makes the
