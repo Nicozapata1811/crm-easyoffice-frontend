@@ -126,11 +126,6 @@ export function CatalogoServicios() {
               <TarjetaServicio key={servicio.codigo} servicio={servicio} />
             ))}
           </Box>
-          {preciosDeEjemplo && (
-            <Typography sx={{ fontSize: 11.5, color: "text.hint", mt: 2, lineHeight: 1.5 }}>
-              Valores de ejemplo. Easy Office aún no confirma los precios.
-            </Typography>
-          )}
         </>
       )}
 
