@@ -25,6 +25,7 @@ import { FichaCliente } from "../features/backoffice/Clientes/FichaCliente";
 import { FormularioCliente } from "../features/backoffice/Clientes/FormularioCliente";
 import { ListaClientes } from "../features/backoffice/Clientes/ListaClientes";
 import { DetalleTramite } from "../features/backoffice/DetalleTramite/DetalleTramite";
+import { NuevoTramite } from "../features/backoffice/NuevoTramite/NuevoTramite";
 import { ListaTramites } from "../features/backoffice/Tramites/ListaTramites";
 import { TiposTramite } from "../features/backoffice/TiposTramite/TiposTramite";
 import { DetalleVenta } from "../features/backoffice/Ventas/DetalleVenta";
@@ -185,10 +186,26 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "tramites/nuevo/:tipo",
+        element: (
+          <RequirePermission permiso={PERMISOS.iniciarTramites}>
+            <NuevoTramite />
+          </RequirePermission>
+        ),
+      },
+      {
         path: "tramites/:tramiteId",
         element: (
           <RequirePermission permiso={PERMISOS.verTramites}>
             <DetalleTramite />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: "tramites/:tramiteId/editar",
+        element: (
+          <RequirePermission permiso={PERMISOS.gestionarTramites}>
+            <NuevoTramite />
           </RequirePermission>
         ),
       },
