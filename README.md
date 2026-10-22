@@ -269,8 +269,18 @@ trabajar, el backend carga clientes ficticios con `seed_demo_clientes`.
 
 ## Trámite de bodega (PLT-02)
 
-El contrato de bodega no se vende en el portal: lo inicia un ejecutivo con el
-permiso `tramites.iniciar_tramite`.
+El contrato de bodega se vende por plan: anual (12 meses), semestral (6) y
+trimestral (3), cada uno a $59.990 con la firma electrónica avanzada incluida.
+Son valores de ejemplo hasta que Easy Office confirme sus precios.
+
+- **Portal.** La tarjeta "Bodega" del catálogo lleva a
+  `/tramites/bodega/nuevo`. El formulario usa las mismas secciones que el
+  domicilio tributario; el cliente elige la sucursal, la bodega, el plan y la
+  fecha de inicio. Luego revisa el borrador, lo confirma y paga, igual que en
+  el domicilio. Solo empresas.
+
+En el backoffice, un ejecutivo con el permiso `tramites.iniciar_tramite`
+también puede iniciarlo para un cliente:
 
 - **Inicio.** El listado de trámites muestra un botón "Nuevo trámite" por cada
   tipo que se inicia en el backoffice. Lleva a
@@ -278,9 +288,7 @@ permiso `tramites.iniciar_tramite`.
 - **Formulario.** Usa las mismas secciones que el domicilio tributario
   (empresa, representante legal, personería y contacto), precargadas con los
   registros del cliente. Se elige la sucursal y la bodega entre las que el
-  backend ofrece completas. Para cada servicio se elige el ciclo de pago, y el
-  precio acordado cuando el servicio no tiene precio de lista. Luego la
-  duración y la fecha de inicio.
+  backend ofrece completas, el plan y la fecha de inicio.
 - **Si falta algo.** Si el trámite no se puede iniciar, la pantalla lista lo
   que falta, para completarlo en el panel de administración.
 - **Detalle.** En el detalle del trámite, el ejecutivo ve el borrador real,
@@ -322,6 +330,9 @@ Contrato definido por el backend y documentado también en su README.
 | `PUT /api/tramites/{id}/` | Editar la solicitud antes de la firma |
 | `POST /api/tramites/{id}/confirmar/` | El cliente confirmó el borrador |
 | `POST /api/tramites/{id}/fecha-inicio/` | Nueva fecha de inicio |
+| `GET /api/portal/tramites/formulario/?tipo=bodega` | Formulario de la bodega en el portal |
+| `POST /api/portal/tramites/` | Solicitar la bodega con el plan elegido |
+| `PUT /api/portal/tramites/{id}/` | Editar la solicitud antes del pago |
 
 Las respuestas están tipadas en `src/types/panel.ts`, `src/types/cliente.ts` y
 `src/types/ventas.ts` con las mismas claves que documenta el backend.
