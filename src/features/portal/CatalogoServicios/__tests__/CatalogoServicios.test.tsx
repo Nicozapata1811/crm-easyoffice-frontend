@@ -122,6 +122,23 @@ describe("CatalogoServicios", () => {
     expect(router.state.location.pathname).toBe("/tramites/domicilio-tributario/nuevo");
   });
 
+  it("makes the bodega card bookable once the backend sells it", async () => {
+    vi.mocked(listarServicios).mockResolvedValue([
+      servicio({
+        codigo: "bodega",
+        nombre: "Bodega",
+        precio_base: "59990",
+        ciclo_pago_default: "anual",
+        se_vende_en_portal: true,
+      }),
+    ]);
+    renderCatalogo();
+
+    await screen.findByRole("heading", { name: "Bodega" });
+    expect(within(tarjeta("Bodega")).getByText("Disponible ahora")).toBeInTheDocument();
+    expect(tarjeta("Bodega").closest("a")).toHaveAttribute("href", "/tramites/bodega/nuevo");
+  });
+
   it("shows a bookable service without a route as coming soon and warns", async () => {
     const aviso = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     vi.mocked(listarServicios).mockResolvedValue([

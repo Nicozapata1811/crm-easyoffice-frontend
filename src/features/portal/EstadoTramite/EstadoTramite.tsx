@@ -11,7 +11,7 @@ import {
   cambiarFechaInicio,
   descargarDocumento,
   listarDocumentos,
-  obtenerFormularioDomicilio,
+  obtenerFormularioPortal,
   obtenerTramite,
 } from "../../../api/tramites";
 import { EstadoPill } from "../../../components/EstadoPill";
@@ -21,6 +21,7 @@ import { guardarArchivo } from "../../../lib/descargar";
 import { formatearFecha, formatearFechaHora } from "../../../lib/formato";
 import { tokens } from "../../../theme";
 import type { Tramite } from "../../../types/tramites";
+import { esBodega } from "../../tramites/contrato";
 import { etiquetaCliente, tituloEvento } from "../../tramites/estados";
 import { FormularioNuevaFecha } from "../../tramites/FormularioNuevaFecha";
 
@@ -112,9 +113,11 @@ export function EstadoTramite() {
       {contrato && (
         <Paper sx={{ p: 3.25, mb: 2.5 }}>
           <SectionHeading texto="Contrato" primera />
-          <Typography sx={{ fontSize: 13 }}>
-            {contrato.servicio} en {contrato.sucursal?.direccion ?? "—"}
-          </Typography>
+          {contrato.servicios.map((linea) => (
+            <Typography key={linea.nombre} sx={{ fontSize: 13 }}>
+              {linea.nombre} en {linea.inmueble?.direccion ?? "—"}
+            </Typography>
+          ))}
           <Typography sx={{ fontSize: 13, color: tokens.inkSoft }}>
             Vigencia: {formatearFecha(contrato.fecha_inicio)} al {formatearFecha(contrato.fecha_vencimiento)}
           </Typography>
@@ -131,7 +134,11 @@ export function EstadoTramite() {
             >
               <span>
                 {firmante.nombre} —{" "}
-                {firmante.rol === "cliente_representante" ? "Representante legal" : "Propietario de la oficina"}
+                {firmante.rol === "cliente_representante"
+                  ? "Representante legal"
+                  : esBodega(datos)
+                    ? "Propietario de la bodega"
+                    : "Propietario de la oficina"}
               </span>
               <EstadoPill
                 etiqueta={firmante.firmado_en ? "Firmado" : "Pendiente"}
@@ -171,8 +178,8 @@ function Acciones({ tramite }: { tramite: Tramite }) {
 function NuevaFecha({ tramite }: { tramite: Tramite }) {
   const queryClient = useQueryClient();
   const limites = useQuery({
-    queryKey: ["portal", "tramites", "formulario-domicilio"],
-    queryFn: ({ signal }) => obtenerFormularioDomicilio(signal),
+    queryKey: ["portal", "tramites", "formulario", tramite.tipo_codigo],
+    queryFn: ({ signal }) => obtenerFormularioPortal(tramite.tipo_codigo, signal),
   });
   return (
     <FormularioNuevaFecha

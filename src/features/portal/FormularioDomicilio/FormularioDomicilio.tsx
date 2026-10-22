@@ -3,13 +3,11 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import FormHelperText from "@mui/material/FormHelperText";
 import Paper from "@mui/material/Paper";
-import RadioGroup from "@mui/material/RadioGroup";
 import Typography from "@mui/material/Typography";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Controller, type FieldPath, FormProvider, useForm } from "react-hook-form";
+import { type FieldPath, FormProvider, useForm } from "react-hook-form";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -20,13 +18,13 @@ import {
 } from "../../../api/tramites";
 import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
-import { formatearPesos } from "../../../lib/formato";
 import { tokens } from "../../../theme";
 import type { FormularioDomicilio as Formulario, Tramite } from "../../../types/tramites";
 import { codigoDeConflicto, erroresDeCampo } from "../../tramites/errores";
-import { CampoTexto, Grilla, Opcion } from "../../tramites/formulario/campos";
+import { CampoTexto, Grilla } from "../../tramites/formulario/campos";
 import { contratanteInicial } from "../../tramites/formulario/schema";
 import { SeccionesContratante } from "../../tramites/formulario/SeccionesContratante";
+import { SelectorInmueble, SelectorPlan } from "../../tramites/formulario/selectores";
 import { aSolicitud, crearDomicilioSchema, type DomicilioEntrada, type DomicilioForm } from "./schema";
 
 /**
@@ -106,7 +104,7 @@ function Contenido({ formulario, tramite }: { formulario: Formulario; tramite?: 
     mode: "onBlur",
     defaultValues: valoresIniciales(formulario, tramite),
   });
-  const { control, handleSubmit, setError } = form;
+  const { handleSubmit, setError } = form;
 
   const enviar = useMutation({
     mutationFn: (form: DomicilioForm) =>
@@ -142,65 +140,19 @@ function Contenido({ formulario, tramite }: { formulario: Formulario; tramite?: 
         />
 
         <SectionHeading texto="Contratación" />
-        <Controller
-          control={control}
-          name="sucursal"
-          render={({ field, fieldState }) => (
-            <Box sx={{ mb: 2.5 }}>
-              <Typography sx={{ fontSize: 13.5, fontWeight: 600, mb: 1 }} id="etiqueta-sucursal">
-                Sucursal de Easy Office
-              </Typography>
-              <RadioGroup aria-labelledby="etiqueta-sucursal" {...field}>
-                {formulario.sucursales.map((sucursal) => (
-                  <Opcion
-                    key={sucursal.id}
-                    value={String(sucursal.id)}
-                    deshabilitada={Boolean(tramite) && String(sucursal.id) !== field.value}
-                    titulo={sucursal.nombre}
-                    detalle={`${sucursal.direccion} · ${sucursal.region}`}
-                  />
-                ))}
-              </RadioGroup>
-              <FormHelperText error={Boolean(fieldState.error)}>
-                {fieldState.error?.message ??
-                  (tramite
-                    ? "La sucursal no se puede cambiar en una solicitud ya creada."
-                    : "Tu domicilio tributario queda en la dirección de la sucursal que elijas.")}
-              </FormHelperText>
-            </Box>
-          )}
+        <SelectorInmueble<DomicilioEntrada>
+          nombre="sucursal"
+          id="sucursal"
+          titulo="Sucursal de Easy Office"
+          opciones={formulario.sucursales}
+          bloqueado={Boolean(tramite)}
+          ayuda={
+            tramite
+              ? "La sucursal no se puede cambiar en una solicitud ya creada."
+              : "Tu domicilio tributario queda en la dirección de la sucursal que elijas."
+          }
         />
-        <Controller
-          control={control}
-          name="plan"
-          render={({ field, fieldState }) => (
-            <Box sx={{ mb: 2.5 }}>
-              <Typography sx={{ fontSize: 13.5, fontWeight: 600, mb: 1 }} id="etiqueta-plan">
-                Plan
-              </Typography>
-              <RadioGroup aria-labelledby="etiqueta-plan" {...field}>
-                {formulario.planes.map((plan) => (
-                  <Opcion
-                    key={plan.codigo}
-                    value={plan.codigo}
-                    titulo={`${plan.nombre} · ${formatearPesos(Number(plan.precio))}`}
-                    detalle={`${plan.duracion_meses} meses, pago ${plan.ciclo_pago.toLowerCase()}. ${
-                      plan.firma_incluida
-                        ? "Incluye la firma electrónica avanzada del contrato."
-                        : plan.precio_firma
-                          ? `La firma electrónica avanzada se cobra aparte: ${formatearPesos(Number(plan.precio_firma))}.`
-                          : "La firma electrónica avanzada se cobra aparte."
-                    }`}
-                  />
-                ))}
-              </RadioGroup>
-              <FormHelperText error={Boolean(fieldState.error)}>
-                {fieldState.error?.message ??
-                  "Valores referenciales: Easy Office aún no confirma los precios."}
-              </FormHelperText>
-            </Box>
-          )}
-        />
+        <SelectorPlan<DomicilioEntrada> planes={formulario.planes} />
         <Grilla>
           <CampoTexto<DomicilioEntrada>
             nombre="fecha_inicio"

@@ -19,14 +19,17 @@ import { formatearFecha, formatearPesos } from "../../../lib/formato";
 import { tokens } from "../../../theme";
 import type { Documento, Tramite } from "../../../types/tramites";
 import { codigoDeConflicto } from "../../tramites/errores";
+import { bodegaDe, esBodega } from "../../tramites/contrato";
 import { VisorPdf } from "../../tramites/VisorPdf";
 
 const CONSULTAR_CADA_MS = 2000;
 
-const ROL_FIRMANTE: Record<Documento["firmantes"][number]["rol"], string> = {
-  cliente_representante: "Representante legal de tu empresa",
-  autorizante: "Propietario de la oficina (autoriza el domicilio)",
-};
+function rolFirmante(rol: Documento["firmantes"][number]["rol"], tramite: Tramite): string {
+  if (rol === "cliente_representante") return "Representante legal de tu empresa";
+  return esBodega(tramite)
+    ? "Propietario de la bodega (autoriza su uso)"
+    : "Propietario de la oficina (autoriza el domicilio)";
+}
 
 /** The real generated draft (HU-26) and the client's confirmation (HU-27). */
 export function PrevisualizacionDocumento() {
@@ -122,10 +125,18 @@ function Borrador({
               <dd>{contrato.folio}</dd>
               <dt>Servicio</dt>
               <dd>
-                {contrato.servicio} · {contrato.duracion_meses} meses
+                {contrato.servicios.map((linea) => linea.nombre).join(" y ")} · {contrato.duracion_meses} meses
               </dd>
               <dt>Domicilio</dt>
               <dd>{contrato.sucursal ? `${contrato.sucursal.nombre}: ${contrato.sucursal.direccion}` : "—"}</dd>
+              {bodegaDe(contrato) && (
+                <>
+                  <dt>Bodega</dt>
+                  <dd>
+                    {bodegaDe(contrato)!.nombre}: {bodegaDe(contrato)!.direccion}
+                  </dd>
+                </>
+              )}
               <dt>Vigencia</dt>
               <dd>
                 {formatearFecha(contrato.fecha_inicio)} al {formatearFecha(contrato.fecha_vencimiento)}
@@ -145,7 +156,7 @@ function Borrador({
               <Typography sx={{ fontSize: 13, color: tokens.inkSoft, mt: 2 }}>Firmarán</Typography>
               {documento.firmantes.map((firmante) => (
                 <Typography key={firmante.orden} sx={{ fontSize: 13 }}>
-                  {firmante.nombre} — {ROL_FIRMANTE[firmante.rol]}
+                  {firmante.nombre} — {rolFirmante(firmante.rol, tramite)}
                 </Typography>
               ))}
               <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 1.5 }}>

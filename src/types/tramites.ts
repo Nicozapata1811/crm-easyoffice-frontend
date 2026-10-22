@@ -145,13 +145,38 @@ export interface LineaElegida {
   precio: string | null;
 }
 
-/** A request an executive files or edits (POST/PUT /api/tramites/). */
+/**
+ * A request an executive files or edits (POST/PUT /api/tramites/). A type
+ * sold by plan sends ``plan``; otherwise the term and each line's choices.
+ */
 export interface SolicitudTramite extends SolicitudContratante {
   fecha_inicio: string;
-  duracion_meses: number;
+  plan?: string;
+  duracion_meses?: number;
   sucursal?: number;
   bodega?: number;
-  lineas: LineaElegida[];
+  lineas?: LineaElegida[];
+}
+
+/** What a portal request form offers (GET /api/portal/tramites/formulario/). */
+export interface FormularioPortal {
+  nombre: string;
+  disponible: boolean;
+  /** A plain reason for the client; never the staff detail. */
+  motivo_no_disponible: string;
+  fecha_min: string;
+  fecha_max: string;
+  planes: PlanDomicilio[];
+  inmuebles: Record<string, InmuebleFormulario[]>;
+  datos: DatosContratante | null;
+}
+
+/** A request the client files in the portal for a type sold by plan (PLT-02). */
+export interface SolicitudPortal extends SolicitudContratante {
+  plan: string;
+  fecha_inicio: string;
+  sucursal?: number;
+  bodega?: number;
 }
 
 export interface NuevaSolicitudTramite extends SolicitudTramite {

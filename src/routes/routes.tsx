@@ -16,6 +16,7 @@ import { CatalogoServicios } from "../features/portal/CatalogoServicios/Catalogo
 import { ConfirmacionPago } from "../features/portal/ConfirmacionPago/ConfirmacionPago";
 import { EstadoTramite } from "../features/portal/EstadoTramite/EstadoTramite";
 import { FormularioDomicilio } from "../features/portal/FormularioDomicilio/FormularioDomicilio";
+import { EditarSolicitud, NuevaSolicitud } from "../features/portal/FormularioTramitePortal/Solicitudes";
 import { MisCompras } from "../features/portal/MisCompras/MisCompras";
 import { PagarVenta } from "../features/portal/PagarVenta/PagarVenta";
 import { MisTramites } from "../features/portal/MisTramites/MisTramites";
@@ -52,6 +53,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "/tramites/:tipo/nuevo",
+        element: (
+          <RequireCliente>
+            <NuevaSolicitud />
+          </RequireCliente>
+        ),
+      },
+      {
         path: "/tramites/:tramiteId",
         element: (
           <RequireCliente>
@@ -63,7 +72,7 @@ export const router = createBrowserRouter([
         path: "/tramites/:tramiteId/editar",
         element: (
           <RequireCliente>
-            <FormularioDomicilio />
+            <EditarSolicitud />
           </RequireCliente>
         ),
       },

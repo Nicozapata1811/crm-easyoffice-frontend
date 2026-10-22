@@ -3,7 +3,9 @@
 import type {
   Documento,
   FormularioDomicilio,
+  FormularioPortal,
   FormularioTramite,
+  PlanDomicilio,
   Tramite,
   TramiteBackoffice,
 } from "../../../types/tramites";
@@ -312,4 +314,41 @@ export const TRAMITE_BODEGA: TramiteBackoffice = {
       },
     ],
   },
+};
+
+/** The bodega's plans (ventas 0013): one placeholder price, signature included. */
+export const PLANES_BODEGA: PlanDomicilio[] = [
+  ["anual", "Plan anual", 12, "Anual"],
+  ["semestral", "Plan semestral", 6, "Semestral"],
+  ["trimestral", "Plan trimestral", 3, "Trimestral"],
+].map(([codigo, nombre, duracion_meses, ciclo_pago]) => ({
+  codigo: codigo as string,
+  nombre: nombre as string,
+  duracion_meses: duracion_meses as number,
+  ciclo_pago: ciclo_pago as string,
+  precio: "59990",
+  precio_incluye_iva: true,
+  precio_confirmado: false,
+  firma_incluida: true,
+  precio_firma: null,
+}));
+
+/** The backoffice form once the bodega is sold by plan. */
+export const FORMULARIO_BODEGA_PLANES: FormularioTramite = {
+  ...FORMULARIO_BODEGA,
+  planes: PLANES_BODEGA,
+  duraciones: [],
+  duracion_por_defecto: null,
+};
+
+/** The portal form of the bodega (GET /api/portal/tramites/formulario/?tipo=bodega). */
+export const FORMULARIO_PORTAL_BODEGA: FormularioPortal = {
+  nombre: "Bodega virtual",
+  disponible: true,
+  motivo_no_disponible: "",
+  fecha_min: FORMULARIO_BODEGA.fecha_min,
+  fecha_max: FORMULARIO_BODEGA.fecha_max,
+  planes: PLANES_BODEGA,
+  inmuebles: FORMULARIO_BODEGA.inmuebles,
+  datos: FORMULARIO.datos,
 };

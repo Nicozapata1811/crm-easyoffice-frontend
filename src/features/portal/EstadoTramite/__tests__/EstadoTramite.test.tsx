@@ -21,6 +21,7 @@ vi.mock("../../../../api/tramites", () => ({
   listarDocumentos: vi.fn(),
   listarTramites: vi.fn(),
   obtenerFormularioDomicilio: vi.fn(),
+  obtenerFormularioPortal: vi.fn(),
   cambiarFechaInicio: vi.fn(),
   descargarDocumento: vi.fn(),
 }));

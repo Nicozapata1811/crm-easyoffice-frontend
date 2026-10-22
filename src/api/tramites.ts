@@ -4,9 +4,11 @@ import type {
   Documento,
   EstadoTramite,
   FormularioDomicilio,
+  FormularioPortal,
   FormularioTramite,
   NuevaSolicitudTramite,
   SolicitudDomicilio,
+  SolicitudPortal,
   SolicitudTramite,
   TipoTramiteIniciable,
   Tramite,
@@ -30,6 +32,20 @@ export function editarDomicilio(tramiteId: number, solicitud: SolicitudDomicilio
 
 export function cambiarFechaInicio(tramiteId: number, fechaInicio: string): Promise<Tramite> {
   return api.post(`/portal/tramites/${tramiteId}/fecha-inicio/`, { fecha_inicio: fechaInicio });
+}
+
+/** The form of any type sold online by plan (the bodega, PLT-02). */
+export function obtenerFormularioPortal(tipo: string, signal?: AbortSignal): Promise<FormularioPortal> {
+  const params = new URLSearchParams({ tipo });
+  return api.get(`/portal/tramites/formulario/?${params.toString()}`, signal);
+}
+
+export function crearTramitePortal(tipo: string, solicitud: SolicitudPortal): Promise<Tramite> {
+  return api.post("/portal/tramites/", { ...solicitud, tipo });
+}
+
+export function editarTramitePortal(tramiteId: number, solicitud: SolicitudPortal): Promise<Tramite> {
+  return api.put(`/portal/tramites/${tramiteId}/`, solicitud);
 }
 
 export function confirmarTramite(tramiteId: number): Promise<Tramite> {
