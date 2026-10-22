@@ -206,6 +206,15 @@ En desarrollo el servidor de Vite redirige `/api` hacia Django, de modo que el
 navegador ve un solo origen y la cookie de sesión es de primera parte. En
 producción se recomienda el mismo arreglo detrás de un único proxy inverso.
 
+**Identidad visual (HU-59, RNF-12).** La aplicación usa los colores de
+easyoffice.cl a través del tema de MUI (`src/theme.ts`), el único lugar con
+colores, fuentes y radios: verde `#24D356` con texto oscuro en los botones
+principales, un verde más oscuro (`#15803D`) para enlaces y foco, Albert Sans
+en la interfaz y Lora solo en los títulos de página. Los estados se muestran
+con color y etiqueta, y cada par de texto y fondo cumple un contraste de 4,5:1.
+Mientras Easy Office no entregue su paleta y logo oficiales (TA-06), los
+valores son una suposición y la marca es un texto ("Easy Office").
+
 **Vocabulario de dominio.** Los tipos de dominio se nombran en español
 (`tramite`, `tipoTramite`, `documento`, `plantilla`, `empresa`,
 `representanteLegal`, `oficina`, `firmante`, `rolDeAvaluo`) porque el dominio es

@@ -258,6 +258,26 @@ procedure: plain wording, no legal jargon unless the document itself requires it
 
 ---
 
+## Visual identity (HU-59, RNF-12)
+
+The brand comes from easyoffice.cl and lives only in the MUI theme
+(`src/theme.ts`); its values are an assumption until TA-06 (official palette
+and logo) closes.
+- Components read the theme through `sx` paths (`"text.secondary"`,
+  `"primary.soft"`, `"divider"`), never a hex or an imported constant.
+  Every palette colour has `soft` (tinted background) and `strong`
+  (text-safe shade); `text.hint` is for notes, `inputBorder` for outlines.
+- The brand green `#24D356` is a background with dark text (`#1C1C1C`).
+  Green text on white is always `primary.strong`.
+- Albert Sans everywhere; Lora only on page titles (`h1`). Fonts load from
+  Google Fonts in `index.html`.
+- Status pills (`EstadoPill`) always carry their label; tones map to palette
+  colours, each pair ≥ 4.5:1 (`src/__tests__/theme.test.tsx`).
+- `components/Marca.tsx` is the logo slot: a text wordmark until the
+  official logo arrives.
+
+---
+
 ## Things not to do
 
 - **No browser storage for application state.** No `localStorage`, no
