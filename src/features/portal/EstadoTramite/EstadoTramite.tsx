@@ -19,7 +19,6 @@ import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
 import { guardarArchivo } from "../../../lib/descargar";
 import { formatearFecha, formatearFechaHora } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import type { Tramite } from "../../../types/tramites";
 import { esBodega } from "../../tramites/contrato";
 import { etiquetaCliente, tituloEvento } from "../../tramites/estados";
@@ -69,7 +68,7 @@ export function EstadoTramite() {
           <Typography variant="h2">{etiqueta}</Typography>
           <EstadoPill etiqueta={datos.estado === "completado" ? "Completado" : "En curso"} tono={tono} />
         </Box>
-        <Typography sx={{ fontSize: 13, color: tokens.inkSoft }}>
+        <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
           {datos.estado === "completado"
             ? "Tu contrato está firmado y vigente."
             : datos.estado === "iniciado"
@@ -93,14 +92,14 @@ export function EstadoTramite() {
                     mt: 0.5,
                     borderRadius: "50%",
                     flex: "none",
-                    bgcolor: ultimo && datos.estado !== "completado" ? tokens.gold : tokens.success,
+                    bgcolor: ultimo && datos.estado !== "completado" ? "warning.main" : "success.main",
                   }}
                 />
                 <Box>
                   <Typography sx={{ fontSize: 13.8, fontWeight: 600 }}>
                     {tituloEvento(evento.estado_nuevo, evento.motivo_nuevo, indice === 0)}
                   </Typography>
-                  <Typography sx={{ fontSize: 12, color: tokens.inkSoft }}>
+                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
                     {formatearFechaHora(evento.fecha)}
                   </Typography>
                 </Box>
@@ -118,7 +117,7 @@ export function EstadoTramite() {
               {linea.nombre} en {linea.inmueble?.direccion ?? "—"}
             </Typography>
           ))}
-          <Typography sx={{ fontSize: 13, color: tokens.inkSoft }}>
+          <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
             Vigencia: {formatearFecha(contrato.fecha_inicio)} al {formatearFecha(contrato.fecha_vencimiento)}
           </Typography>
         </Paper>

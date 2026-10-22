@@ -8,6 +8,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { Outlet, useNavigate } from "react-router-dom";
 
+import { Marca } from "../components/Marca";
 import { NavLinks } from "../components/NavLinks";
 import { PERMISOS } from "../features/auth/permisos";
 import { tienePermiso, useLogout, useSesion } from "../features/auth/useSesion";
@@ -33,9 +34,7 @@ export function BackofficeLayout() {
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <AppBar position="static" color="default">
         <Toolbar sx={{ gap: 3 }}>
-          <Typography variant="h6" component="span">
-            Easy Office · Backoffice
-          </Typography>
+          <Marca contexto="Backoffice" />
           <NavLinks
             links={LINKS.filter(({ permiso }) => !permiso || tienePermiso(usuario, permiso))}
           />

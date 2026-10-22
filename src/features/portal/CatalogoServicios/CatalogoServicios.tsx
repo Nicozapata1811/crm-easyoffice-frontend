@@ -13,7 +13,6 @@ import { listarServicios } from "../../../api/portal";
 import { listarTramites } from "../../../api/tramites";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import { useSesion } from "../../auth/useSesion";
 import type { Servicio } from "../../../types/ventas";
 import { rutaDeServicio } from "./rutas";
@@ -109,9 +108,9 @@ export function CatalogoServicios() {
           No pudimos cargar los servicios. Intenta de nuevo en unos minutos.
         </Alert>
       ) : visibles.length === 0 ? (
-        <Typography sx={{ color: tokens.inkSoft }}>Pronto publicaremos nuestros servicios.</Typography>
+        <Typography sx={{ color: "text.secondary" }}>Pronto publicaremos nuestros servicios.</Typography>
       ) : encontrados.length === 0 ? (
-        <Typography sx={{ color: tokens.inkSoft }}>
+        <Typography sx={{ color: "text.secondary" }}>
           No encontramos servicios para «{busqueda.trim()}».
         </Typography>
       ) : (
@@ -128,7 +127,7 @@ export function CatalogoServicios() {
             ))}
           </Box>
           {preciosDeEjemplo && (
-            <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 2, lineHeight: 1.5 }}>
+            <Typography sx={{ fontSize: 11.5, color: "text.hint", mt: 2, lineHeight: 1.5 }}>
               Valores de ejemplo. Easy Office aún no confirma los precios.
             </Typography>
           )}
@@ -160,10 +159,10 @@ function TramitesEnCurso() {
           gap: 1.25,
           mt: 4.5,
           pt: 3,
-          borderTop: `1px solid ${tokens.border}`,
+          borderTop: 1, borderColor: "divider",
         }}
       >
-        <Typography sx={{ fontSize: 12.5, color: tokens.inkSoft }}>
+        <Typography sx={{ fontSize: 12.5, color: "text.secondary" }}>
           {enCurso === 1 ? "Tienes 1 trámite en curso —" : `Tienes ${enCurso} trámites en curso —`}
         </Typography>
         <Box
@@ -174,8 +173,8 @@ function TramitesEnCurso() {
             px: 1.5,
             py: 0.75,
             borderRadius: 20,
-            bgcolor: tokens.primaryTint,
-            color: tokens.primaryDark,
+            bgcolor: "primary.soft",
+            color: "text.primary",
             fontWeight: 500,
             textDecoration: "none",
           }}
@@ -207,12 +206,12 @@ function TarjetaServicio({ servicio }: { servicio: Servicio }) {
         opacity: ruta ? 1 : 0.5,
         cursor: ruta ? "pointer" : "default",
         transition: "border-color .15s",
-        "&:hover": ruta ? { borderColor: tokens.primary } : undefined,
-        "&:focus-visible": ruta ? { outline: `2px solid ${tokens.primary}` } : undefined,
+        "&:hover": ruta ? { borderColor: "primary.main" } : undefined,
+        "&:focus-visible": ruta ? { outline: "2px solid", outlineColor: "primary.strong" } : undefined,
       }}
     >
       {ruta ? (
-        <Typography sx={{ fontSize: 11, color: tokens.stamp, fontWeight: 600, mb: 1.25 }}>
+        <Typography sx={{ fontSize: 11, color: "primary.strong", fontWeight: 600, mb: 1.25 }}>
           Disponible ahora
         </Typography>
       ) : (
@@ -222,12 +221,13 @@ function TarjetaServicio({ servicio }: { servicio: Servicio }) {
             top: 16,
             right: 16,
             fontSize: 10,
-            bgcolor: tokens.bg,
-            border: `1px solid ${tokens.border}`,
+            bgcolor: "background.default",
+            border: 1,
+            borderColor: "divider",
             px: 1,
             py: 0.375,
             borderRadius: 20,
-            color: tokens.inkSoft,
+            color: "text.secondary",
           }}
         >
           Próximamente
@@ -240,7 +240,7 @@ function TarjetaServicio({ servicio }: { servicio: Servicio }) {
       <Typography
         sx={{
           fontSize: 12.8,
-          color: tokens.inkSoft,
+          color: "text.secondary",
           mb: 1.75,
           lineHeight: 1.5,
           display: "-webkit-box",
@@ -256,8 +256,8 @@ function TarjetaServicio({ servicio }: { servicio: Servicio }) {
           display: "flex",
           justifyContent: "space-between",
           fontSize: 12,
-          color: tokens.inkFaint,
-          borderTop: `1px solid ${tokens.border}`,
+          color: "text.hint",
+          borderTop: 1, borderColor: "divider",
           pt: 1.5,
           mt: "auto",
         }}

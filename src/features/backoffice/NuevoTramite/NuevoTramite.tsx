@@ -28,7 +28,6 @@ import {
 import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
 import { formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import type { FormularioTramite, TramiteBackoffice } from "../../../types/tramites";
 import { codigoDeConflicto, erroresDeCampo } from "../../tramites/errores";
 import { CampoTexto, Grilla, Opcion } from "../../tramites/formulario/campos";
@@ -121,7 +120,7 @@ function ElegirCliente({ onElegir }: { onElegir: (id: number) => void }) {
           ))}
         </List>
         {clientes.data?.results.length === 0 && (
-          <Typography sx={{ fontSize: 13, color: tokens.inkSoft }}>
+          <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
             Ninguna empresa coincide. Regístrala primero en Clientes.
           </Typography>
         )}
@@ -317,7 +316,7 @@ function Contenido({
                     slotProps={{ input: { startAdornment: <InputAdornment position="start">$</InputAdornment> } }}
                   />
                 ) : (
-                  <Typography sx={{ fontSize: 13, color: tokens.inkSoft, alignSelf: "center" }}>
+                  <Typography sx={{ fontSize: 13, color: "text.secondary", alignSelf: "center" }}>
                     Precio de lista {formatearPesos(Number(linea.precio_base))}
                     {linea.precio_confirmado ? "" : " (referencial)"}
                   </Typography>

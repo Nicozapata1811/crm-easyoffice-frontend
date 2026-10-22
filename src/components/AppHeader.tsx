@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 
-import { tokens } from "../theme";
+import { Marca } from "./Marca";
 
 interface AppHeaderProps {
   nombre?: string;
@@ -26,8 +26,9 @@ export function AppHeader({ nombre, onSalir }: AppHeaderProps) {
     <Box
       component="header"
       sx={{
-        bgcolor: tokens.surface,
-        borderBottom: `1px solid ${tokens.border}`,
+        bgcolor: "background.paper",
+        borderBottom: 1,
+        borderColor: "divider",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -39,37 +40,18 @@ export function AppHeader({ nombre, onSalir }: AppHeaderProps) {
         component={RouterLink}
         to="/"
         sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1.125,
           textDecoration: "none",
-          fontFamily: tokens.serif,
-          fontWeight: 600,
-          fontSize: 19,
-          color: tokens.primaryDark,
+          borderRadius: 1,
+          "&:focus-visible": { outline: "2px solid", outlineColor: "primary.strong", outlineOffset: 2 },
         }}
       >
-        <Box
-          sx={{
-            width: 26,
-            height: 26,
-            border: `1.5px solid ${tokens.primaryDark}`,
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 12,
-          }}
-        >
-          EO
-        </Box>
-        Easy Office
+        <Marca />
       </Box>
 
       {nombre ? (
         <Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
           <Typography
-            sx={{ fontSize: 13.5, color: tokens.inkSoft, display: { xs: "none", sm: "block" } }}
+            sx={{ fontSize: 13.5, color: "text.secondary", display: { xs: "none", sm: "block" } }}
           >
             {nombre}
           </Typography>
@@ -79,14 +61,13 @@ export function AppHeader({ nombre, onSalir }: AppHeaderProps) {
               width: 32,
               height: 32,
               borderRadius: "50%",
-              bgcolor: tokens.primaryTint,
-              color: tokens.primaryDark,
+              bgcolor: "primary.soft",
+              color: "text.primary",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: 12.5,
               fontWeight: 600,
-              fontFamily: tokens.serif,
             }}
           >
             {iniciales(nombre)}

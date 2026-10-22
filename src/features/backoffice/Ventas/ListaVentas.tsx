@@ -19,7 +19,6 @@ import { listarVentasBackoffice } from "../../../api/ventas";
 import { EstadoPill } from "../../../components/EstadoPill";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearFechaHora, formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import type { EstadoVenta } from "../../../types/ventas";
 import { ESTADO_VENTA } from "../../portal/Pago/estados";
 
@@ -98,7 +97,7 @@ export function ListaVentas() {
                   onClick={() => navigate(`/backoffice/ventas/${venta.id}`)}
                   sx={{ cursor: "pointer" }}
                 >
-                  <TableCell sx={{ whiteSpace: "nowrap", color: tokens.inkSoft }}>{venta.folio}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary" }}>{venta.folio}</TableCell>
                   <TableCell>{venta.cliente.nombre}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>{formatearFechaHora(venta.created_at)}</TableCell>
                   <TableCell align="right">{formatearPesos(Number(venta.total))}</TableCell>
@@ -109,7 +108,7 @@ export function ListaVentas() {
               ))}
               {data.results.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} sx={{ color: tokens.inkSoft }}>
+                  <TableCell colSpan={5} sx={{ color: "text.secondary" }}>
                     No hay ventas con estos filtros.
                   </TableCell>
                 </TableRow>

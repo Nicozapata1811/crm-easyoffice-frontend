@@ -18,7 +18,6 @@ import {
 } from "../../../api/tramites";
 import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
-import { tokens } from "../../../theme";
 import type { FormularioDomicilio as Formulario, Tramite } from "../../../types/tramites";
 import { codigoDeConflicto, erroresDeCampo } from "../../tramites/errores";
 import { CampoTexto, Grilla } from "../../tramites/formulario/campos";
@@ -198,7 +197,7 @@ function Contenido({ formulario, tramite }: { formulario: Formulario; tramite?: 
       </Paper>
       </FormProvider>
 
-      <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 2 }}>
+      <Typography sx={{ fontSize: 11.5, color: "text.hint", mt: 2 }}>
         La validación del RUT comprueba su dígito verificador. No se consulta ningún registro público.
       </Typography>
     </Box>

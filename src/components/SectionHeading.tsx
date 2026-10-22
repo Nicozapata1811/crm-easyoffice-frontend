@@ -2,17 +2,15 @@
 
 import Typography from "@mui/material/Typography";
 
-import { tokens } from "../theme";
-
 export function SectionHeading({ texto, primera }: { texto: string; primera?: boolean }) {
   return (
     <Typography
       variant="h2"
       sx={{
         fontSize: 16,
-        color: tokens.primaryDark,
+        color: "text.primary",
         mb: 2.25,
-        ...(primera ? {} : { mt: 1, pt: 3, borderTop: `1px solid ${tokens.border}` }),
+        ...(primera ? {} : { mt: 1, pt: 3, borderTop: 1, borderColor: "divider" }),
       }}
     >
       {texto}

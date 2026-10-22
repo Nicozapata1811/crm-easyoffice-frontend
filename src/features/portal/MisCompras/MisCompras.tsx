@@ -11,7 +11,6 @@ import { listarVentas } from "../../../api/portal";
 import { EstadoPill } from "../../../components/EstadoPill";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearFechaHora, formatearPesos } from "../../../lib/formato";
-import { tokens } from "../../../theme";
 import { ESTADO_VENTA } from "../Pago/estados";
 
 export function MisCompras() {
@@ -30,7 +29,7 @@ export function MisCompras() {
       )}
       {ventas.isError && <Alert severity="error">No pudimos cargar tus compras.</Alert>}
       {ventas.data?.results.length === 0 && (
-        <Typography sx={{ color: tokens.inkSoft }}>Aún no tienes compras.</Typography>
+        <Typography sx={{ color: "text.secondary" }}>Aún no tienes compras.</Typography>
       )}
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {ventas.data?.results.map((venta) => (
@@ -38,7 +37,7 @@ export function MisCompras() {
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
               <Box>
                 <Typography sx={{ fontWeight: 600 }}>{venta.folio}</Typography>
-                <Typography sx={{ fontSize: 12.5, color: tokens.inkSoft }}>
+                <Typography sx={{ fontSize: 12.5, color: "text.secondary" }}>
                   {formatearFechaHora(venta.created_at)}
                 </Typography>
               </Box>
@@ -58,7 +57,7 @@ export function MisCompras() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                borderTop: `1px solid ${tokens.border}`,
+                borderTop: 1, borderColor: "divider",
                 mt: 1.5,
                 pt: 1.5,
               }}

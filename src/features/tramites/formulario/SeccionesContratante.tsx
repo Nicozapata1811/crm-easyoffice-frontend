@@ -6,15 +6,14 @@ import { Controller, useFormContext } from "react-hook-form";
 
 import { SectionHeading } from "../../../components/SectionHeading";
 import { REGIONES } from "../../../lib/regiones";
-import { tokens } from "../../../theme";
 import { CampoTexto, Grilla } from "./campos";
 import type { ContratanteEntrada } from "./schema";
 
 const Campo = CampoTexto<ContratanteEntrada>;
 
 const campoValido = {
-  "& .MuiOutlinedInput-notchedOutline": { borderColor: tokens.success },
-  "& .MuiFormHelperText-root": { color: tokens.success },
+  "& .MuiOutlinedInput-notchedOutline": { borderColor: "success.main" },
+  "& .MuiFormHelperText-root": { color: "success.main" },
 };
 
 /**
@@ -54,7 +53,7 @@ export function SeccionesContratante({
       </Grilla>
 
       <SectionHeading texto="Representante legal" />
-      <Typography sx={{ fontSize: 12.5, color: tokens.inkSoft, mb: 2 }}>{ayudaRepresentante}</Typography>
+      <Typography sx={{ fontSize: 12.5, color: "text.secondary", mb: 2 }}>{ayudaRepresentante}</Typography>
       <Grilla>
         <Campo nombre="representante.nombres" etiqueta="Nombres" />
         <Campo nombre="representante.apellido_paterno" etiqueta="Apellido paterno" />

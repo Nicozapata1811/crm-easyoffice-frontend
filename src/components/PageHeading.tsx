@@ -3,8 +3,6 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { tokens } from "../theme";
-
 interface PageHeadingProps {
   titulo: string;
   bajada?: string;
@@ -17,7 +15,7 @@ export function PageHeading({ titulo, bajada }: PageHeadingProps) {
         {titulo}
       </Typography>
       {bajada && (
-        <Typography sx={{ color: tokens.inkSoft, fontSize: 14.5 }}>{bajada}</Typography>
+        <Typography sx={{ color: "text.secondary", fontSize: 14.5 }}>{bajada}</Typography>
       )}
     </Box>
   );
