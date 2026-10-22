@@ -273,10 +273,11 @@ and logo) closes.
   Google Fonts in `index.html`.
 - Status pills (`EstadoPill`) always carry their label; tones map to palette
   colours, each pair ≥ 4.5:1 (`src/__tests__/theme.test.tsx`).
-- `components/Marca.tsx` shows the "eo" symbol (`public/marca/isotipo.png`,
-  cut from the logo the team provided) with the name as text beside it;
-  `public/favicon.png` is the same symbol. Both come from a small bitmap:
-  swap in the official vector file when Easy Office sends it (TA-06).
+- `components/Marca.tsx` shows the logo Easy Office provided
+  (`public/marca/logo.svg`, alt "Easy Office") in both headers. The favicon is
+  their `favicon.svg` with its viewBox cut to the "eo" symbol, plus
+  `public/favicon.png` (64×64) as a fallback. Both SVGs wrap a bitmap: swap
+  in true vector files when they exist (TA-06).
 
 ---
 

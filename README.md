@@ -212,10 +212,12 @@ colores, fuentes y radios: verde `#24D356` con texto oscuro en los botones
 principales, un verde más oscuro (`#15803D`) para enlaces y foco, Albert Sans
 en la interfaz y Lora solo en los títulos de página. Los estados se muestran
 con color y etiqueta, y cada par de texto y fondo cumple un contraste de 4,5:1.
-El encabezado y el ícono de la pestaña usan el símbolo "eo" del logo de Easy
-Office (`public/marca/isotipo.png` y `public/favicon.png`), junto al nombre
-escrito como texto. Mientras Easy Office no entregue su paleta y su logo
-oficiales en formato vectorial (TA-06), los valores son una suposición.
+El encabezado muestra el logo que entregó Easy Office
+(`public/marca/logo.svg`) y el ícono de la pestaña es su símbolo "eo"
+(`public/favicon.svg`, con `public/favicon.png` como respaldo). Ambos SVG
+contienen una imagen de mapa de bits; cuando exista una versión vectorial se
+reemplazan. Mientras Easy Office no confirme su paleta oficial (TA-06), los
+colores son una suposición.
 
 **Vocabulario de dominio.** Los tipos de dominio se nombran en español
 (`tramite`, `tipoTramite`, `documento`, `plantilla`, `empresa`,

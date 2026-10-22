@@ -33,7 +33,7 @@ export function AppHeader({ nombre, onSalir }: AppHeaderProps) {
         alignItems: "center",
         justifyContent: "space-between",
         px: { xs: 2, md: 4 },
-        py: 1.75,
+        py: 0.75,
       }}
     >
       <Box

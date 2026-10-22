@@ -1,28 +1,20 @@
 /**
- * The Easy Office mark, shared by both shells: the "eo" symbol and the name.
+ * The Easy Office logo, shared by both shells (`public/marca/logo.svg`, the
+ * file Easy Office provided). The backoffice adds its context beside it.
  *
- * The symbol (`public/marca/isotipo.png`) is cut from the logo the team
- * provided; at header height the logo's own lettering would be unreadable,
- * so the name is set as text beside it.
- *
- * ASSUMPTION: pending validation with Easy Office. The logo came as a small
- * bitmap; ask for the official vector file (TA-06) and swap it in here.
+ * ASSUMPTION: pending validation with Easy Office. The SVG wraps a bitmap;
+ * replace it with a true vector file when one is available (TA-06).
  */
 
 import Box from "@mui/material/Box";
 
 export function Marca({ contexto }: { contexto?: string }) {
   return (
-    <Box
-      component="span"
-      sx={{ display: "flex", alignItems: "center", gap: 1.125, fontWeight: 700, fontSize: 18, color: "text.primary" }}
-    >
-      {/* Decorative: the name next to it already says "Easy Office". */}
-      <Box component="img" src="/marca/isotipo.png" alt="" sx={{ height: 28, width: "auto", display: "block" }} />
-      Easy Office
+    <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+      <Box component="img" src="/marca/logo.svg" alt="Easy Office" sx={{ height: 48, width: "auto", display: "block" }} />
       {contexto && (
-        <Box component="span" sx={{ fontWeight: 500, color: "text.secondary" }}>
-          · {contexto}
+        <Box component="span" sx={{ fontSize: 18, fontWeight: 500, color: "text.secondary" }}>
+          {contexto}
         </Box>
       )}
     </Box>
