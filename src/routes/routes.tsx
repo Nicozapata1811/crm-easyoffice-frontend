@@ -16,6 +16,7 @@ import { CatalogoServicios } from "../features/portal/CatalogoServicios/Catalogo
 import { ConfirmacionPago } from "../features/portal/ConfirmacionPago/ConfirmacionPago";
 import { EstadoTramite } from "../features/portal/EstadoTramite/EstadoTramite";
 import { FormularioDomicilio } from "../features/portal/FormularioDomicilio/FormularioDomicilio";
+import { EditarSolicitud, NuevaSolicitud } from "../features/portal/FormularioTramitePortal/Solicitudes";
 import { MisCompras } from "../features/portal/MisCompras/MisCompras";
 import { PagarVenta } from "../features/portal/PagarVenta/PagarVenta";
 import { MisTramites } from "../features/portal/MisTramites/MisTramites";
@@ -25,6 +26,7 @@ import { FichaCliente } from "../features/backoffice/Clientes/FichaCliente";
 import { FormularioCliente } from "../features/backoffice/Clientes/FormularioCliente";
 import { ListaClientes } from "../features/backoffice/Clientes/ListaClientes";
 import { DetalleTramite } from "../features/backoffice/DetalleTramite/DetalleTramite";
+import { NuevoTramite } from "../features/backoffice/NuevoTramite/NuevoTramite";
 import { ListaTramites } from "../features/backoffice/Tramites/ListaTramites";
 import { TiposTramite } from "../features/backoffice/TiposTramite/TiposTramite";
 import { DetalleVenta } from "../features/backoffice/Ventas/DetalleVenta";
@@ -51,6 +53,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "/tramites/:tipo/nuevo",
+        element: (
+          <RequireCliente>
+            <NuevaSolicitud />
+          </RequireCliente>
+        ),
+      },
+      {
         path: "/tramites/:tramiteId",
         element: (
           <RequireCliente>
@@ -62,7 +72,7 @@ export const router = createBrowserRouter([
         path: "/tramites/:tramiteId/editar",
         element: (
           <RequireCliente>
-            <FormularioDomicilio />
+            <EditarSolicitud />
           </RequireCliente>
         ),
       },
@@ -185,10 +195,26 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "tramites/nuevo/:tipo",
+        element: (
+          <RequirePermission permiso={PERMISOS.iniciarTramites}>
+            <NuevoTramite />
+          </RequirePermission>
+        ),
+      },
+      {
         path: "tramites/:tramiteId",
         element: (
           <RequirePermission permiso={PERMISOS.verTramites}>
             <DetalleTramite />
+          </RequirePermission>
+        ),
+      },
+      {
+        path: "tramites/:tramiteId/editar",
+        element: (
+          <RequirePermission permiso={PERMISOS.gestionarTramites}>
+            <NuevoTramite />
           </RequirePermission>
         ),
       },

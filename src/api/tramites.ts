@@ -4,7 +4,13 @@ import type {
   Documento,
   EstadoTramite,
   FormularioDomicilio,
+  FormularioPortal,
+  FormularioTramite,
+  NuevaSolicitudTramite,
   SolicitudDomicilio,
+  SolicitudPortal,
+  SolicitudTramite,
+  TipoTramiteIniciable,
   Tramite,
   TramiteBackoffice,
 } from "../types/tramites";
@@ -26,6 +32,20 @@ export function editarDomicilio(tramiteId: number, solicitud: SolicitudDomicilio
 
 export function cambiarFechaInicio(tramiteId: number, fechaInicio: string): Promise<Tramite> {
   return api.post(`/portal/tramites/${tramiteId}/fecha-inicio/`, { fecha_inicio: fechaInicio });
+}
+
+/** The form of any type sold online by plan (the bodega, PLT-02). */
+export function obtenerFormularioPortal(tipo: string, signal?: AbortSignal): Promise<FormularioPortal> {
+  const params = new URLSearchParams({ tipo });
+  return api.get(`/portal/tramites/formulario/?${params.toString()}`, signal);
+}
+
+export function crearTramitePortal(tipo: string, solicitud: SolicitudPortal): Promise<Tramite> {
+  return api.post("/portal/tramites/", { ...solicitud, tipo });
+}
+
+export function editarTramitePortal(tramiteId: number, solicitud: SolicitudPortal): Promise<Tramite> {
+  return api.put(`/portal/tramites/${tramiteId}/`, solicitud);
 }
 
 export function confirmarTramite(tramiteId: number): Promise<Tramite> {
@@ -94,4 +114,38 @@ export function subirDocumentoFirmado(tramiteId: number, documentoId: number, ar
   const formulario = new FormData();
   formulario.append("archivo", archivo);
   return api.enviarFormulario(`/tramites/${tramiteId}/documentos/${documentoId}/firmado/subir/`, formulario);
+}
+
+// --- Backoffice: cases an executive starts for a client (PLT-02) -------------
+
+export function listarTiposIniciables(signal?: AbortSignal): Promise<TipoTramiteIniciable[]> {
+  return api.get("/tramites/tipos/?canal=backoffice", signal);
+}
+
+export function obtenerFormularioTramite(
+  tipo: string,
+  clienteId: number,
+  signal?: AbortSignal,
+): Promise<FormularioTramite> {
+  const params = new URLSearchParams({ tipo, cliente: String(clienteId) });
+  return api.get(`/tramites/formulario/?${params.toString()}`, signal);
+}
+
+export function crearTramiteBackoffice(solicitud: NuevaSolicitudTramite): Promise<TramiteBackoffice> {
+  return api.post("/tramites/", solicitud);
+}
+
+export function editarTramiteBackoffice(
+  tramiteId: number,
+  solicitud: SolicitudTramite,
+): Promise<TramiteBackoffice> {
+  return api.put(`/tramites/${tramiteId}/`, solicitud);
+}
+
+export function confirmarTramiteBackoffice(tramiteId: number): Promise<TramiteBackoffice> {
+  return api.post(`/tramites/${tramiteId}/confirmar/`);
+}
+
+export function cambiarFechaInicioBackoffice(tramiteId: number, fechaInicio: string): Promise<TramiteBackoffice> {
+  return api.post(`/tramites/${tramiteId}/fecha-inicio/`, { fecha_inicio: fechaInicio });
 }

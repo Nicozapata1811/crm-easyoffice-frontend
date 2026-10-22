@@ -19,14 +19,17 @@ import { formatearFecha, formatearPesos } from "../../../lib/formato";
 import { tokens } from "../../../theme";
 import type { Documento, Tramite } from "../../../types/tramites";
 import { codigoDeConflicto } from "../../tramites/errores";
-import { useArchivo } from "../../tramites/useArchivo";
+import { bodegaDe, esBodega } from "../../tramites/contrato";
+import { VisorPdf } from "../../tramites/VisorPdf";
 
 const CONSULTAR_CADA_MS = 2000;
 
-const ROL_FIRMANTE: Record<Documento["firmantes"][number]["rol"], string> = {
-  cliente_representante: "Representante legal de tu empresa",
-  autorizante: "Propietario de la oficina (autoriza el domicilio)",
-};
+function rolFirmante(rol: Documento["firmantes"][number]["rol"], tramite: Tramite): string {
+  if (rol === "cliente_representante") return "Representante legal de tu empresa";
+  return esBodega(tramite)
+    ? "Propietario de la bodega (autoriza su uso)"
+    : "Propietario de la oficina (autoriza el domicilio)";
+}
 
 /** The real generated draft (HU-26) and the client's confirmation (HU-27). */
 export function PrevisualizacionDocumento() {
@@ -81,11 +84,6 @@ function Borrador({
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const pdf = useArchivo(
-    ["tramite", tramite.id, "documento", documento?.id, "pdf"],
-    () => descargarDocumento(tramite.id, documento!.id, "pdf"),
-    documento !== undefined,
-  );
   const word = useMutation({
     mutationFn: () => descargarDocumento(tramite.id, documento!.id, "docx"),
     onSuccess: ({ blob, nombreArchivo }) => guardarArchivo(blob, nombreArchivo ?? "contrato.docx"),
@@ -108,20 +106,13 @@ function Borrador({
       />
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 320px" }, gap: 3, alignItems: "start" }}>
         <Paper sx={{ p: 1, minHeight: 480 }}>
-          {pdf.url ? (
-            <Box
-              component="iframe"
-              title="Borrador del contrato"
-              src={pdf.url}
-              sx={{ width: "100%", height: "75vh", border: 0 }}
-            />
-          ) : pdf.isError ? (
-            <Alert severity="error">No pudimos mostrar el borrador. Descárgalo en Word para revisarlo.</Alert>
-          ) : (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
-              <CircularProgress aria-label="Cargando el borrador" />
-            </Box>
-          )}
+          <VisorPdf
+            clave={["tramite", tramite.id, "documento", documento?.id, "pdf"]}
+            obtener={() => descargarDocumento(tramite.id, documento!.id, "pdf")}
+            habilitado={documento !== undefined}
+            titulo="Borrador del contrato"
+            error="No pudimos mostrar el borrador. Descárgalo en Word para revisarlo."
+          />
         </Paper>
 
         <Paper sx={{ p: 2.75 }}>
@@ -134,10 +125,18 @@ function Borrador({
               <dd>{contrato.folio}</dd>
               <dt>Servicio</dt>
               <dd>
-                {contrato.servicio} · {contrato.duracion_meses} meses
+                {contrato.servicios.map((linea) => linea.nombre).join(" y ")} · {contrato.duracion_meses} meses
               </dd>
               <dt>Domicilio</dt>
               <dd>{contrato.sucursal ? `${contrato.sucursal.nombre}: ${contrato.sucursal.direccion}` : "—"}</dd>
+              {bodegaDe(contrato) && (
+                <>
+                  <dt>Bodega</dt>
+                  <dd>
+                    {bodegaDe(contrato)!.nombre}: {bodegaDe(contrato)!.direccion}
+                  </dd>
+                </>
+              )}
               <dt>Vigencia</dt>
               <dd>
                 {formatearFecha(contrato.fecha_inicio)} al {formatearFecha(contrato.fecha_vencimiento)}
@@ -157,7 +156,7 @@ function Borrador({
               <Typography sx={{ fontSize: 13, color: tokens.inkSoft, mt: 2 }}>Firmarán</Typography>
               {documento.firmantes.map((firmante) => (
                 <Typography key={firmante.orden} sx={{ fontSize: 13 }}>
-                  {firmante.nombre} — {ROL_FIRMANTE[firmante.rol]}
+                  {firmante.nombre} — {rolFirmante(firmante.rol, tramite)}
                 </Typography>
               ))}
               <Typography sx={{ fontSize: 11.5, color: tokens.inkFaint, mt: 1.5 }}>

@@ -77,16 +77,111 @@ export interface FormularioDomicilio {
   datos: DatosContratante | null;
 }
 
-/** The domicile request as the portal sends it (section A of PLT-01). */
-export interface SolicitudDomicilio {
+/** The contracting party of a service contract (section A of PLT-01 and PLT-02). */
+export interface SolicitudContratante {
   empresa: EmpresaContratante;
   representante: RepresentanteContratante;
   personeria: { fecha_instrumento: string; sitio_o_notaria: string };
   email_aviso: string;
   movil_aviso: string;
+}
+
+/** The domicile request as the portal sends it. */
+export interface SolicitudDomicilio extends SolicitudContratante {
   plan: string;
   sucursal: number;
   fecha_inicio: string;
+}
+
+/** A case type an executive can start (GET /api/tramites/tipos/). */
+export interface TipoTramiteIniciable {
+  codigo: string;
+  nombre: string;
+}
+
+/** A property a request can name: a branch office or a warehouse. */
+export interface InmuebleFormulario {
+  id: number;
+  tipo: "oficina" | "bodega";
+  codigo: string | null;
+  nombre: string;
+  direccion: string;
+  comuna: string;
+  region: string;
+}
+
+/** A service the case type's contract holds, as the catalogue lists it. */
+export interface LineaFormulario {
+  servicio: string;
+  nombre: string;
+  /** Null when the service has no list price: the agreed one is typed. */
+  precio_base: string | null;
+  precio_confirmado: boolean;
+  ciclo_pago_default: string | null;
+  /** The property role the line is located at: "sucursal", "bodega". */
+  inmueble: string;
+}
+
+/** What the backoffice request form offers (GET /api/tramites/formulario/). */
+export interface FormularioTramite {
+  disponible: boolean;
+  /** What is missing, for staff. */
+  problemas: string[];
+  fecha_min: string;
+  fecha_max: string;
+  planes: PlanDomicilio[];
+  duraciones: number[];
+  duracion_por_defecto: number | null;
+  inmuebles: Record<string, InmuebleFormulario[]>;
+  lineas: LineaFormulario[];
+  ciclos_pago: { codigo: string; nombre: string }[];
+  datos: DatosContratante | null;
+}
+
+/** A line's choices when the type is not sold by plans. */
+export interface LineaElegida {
+  servicio: string;
+  ciclo_pago: string | null;
+  precio: string | null;
+}
+
+/**
+ * A request an executive files or edits (POST/PUT /api/tramites/). A type
+ * sold by plan sends ``plan``; otherwise the term and each line's choices.
+ */
+export interface SolicitudTramite extends SolicitudContratante {
+  fecha_inicio: string;
+  plan?: string;
+  duracion_meses?: number;
+  sucursal?: number;
+  bodega?: number;
+  lineas?: LineaElegida[];
+}
+
+/** What a portal request form offers (GET /api/portal/tramites/formulario/). */
+export interface FormularioPortal {
+  nombre: string;
+  disponible: boolean;
+  /** A plain reason for the client; never the staff detail. */
+  motivo_no_disponible: string;
+  fecha_min: string;
+  fecha_max: string;
+  planes: PlanDomicilio[];
+  inmuebles: Record<string, InmuebleFormulario[]>;
+  datos: DatosContratante | null;
+}
+
+/** A request the client files in the portal for a type sold by plan (PLT-02). */
+export interface SolicitudPortal extends SolicitudContratante {
+  plan: string;
+  fecha_inicio: string;
+  sucursal?: number;
+  bodega?: number;
+}
+
+export interface NuevaSolicitudTramite extends SolicitudTramite {
+  tipo: string;
+  cliente: number;
 }
 
 export interface ContratoTramite {
@@ -101,6 +196,13 @@ export interface ContratoTramite {
   precio: string | null;
   ciclo_pago: string;
   sucursal: { id: number; nombre: string; direccion: string } | null;
+  /** Every line; the keys above repeat the first one. */
+  servicios: {
+    nombre: string;
+    precio: string;
+    ciclo_pago: string;
+    inmueble: { id: number; tipo: "oficina" | "bodega"; nombre: string; direccion: string } | null;
+  }[];
 }
 
 export interface VentaTramite {
@@ -121,11 +223,19 @@ export interface Tramite {
   id: number;
   folio: string;
   tipo: string;
+  tipo_codigo: string;
   estado: EstadoTramite;
   motivo: MotivoPendiente | null;
   accion_cliente: AccionCliente;
   editable: boolean;
-  datos: { plan?: string; sucursal?: number; fecha_inicio?: string };
+  datos: {
+    plan?: string;
+    sucursal?: number;
+    bodega?: number;
+    fecha_inicio?: string;
+    duracion_meses?: number;
+    lineas?: LineaElegida[];
+  };
   contrato: ContratoTramite | null;
   venta: VentaTramite | null;
   eventos: EventoTramite[];

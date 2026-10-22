@@ -6,6 +6,7 @@ export const PERMISOS = {
   verVentas: "ventas.view_venta",
   verTramites: "tramites.view_tramite",
   gestionarTramites: "tramites.gestionar_tramite",
+  iniciarTramites: "tramites.iniciar_tramite",
   verDocumentos: "documentos.view_documento",
   subirDocumentoFirmado: "documentos.subir_documento_firmado",
 } as const;

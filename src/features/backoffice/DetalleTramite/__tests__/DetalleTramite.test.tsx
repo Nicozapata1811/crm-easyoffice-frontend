@@ -2,16 +2,25 @@
 
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getSesion } from "../../../../api/auth";
 import {
+  cambiarFechaInicioBackoffice,
+  confirmarTramiteBackoffice,
+  descargarDocumentoBackoffice,
   listarDocumentosBackoffice,
+  obtenerFormularioTramite,
   obtenerTramiteBackoffice,
   regenerarDocumento,
   subirDocumentoFirmado,
 } from "../../../../api/tramites";
-import { DOCUMENTO, TRAMITE_BACKOFFICE } from "../../../tramites/__tests__/fixtures";
+import {
+  DOCUMENTO,
+  FORMULARIO_BODEGA,
+  TRAMITE_BACKOFFICE,
+  TRAMITE_BODEGA,
+} from "../../../tramites/__tests__/fixtures";
 import { EJECUTIVO, renderEn } from "../../Clientes/__tests__/renderConSesion";
 import { DetalleTramite } from "../DetalleTramite";
 
@@ -22,6 +31,9 @@ vi.mock("../../../../api/tramites", () => ({
   descargarDocumentoBackoffice: vi.fn(),
   subirDocumentoFirmado: vi.fn(),
   regenerarDocumento: vi.fn(),
+  confirmarTramiteBackoffice: vi.fn(),
+  cambiarFechaInicioBackoffice: vi.fn(),
+  obtenerFormularioTramite: vi.fn(),
 }));
 
 const CON_PERMISOS = {
@@ -94,5 +106,69 @@ describe("DetalleTramite", () => {
     expect(await screen.findByText(/Falta el reverso de la cédula/)).toBeInTheDocument();
     await user.click(await screen.findByRole("button", { name: "Generar el documento de nuevo" }));
     expect(regenerarDocumento).toHaveBeenCalledWith(7);
+  });
+
+  describe("a case started in the backoffice", () => {
+    const crearUrl = URL.createObjectURL;
+    const revocarUrl = URL.revokeObjectURL;
+
+    afterEach(() => {
+      URL.createObjectURL = crearUrl;
+      URL.revokeObjectURL = revocarUrl;
+    });
+
+    beforeEach(() => {
+      URL.createObjectURL = vi.fn(() => "blob:borrador");
+      URL.revokeObjectURL = vi.fn();
+      vi.mocked(obtenerTramiteBackoffice).mockResolvedValue(TRAMITE_BODEGA);
+      vi.mocked(descargarDocumentoBackoffice).mockResolvedValue({
+        blob: new Blob(["%PDF-1.7"], { type: "application/pdf" }),
+        nombreArchivo: "LF-0002-2026-v1.pdf",
+      });
+    });
+
+    it("lists every contract line with its property", async () => {
+      renderEn("/backoffice/tramites/8", [{ path: "/backoffice/tramites/:tramiteId", element: <DetalleTramite /> }]);
+
+      expect(await screen.findByText(/Bodega · \$20\.000 mensual · Bodega de Ejemplo Costa/)).toBeInTheDocument();
+      expect(screen.getByText(/Domicilio tributario · \$59\.990 anual · La Florida/)).toBeInTheDocument();
+    });
+
+    it("previews the draft and records the client's confirmation", async () => {
+      vi.mocked(confirmarTramiteBackoffice).mockResolvedValue({
+        ...TRAMITE_BODEGA,
+        motivo: { codigo: "firma", nombre: "Firma", texto_cliente: "" },
+      });
+      const user = userEvent.setup();
+      renderEn("/backoffice/tramites/8", [{ path: "/backoffice/tramites/:tramiteId", element: <DetalleTramite /> }]);
+
+      expect(await screen.findByTitle("Borrador del contrato")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "Editar datos" })).toHaveAttribute(
+        "href",
+        "/backoffice/tramites/8/editar",
+      );
+      await user.click(screen.getByRole("button", { name: "El cliente confirmó el borrador" }));
+
+      expect(confirmarTramiteBackoffice).toHaveBeenCalledWith(8);
+    });
+
+    it("lets the executive set a new start date once it passed", async () => {
+      vi.mocked(obtenerTramiteBackoffice).mockResolvedValue({
+        ...TRAMITE_BODEGA,
+        motivo: { codigo: "falta_informacion", nombre: "Falta información", texto_cliente: "" },
+        detalle_pendiente: "La fecha de inicio ya pasó: elige una nueva para emitir el contrato.",
+      });
+      vi.mocked(obtenerFormularioTramite).mockResolvedValue(FORMULARIO_BODEGA);
+      vi.mocked(cambiarFechaInicioBackoffice).mockResolvedValue(TRAMITE_BODEGA);
+      const user = userEvent.setup();
+      renderEn("/backoffice/tramites/8", [{ path: "/backoffice/tramites/:tramiteId", element: <DetalleTramite /> }]);
+
+      const fecha = await screen.findByLabelText("Nueva fecha de inicio");
+      expect(screen.queryByRole("button", { name: "Generar el documento de nuevo" })).not.toBeInTheDocument();
+      await user.type(fecha, "2026-10-25");
+      await user.click(screen.getByRole("button", { name: "Guardar fecha" }));
+
+      expect(cambiarFechaInicioBackoffice).toHaveBeenCalledWith(8, "2026-10-25");
+    });
   });
 });

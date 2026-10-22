@@ -160,12 +160,57 @@ until Easy Office picks one).
 - **Mis trámites** lists the client's cases; the landing counts those in
   course for a logged-in client.
 
+**Warehouse case (PLT-02), portal** (`features/portal/FormularioTramitePortal/`):
+the bodega is sold online by plan (anual, semestral, trimestral; 59.990 with
+the signature included, a placeholder until Easy Office confirms prices).
+- `CatalogoServicios/rutas.ts` routes `bodega` to `/tramites/bodega/nuevo`
+  (`/tramites/:tipo/nuevo`, `NuevaSolicitud`), so its card is bookable when
+  the backend says `se_vende_en_portal`.
+- `FormularioTramitePortal` is the generic portal form of a type sold by plan,
+  built from `GET /api/portal/tramites/formulario/?tipo=`: the shared
+  contracting-party sections, one property per role (`SelectorInmueble`), the
+  plan (`SelectorPlan`, shared with the domicile) and the start date. It posts
+  to `POST /api/portal/tramites/` and goes to the draft; the rest of the flow
+  (draft, confirm, pay, status) is the domicile's.
+- `/tramites/:id/editar` (`EditarSolicitud`) opens the domicile's own form
+  or the generic one by the case's `tipo_codigo`.
+- Draft and status screens list every contract line; the owner signs as
+  "Propietario de la bodega" when the contract has a warehouse
+  (`features/tramites/contrato.ts`).
+
+**Warehouse case (PLT-02), backoffice** (`features/backoffice/NuevoTramite/`): an
+executive starts it for a company client.
+- Entry point: `/backoffice/tramites/nuevo/:tipo`, from the "Nuevo trámite"
+  buttons that `GET /api/tramites/tipos/` lists. Guard:
+  `tramites.iniciar_tramite`.
+- Steps: pick the company, then the form `GET /api/tramites/formulario/`
+  describes:
+  - the shared contracting-party sections;
+  - one property per role (`sucursal`, `bodega`);
+  - the plan, when the type is sold by plan (the bodega); otherwise each
+    line's cycle, its agreed price when it has no list price, and the
+    duration;
+  - the start date.
+- `/backoffice/tramites/:id/editar` reuses the same screen
+  (`tramites.gestionar_tramite`).
+- Missing data: staff see the backend's `problemas`.
+
+The pieces the request forms share live in `features/tramites/`:
+`formulario/SeccionesContratante` (through `FormProvider`), `CampoTexto`,
+`Grilla`, `Opcion`, `formulario/selectores.tsx` (`SelectorPlan`,
+`SelectorInmueble`), `formulario/roles.ts`, `formulario/schema.ts`
+(`camposContratante`, `aContratante`), `VisorPdf` and `FormularioNuevaFecha`.
+
 **Trámites** (`features/backoffice/Tramites/`, `DetalleTramite`): list with
 search and filters by state and pending reason, and the case detail: client,
 contract, sale, pending reason with the internal detail, document versions
 with PDF/Word downloads and their SHA-256, the upload of the signed PDF
 (assisted signature), retrying a document after completing missing data, and
-the history. Guards: `tramites.view_tramite`, `documentos.view_documento`,
+the history. It lists every contract line. For a case started in the
+backoffice (`canal`), the executive:
+- previews the draft (`VisorPdf`);
+- records the client's confirmation, or edits the data;
+- sets a new start date when the chosen one passed. Guards: `tramites.view_tramite`, `documentos.view_documento`,
 `documentos.subir_documento_firmado`, `tramites.gestionar_tramite`.
 
 Still to build: **case type configuration** — the screen that makes the

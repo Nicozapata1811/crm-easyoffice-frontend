@@ -7,6 +7,7 @@
  */
 export const RUTA_POR_SERVICIO: Readonly<Record<string, string>> = {
   "domicilio-tributario": "/tramites/domicilio-tributario/nuevo",
+  bodega: "/tramites/bodega/nuevo",
 };
 
 export function rutaDeServicio(codigo: string): string | undefined {

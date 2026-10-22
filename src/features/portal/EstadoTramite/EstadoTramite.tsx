@@ -1,10 +1,8 @@
-import { useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Paper from "@mui/material/Paper";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link as RouterLink, useParams } from "react-router-dom";
@@ -13,7 +11,7 @@ import {
   cambiarFechaInicio,
   descargarDocumento,
   listarDocumentos,
-  obtenerFormularioDomicilio,
+  obtenerFormularioPortal,
   obtenerTramite,
 } from "../../../api/tramites";
 import { EstadoPill } from "../../../components/EstadoPill";
@@ -23,8 +21,9 @@ import { guardarArchivo } from "../../../lib/descargar";
 import { formatearFecha, formatearFechaHora } from "../../../lib/formato";
 import { tokens } from "../../../theme";
 import type { Tramite } from "../../../types/tramites";
+import { esBodega } from "../../tramites/contrato";
 import { etiquetaCliente, tituloEvento } from "../../tramites/estados";
-import { erroresDeCampo } from "../../tramites/errores";
+import { FormularioNuevaFecha } from "../../tramites/FormularioNuevaFecha";
 
 const CONSULTAR_CADA_MS = 4000;
 
@@ -114,9 +113,11 @@ export function EstadoTramite() {
       {contrato && (
         <Paper sx={{ p: 3.25, mb: 2.5 }}>
           <SectionHeading texto="Contrato" primera />
-          <Typography sx={{ fontSize: 13 }}>
-            {contrato.servicio} en {contrato.sucursal?.direccion ?? "—"}
-          </Typography>
+          {contrato.servicios.map((linea) => (
+            <Typography key={linea.nombre} sx={{ fontSize: 13 }}>
+              {linea.nombre} en {linea.inmueble?.direccion ?? "—"}
+            </Typography>
+          ))}
           <Typography sx={{ fontSize: 13, color: tokens.inkSoft }}>
             Vigencia: {formatearFecha(contrato.fecha_inicio)} al {formatearFecha(contrato.fecha_vencimiento)}
           </Typography>
@@ -133,7 +134,11 @@ export function EstadoTramite() {
             >
               <span>
                 {firmante.nombre} —{" "}
-                {firmante.rol === "cliente_representante" ? "Representante legal" : "Propietario de la oficina"}
+                {firmante.rol === "cliente_representante"
+                  ? "Representante legal"
+                  : esBodega(datos)
+                    ? "Propietario de la bodega"
+                    : "Propietario de la oficina"}
               </span>
               <EstadoPill
                 etiqueta={firmante.firmado_en ? "Firmado" : "Pendiente"}
@@ -173,47 +178,16 @@ function Acciones({ tramite }: { tramite: Tramite }) {
 function NuevaFecha({ tramite }: { tramite: Tramite }) {
   const queryClient = useQueryClient();
   const limites = useQuery({
-    queryKey: ["portal", "tramites", "formulario-domicilio"],
-    queryFn: ({ signal }) => obtenerFormularioDomicilio(signal),
+    queryKey: ["portal", "tramites", "formulario", tramite.tipo_codigo],
+    queryFn: ({ signal }) => obtenerFormularioPortal(tramite.tipo_codigo, signal),
   });
-  const [fecha, setFecha] = useState("");
-  const cambiar = useMutation({
-    mutationFn: () => cambiarFechaInicio(tramite.id, fecha),
-    onSuccess: (actualizado) => queryClient.setQueryData(["portal", "tramites", tramite.id], actualizado),
-  });
-  const errorFecha = erroresDeCampo(cambiar.error).find(([ruta]) => ruta === "fecha_inicio")?.[1];
-
   return (
-    <Box
-      component="form"
-      sx={{ display: "flex", gap: 1.5, alignItems: "flex-start", mt: 2, flexWrap: "wrap" }}
-      onSubmit={(event) => {
-        event.preventDefault();
-        cambiar.mutate();
-      }}
-    >
-      <TextField
-        type="date"
-        size="small"
-        label="Nueva fecha de inicio"
-        value={fecha}
-        onChange={(event) => setFecha(event.target.value)}
-        error={Boolean(errorFecha)}
-        helperText={errorFecha ?? " "}
-        slotProps={{
-          inputLabel: { shrink: true },
-          htmlInput: { min: limites.data?.fecha_min, max: limites.data?.fecha_max },
-        }}
-      />
-      <Button type="submit" variant="contained" disabled={!fecha || cambiar.isPending}>
-        Guardar fecha
-      </Button>
-      {cambiar.isError && !errorFecha && (
-        <Alert severity="error" sx={{ width: "100%" }}>
-          No pudimos guardar la fecha. Intenta nuevamente.
-        </Alert>
-      )}
-    </Box>
+    <FormularioNuevaFecha
+      fechaMin={limites.data?.fecha_min}
+      fechaMax={limites.data?.fecha_max}
+      guardar={(fecha) => cambiarFechaInicio(tramite.id, fecha)}
+      alGuardar={(actualizado: Tramite) => queryClient.setQueryData(["portal", "tramites", tramite.id], actualizado)}
+    />
   );
 }
 

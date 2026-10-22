@@ -267,6 +267,35 @@ Leer requiere `clientes.view_cliente`, crear `clientes.add_cliente` y editar
 Ejecutivo, entra directo al listado de clientes. Para tener datos con qué
 trabajar, el backend carga clientes ficticios con `seed_demo_clientes`.
 
+## Trámite de bodega (PLT-02)
+
+El contrato de bodega se vende por plan: anual (12 meses), semestral (6) y
+trimestral (3), cada uno a $59.990 con la firma electrónica avanzada incluida.
+Son valores de ejemplo hasta que Easy Office confirme sus precios.
+
+- **Portal.** La tarjeta "Bodega" del catálogo lleva a
+  `/tramites/bodega/nuevo`. El formulario usa las mismas secciones que el
+  domicilio tributario; el cliente elige la sucursal, la bodega, el plan y la
+  fecha de inicio. Luego revisa el borrador, lo confirma y paga, igual que en
+  el domicilio. Solo empresas.
+
+En el backoffice, un ejecutivo con el permiso `tramites.iniciar_tramite`
+también puede iniciarlo para un cliente:
+
+- **Inicio.** El listado de trámites muestra un botón "Nuevo trámite" por cada
+  tipo que se inicia en el backoffice. Lleva a
+  `/backoffice/tramites/nuevo/:tipo`, donde primero se elige la empresa.
+- **Formulario.** Usa las mismas secciones que el domicilio tributario
+  (empresa, representante legal, personería y contacto), precargadas con los
+  registros del cliente. Se elige la sucursal y la bodega entre las que el
+  backend ofrece completas, el plan y la fecha de inicio.
+- **Si falta algo.** Si el trámite no se puede iniciar, la pantalla lista lo
+  que falta, para completarlo en el panel de administración.
+- **Detalle.** En el detalle del trámite, el ejecutivo ve el borrador real,
+  registra que el cliente lo confirmó o edita los datos
+  (`/backoffice/tramites/:id/editar`), y fija una nueva fecha de inicio si la
+  elegida ya pasó. Luego sube el PDF firmado, igual que en el domicilio.
+
 ---
 
 ## API
@@ -295,6 +324,15 @@ Contrato definido por el backend y documentado también en su README.
 | `POST /api/clientes/` | Registrar cliente |
 | `GET /api/clientes/{id}/` | Ficha del cliente |
 | `PATCH /api/clientes/{id}/` | Editar cliente |
+| `GET /api/tramites/tipos/?canal=backoffice` | Botones "Nuevo trámite" |
+| `GET /api/tramites/formulario/?tipo=&cliente=` | Formulario del trámite iniciado por un ejecutivo |
+| `POST /api/tramites/` | Iniciar el trámite |
+| `PUT /api/tramites/{id}/` | Editar la solicitud antes de la firma |
+| `POST /api/tramites/{id}/confirmar/` | El cliente confirmó el borrador |
+| `POST /api/tramites/{id}/fecha-inicio/` | Nueva fecha de inicio |
+| `GET /api/portal/tramites/formulario/?tipo=bodega` | Formulario de la bodega en el portal |
+| `POST /api/portal/tramites/` | Solicitar la bodega con el plan elegido |
+| `PUT /api/portal/tramites/{id}/` | Editar la solicitud antes del pago |
 
 Las respuestas están tipadas en `src/types/panel.ts`, `src/types/cliente.ts` y
 `src/types/ventas.ts` con las mismas claves que documenta el backend.
@@ -311,7 +349,9 @@ Sprint 2 (6 – 17 de octubre de 2026). Ya están:
 - el pago con Klap Checkout Flex en su ambiente de pruebas, "Mis compras" y las
   ventas en el backoffice (HU-39, HU-57);
 - el panel operativo conectado al backend y exportable a Excel;
-- la gestión de clientes: listado con búsqueda, ficha, registro y edición.
+- la gestión de clientes: listado con búsqueda, ficha, registro y edición;
+- el contrato de bodega (PLT-02), iniciado por un ejecutivo desde el
+  backoffice.
 
 Los estados de los trámites, los roles más allá de Administrador y Ejecutivo,
 la confirmación del proveedor de pago y de los precios, y el momento exacto de

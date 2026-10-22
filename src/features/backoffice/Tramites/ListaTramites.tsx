@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
@@ -12,15 +13,17 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import { TAMANO_PAGINA_CLIENTES } from "../../../api/clientes";
-import { listarTramitesBackoffice } from "../../../api/tramites";
+import { listarTiposIniciables, listarTramitesBackoffice } from "../../../api/tramites";
 import { EstadoPill } from "../../../components/EstadoPill";
 import { PageHeading } from "../../../components/PageHeading";
 import { formatearFechaHora } from "../../../lib/formato";
 import { tokens } from "../../../theme";
 import type { EstadoTramite } from "../../../types/tramites";
+import { PERMISOS } from "../../auth/permisos";
+import { tienePermiso, useSesion } from "../../auth/useSesion";
 import { etiquetaStaff, MOTIVOS } from "../../tramites/estados";
 
 const ESTADOS: { valor: EstadoTramite; nombre: string }[] = [
@@ -45,7 +48,10 @@ export function ListaTramites() {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto" }}>
-      <PageHeading titulo="Trámites" bajada="Solicitudes de los clientes y en qué paso está cada una." />
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
+        <PageHeading titulo="Trámites" bajada="Solicitudes de los clientes y en qué paso está cada una." />
+        <NuevosTramites />
+      </Box>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2.5 }}>
         <TextField
           label="Buscar"
@@ -153,6 +159,27 @@ export function ListaTramites() {
           />
         </Paper>
       )}
+    </Box>
+  );
+}
+
+/** One button per case type an executive starts for a client (from configuration). */
+function NuevosTramites() {
+  const { data: usuario } = useSesion();
+  const puede = tienePermiso(usuario, PERMISOS.iniciarTramites);
+  const tipos = useQuery({
+    queryKey: ["tramites", "tipos-iniciables"],
+    queryFn: ({ signal }) => listarTiposIniciables(signal),
+    enabled: puede,
+  });
+  if (!puede || !tipos.data?.length) return null;
+  return (
+    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+      {tipos.data.map((tipo) => (
+        <Button key={tipo.codigo} variant="contained" component={RouterLink} to={`/backoffice/tramites/nuevo/${tipo.codigo}`}>
+          Nuevo trámite: {tipo.nombre}
+        </Button>
+      ))}
     </Box>
   );
 }

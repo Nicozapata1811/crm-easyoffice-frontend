@@ -15,8 +15,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link as RouterLink, useParams } from "react-router-dom";
 
 import {
+  cambiarFechaInicioBackoffice,
+  confirmarTramiteBackoffice,
   descargarDocumentoBackoffice,
   listarDocumentosBackoffice,
+  obtenerFormularioTramite,
   obtenerTramiteBackoffice,
   regenerarDocumento,
   subirDocumentoFirmado,
@@ -32,6 +35,10 @@ import { PERMISOS } from "../../auth/permisos";
 import { tienePermiso, useSesion } from "../../auth/useSesion";
 import { etiquetaStaff, tituloEvento } from "../../tramites/estados";
 import { codigoDeConflicto, erroresDeCampo } from "../../tramites/errores";
+import { FormularioNuevaFecha } from "../../tramites/FormularioNuevaFecha";
+import { VisorPdf } from "../../tramites/VisorPdf";
+
+const NUEVA_FECHA = "La fecha de inicio ya pasó";
 
 const ESTADO_DOCUMENTO: Record<Documento["estado"], string> = {
   generado: "Vigente",
@@ -73,8 +80,11 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
   });
   const contrato = tramite.contrato;
   const faltaInformacion = tramite.motivo?.codigo === "falta_informacion";
-  // A passed start date waits for the client, not for the executive.
-  const esperaAlCliente = tramite.detalle_pendiente.startsWith("La fecha de inicio ya pasó");
+  const pideNuevaFecha = faltaInformacion && tramite.detalle_pendiente.startsWith(NUEVA_FECHA);
+  // The executive moves the cases started in the backoffice; in a portal
+  // case a passed start date waits for the client.
+  const delBackoffice = tramite.canal === "backoffice";
+  const puedeGestionar = tienePermiso(usuario, PERMISOS.gestionarTramites);
 
   return (
     <Box sx={{ maxWidth: 1000, mx: "auto" }}>
@@ -87,7 +97,7 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
         <Alert severity={faltaInformacion ? "warning" : "info"} sx={{ mb: 3, whiteSpace: "pre-line" }}>
           <strong>Pendiente: {tramite.motivo.nombre}.</strong>
           {tramite.detalle_pendiente ? `\n${tramite.detalle_pendiente}` : ""}
-          {faltaInformacion && !esperaAlCliente && tienePermiso(usuario, PERMISOS.gestionarTramites) && (
+          {faltaInformacion && !pideNuevaFecha && puedeGestionar && (
             <Box sx={{ mt: 1.5 }}>
               <Button size="small" variant="outlined" disabled={regenerar.isPending} onClick={() => regenerar.mutate()}>
                 Generar el documento de nuevo
@@ -97,6 +107,7 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
               </Typography>
             </Box>
           )}
+          {pideNuevaFecha && delBackoffice && puedeGestionar && <NuevaFecha tramite={tramite} />}
         </Alert>
       )}
       {regenerar.isError && (
@@ -118,13 +129,15 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
           <>
             <SectionHeading texto="Contrato" />
             <Typography sx={{ fontSize: 13.5 }}>
-              {contrato.folio} ({contrato.estado}) · {contrato.servicio}
-              {contrato.precio ? ` · ${formatearPesos(Number(contrato.precio))} ${contrato.ciclo_pago.toLowerCase()}` : ""}
+              {contrato.folio} ({contrato.estado}) · {formatearFecha(contrato.fecha_inicio)} al{" "}
+              {formatearFecha(contrato.fecha_vencimiento)}
             </Typography>
-            <Typography sx={{ fontSize: 13, color: tokens.inkSoft }}>
-              {contrato.sucursal ? `${contrato.sucursal.nombre}: ${contrato.sucursal.direccion}` : "—"} ·{" "}
-              {formatearFecha(contrato.fecha_inicio)} al {formatearFecha(contrato.fecha_vencimiento)}
-            </Typography>
+            {contrato.servicios.map((linea) => (
+              <Typography key={linea.nombre} sx={{ fontSize: 13, color: tokens.inkSoft }}>
+                {linea.nombre} · {formatearPesos(Number(linea.precio))} {linea.ciclo_pago.toLowerCase()}
+                {linea.inmueble ? ` · ${linea.inmueble.nombre}: ${linea.inmueble.direccion}` : ""}
+              </Typography>
+            ))}
             <Typography sx={{ fontSize: 13, color: tokens.inkSoft }}>
               Avisos: {contrato.email_aviso} · +56 {contrato.movil_aviso}
             </Typography>
@@ -142,6 +155,14 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
           </>
         )}
       </Paper>
+
+      {delBackoffice && tramite.motivo?.codigo === "revision_borrador" && tienePermiso(usuario, PERMISOS.verDocumentos) && (
+        <Borrador
+          tramite={tramite}
+          documentoId={documentos.data?.find((documento) => documento.estado === "generado")?.id}
+          puedeGestionar={puedeGestionar}
+        />
+      )}
 
       {tienePermiso(usuario, PERMISOS.verDocumentos) && (
         <Paper sx={{ p: 3, mb: 3 }}>
@@ -189,6 +210,82 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
         </Table>
       </Paper>
     </Box>
+  );
+}
+
+/**
+ * A backoffice case's draft: the executive reviews it with the client and
+ * records their confirmation (RN-13), or edits the data to generate it again.
+ */
+function Borrador({
+  tramite,
+  documentoId,
+  puedeGestionar,
+}: {
+  tramite: TramiteBackoffice;
+  documentoId?: number;
+  puedeGestionar: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const confirmar = useMutation({
+    mutationFn: () => confirmarTramiteBackoffice(tramite.id),
+    onSuccess: (actualizado) => queryClient.setQueryData(["tramites", tramite.id], actualizado),
+  });
+  const conflicto = codigoDeConflicto(confirmar.error);
+
+  return (
+    <Paper sx={{ p: 3, mb: 3 }}>
+      <SectionHeading texto="Borrador para revisar con el cliente" primera />
+      <Box sx={{ border: `1px solid ${tokens.border}`, mb: 2 }}>
+        <VisorPdf
+          clave={["tramite", tramite.id, "documento", documentoId, "pdf"]}
+          obtener={() => descargarDocumentoBackoffice(tramite.id, documentoId!, "pdf")}
+          habilitado={documentoId !== undefined}
+          titulo="Borrador del contrato"
+          error="No pudimos mostrar el borrador. Descárgalo en Word para revisarlo."
+        />
+      </Box>
+      {puedeGestionar && (
+        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+          <Button
+            variant="contained"
+            disabled={confirmar.isPending || documentoId === undefined}
+            onClick={() => confirmar.mutate()}
+          >
+            {confirmar.isPending ? "Confirmando…" : "El cliente confirmó el borrador"}
+          </Button>
+          {tramite.editable && (
+            <Button variant="outlined" component={RouterLink} to={`/backoffice/tramites/${tramite.id}/editar`}>
+              Editar datos
+            </Button>
+          )}
+        </Box>
+      )}
+      {confirmar.isError && (
+        <Alert severity={conflicto ? "warning" : "error"} sx={{ mt: 2 }}>
+          {conflicto === "fecha_inicio_vencida"
+            ? "La fecha de inicio ya pasó: edita los datos y elige una nueva."
+            : "No pudimos confirmar el borrador. Intenta nuevamente."}
+        </Alert>
+      )}
+    </Paper>
+  );
+}
+
+/** A backoffice case whose start date passed: the executive sets a new one. */
+function NuevaFecha({ tramite }: { tramite: TramiteBackoffice }) {
+  const queryClient = useQueryClient();
+  const limites = useQuery({
+    queryKey: ["tramites", "formulario", tramite.tipo_codigo, tramite.cliente.id],
+    queryFn: ({ signal }) => obtenerFormularioTramite(tramite.tipo_codigo, tramite.cliente.id, signal),
+  });
+  return (
+    <FormularioNuevaFecha
+      fechaMin={limites.data?.fecha_min}
+      fechaMax={limites.data?.fecha_max}
+      guardar={(fecha) => cambiarFechaInicioBackoffice(tramite.id, fecha)}
+      alGuardar={(actualizado: TramiteBackoffice) => queryClient.setQueryData(["tramites", tramite.id], actualizado)}
+    />
   );
 }
 
@@ -279,7 +376,9 @@ function FilaDocumento({
             <Alert severity="error" sx={{ width: "100%" }}>
               {errorArchivo ??
                 (conflicto === "fecha_inicio_vencida"
-                  ? "La fecha de inicio ya pasó: el cliente debe elegir una nueva antes de firmar."
+                  ? tramite.canal === "backoffice"
+                    ? "La fecha de inicio ya pasó: elige una nueva antes de firmar."
+                    : "La fecha de inicio ya pasó: el cliente debe elegir una nueva antes de firmar."
                   : "Este documento ya no espera una firma.")}
             </Alert>
           )}
