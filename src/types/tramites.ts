@@ -259,11 +259,48 @@ export interface TramiteBackoffice extends Omit<Tramite, "eventos"> {
 
 export type EstadoDocumento = "generado" | "reemplazado" | "firmado";
 
+export type RolFirmante = "cliente_representante" | "representante_emisor" | "autorizante";
+export type EstadoFirmante = "pendiente" | "firmado" | "rechazado";
+
+/** A signer as the client sees it: name, role and state only. */
 export interface Firmante {
   orden: number;
-  rol: "cliente_representante" | "autorizante";
+  rol: RolFirmante;
   nombre: string;
+  estado: EstadoFirmante;
   firmado_en: string | null;
+}
+
+export interface FirmanteBackoffice extends Firmante {
+  id: number;
+  rechazado_en: string | null;
+  motivo_rechazo: string;
+}
+
+/** ``asistida``: the executive uploads the signed PDF. ``avanzada``: an external provider. */
+export type NivelFirma = "asistida" | "avanzada";
+
+export type EstadoSolicitudFirma = "creando" | "enviada" | "completada" | "rechazada" | "expirada" | "cancelada" | "error";
+
+export interface Firma {
+  nivel: NivelFirma;
+  /** The provider is a test environment: its signatures have no legal validity. */
+  ambiente_pruebas: boolean;
+}
+
+export interface SolicitudFirma {
+  id_externo: string | null;
+  proveedor: string;
+  estado: EstadoSolicitudFirma;
+  ambiente_pruebas: boolean;
+  enviada_en: string | null;
+  expira_en: string | null;
+  terminada_en: string | null;
+  detalle_error: string;
+}
+
+export interface FirmaBackoffice extends Firma {
+  solicitud: SolicitudFirma | null;
 }
 
 export interface Documento {
@@ -278,6 +315,12 @@ export interface Documento {
   firmado_en: string | null;
   tiene_firmado: boolean;
   firmantes: Firmante[];
+  firma: Firma;
+}
+
+export interface DocumentoBackoffice extends Documento {
+  firmantes: FirmanteBackoffice[];
+  firma: FirmaBackoffice;
 }
 
 export type ArchivoDocumento = "pdf" | "docx" | "firmado";

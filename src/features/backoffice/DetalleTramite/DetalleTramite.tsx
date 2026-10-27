@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -16,12 +16,15 @@ import { Link as RouterLink, useParams } from "react-router-dom";
 
 import {
   cambiarFechaInicioBackoffice,
+  cancelarFirma,
   confirmarTramiteBackoffice,
   descargarDocumentoBackoffice,
   listarDocumentosBackoffice,
   obtenerFormularioTramite,
   obtenerTramiteBackoffice,
   regenerarDocumento,
+  reenviarEnlaceFirma,
+  reintentarFirma,
   subirDocumentoFirmado,
 } from "../../../api/tramites";
 import { EstadoPill } from "../../../components/EstadoPill";
@@ -29,15 +32,23 @@ import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
 import { guardarArchivo } from "../../../lib/descargar";
 import { formatearFecha, formatearFechaHora, formatearPesos } from "../../../lib/formato";
-import type { ArchivoDocumento, Documento, TramiteBackoffice } from "../../../types/tramites";
+import type { ArchivoDocumento, Documento, DocumentoBackoffice, TramiteBackoffice } from "../../../types/tramites";
 import { PERMISOS } from "../../auth/permisos";
 import { tienePermiso, useSesion } from "../../auth/useSesion";
 import { etiquetaStaff, tituloEvento } from "../../tramites/estados";
 import { codigoDeConflicto, erroresDeCampo } from "../../tramites/errores";
+import { ESTADO_SOLICITUD, estadoFirmante, rolFirmante } from "../../tramites/firmantes";
 import { FormularioNuevaFecha } from "../../tramites/FormularioNuevaFecha";
 import { VisorPdf } from "../../tramites/VisorPdf";
 
 const NUEVA_FECHA = "La fecha de inicio ya pasó";
+// While a provider collects signatures, ask again this often. The backend
+// also checks the provider on each request when its webhooks are late.
+const CONSULTAR_FIRMA_MS = 10000;
+
+function firmaEnCurso(documentos: DocumentoBackoffice[] | undefined): boolean {
+  return Boolean(documentos?.some((d) => d.firma.solicitud && ["creando", "enviada"].includes(d.firma.solicitud.estado)));
+}
 
 const ESTADO_DOCUMENTO: Record<Documento["estado"], string> = {
   generado: "Vigente",
@@ -72,7 +83,15 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
     queryKey: ["tramites", tramite.id, "documentos", tramite.eventos.length],
     queryFn: ({ signal }) => listarDocumentosBackoffice(tramite.id, signal),
     enabled: tienePermiso(usuario, PERMISOS.verDocumentos),
+    refetchInterval: (query) => (firmaEnCurso(query.state.data) ? CONSULTAR_FIRMA_MS : false),
   });
+  // The provider's last signature completes the case: read it again.
+  const firmadoSinCompletar =
+    tramite.estado !== "completado" && Boolean(documentos.data?.some((d) => d.estado === "firmado"));
+  const terminoFirma = !firmaEnCurso(documentos.data) && tramite.motivo?.codigo === "firma" && documentos.data?.some((d) => d.firma.solicitud);
+  useEffect(() => {
+    if (firmadoSinCompletar || terminoFirma) void queryClient.invalidateQueries({ queryKey: ["tramites", tramite.id], exact: true });
+  }, [firmadoSinCompletar, terminoFirma, queryClient, tramite.id]);
   const regenerar = useMutation({
     mutationFn: () => regenerarDocumento(tramite.id),
     onSuccess: (actualizado) => queryClient.setQueryData(["tramites", tramite.id], actualizado),
@@ -176,10 +195,13 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
               tramite={tramite}
               documento={documento}
               puedeSubir={
+                // The assisted upload exists only for types signed "asistida".
+                documento.firma.nivel === "asistida" &&
                 tienePermiso(usuario, PERMISOS.subirDocumentoFirmado) &&
                 tramite.motivo?.codigo === "firma" &&
                 documento.estado === "generado"
               }
+              puedeGestionarFirma={tienePermiso(usuario, PERMISOS.gestionarFirma)}
             />
           ))}
         </Paper>
@@ -292,10 +314,12 @@ function FilaDocumento({
   tramite,
   documento,
   puedeSubir,
+  puedeGestionarFirma,
 }: {
   tramite: TramiteBackoffice;
-  documento: Documento;
+  documento: DocumentoBackoffice;
   puedeSubir: boolean;
+  puedeGestionarFirma: boolean;
 }) {
   const queryClient = useQueryClient();
   const [archivo, setArchivo] = useState<File | null>(null);
@@ -341,12 +365,7 @@ function FilaDocumento({
         SHA-256 PDF {documento.sha256_pdf}
         {documento.sha256_firmado && ` · firmado ${documento.sha256_firmado}`}
       </Typography>
-      <Typography sx={{ fontSize: 12.5, color: "text.secondary", mt: 0.5 }}>
-        Firmantes:{" "}
-        {documento.firmantes
-          .map((f) => `${f.nombre} (${f.rol === "autorizante" ? "autorizante" : "representante"}${f.firmado_en ? ", firmó" : ""})`)
-          .join(" · ")}
-      </Typography>
+      <Firmantes tramite={tramite} documento={documento} puedeGestionar={puedeGestionarFirma} />
 
       {puedeSubir && (
         <Box
@@ -382,6 +401,112 @@ function FilaDocumento({
             </Alert>
           )}
         </Box>
+      )}
+    </Box>
+  );
+}
+
+function Firmantes({
+  tramite,
+  documento,
+  puedeGestionar,
+}: {
+  tramite: TramiteBackoffice;
+  documento: DocumentoBackoffice;
+  puedeGestionar: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const solicitud = documento.firma.solicitud;
+  const alResponder = () => void queryClient.invalidateQueries({ queryKey: ["tramites", tramite.id] });
+  const reenviar = useMutation({
+    mutationFn: (firmanteId: number) => reenviarEnlaceFirma(tramite.id, documento.id, firmanteId),
+    onSuccess: alResponder,
+  });
+  const cancelar = useMutation({ mutationFn: () => cancelarFirma(tramite.id, documento.id), onSuccess: alResponder });
+  const reintentar = useMutation({ mutationFn: () => reintentarFirma(tramite.id, documento.id), onSuccess: alResponder });
+  const enCurso = solicitud?.estado === "enviada";
+  const error = reenviar.error ?? cancelar.error ?? reintentar.error;
+
+  return (
+    <Box sx={{ mt: 1 }}>
+      {solicitud && (
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, fontSize: 12.5, mb: 0.5 }}>
+          <Typography sx={{ fontSize: 12.5, fontWeight: 600 }}>Firma avanzada: {ESTADO_SOLICITUD[solicitud.estado]}</Typography>
+          {solicitud.id_externo && (
+            <Typography sx={{ fontSize: 11.5, color: "text.hint", fontFamily: "monospace", wordBreak: "break-all" }}>
+              Solicitud {solicitud.id_externo}
+            </Typography>
+          )}
+          {solicitud.expira_en && enCurso && (
+            <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+              · vence {formatearFechaHora(solicitud.expira_en)}
+            </Typography>
+          )}
+          <Box sx={{ flex: 1 }} />
+          {puedeGestionar && enCurso && (
+            <Button size="small" color="error" disabled={cancelar.isPending} onClick={() => cancelar.mutate()}>
+              Cancelar firma
+            </Button>
+          )}
+          {puedeGestionar && solicitud.estado === "error" && (
+            <Button size="small" disabled={reintentar.isPending} onClick={() => reintentar.mutate()}>
+              Reintentar envío
+            </Button>
+          )}
+        </Box>
+      )}
+      {solicitud?.detalle_error && solicitud.estado !== "completada" && (
+        <Typography sx={{ fontSize: 12.5, color: "text.secondary", mb: 0.5 }}>{solicitud.detalle_error}</Typography>
+      )}
+      <Table size="small" aria-label={`Firmantes de la versión ${documento.version}`}>
+        <TableHead>
+          <TableRow>
+            <TableCell>#</TableCell>
+            <TableCell>Firmante</TableCell>
+            <TableCell>Estado</TableCell>
+            <TableCell>Fecha</TableCell>
+            {enCurso && puedeGestionar && <TableCell />}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {documento.firmantes.map((firmante) => {
+            const fecha = firmante.firmado_en ?? firmante.rechazado_en;
+            return (
+              <TableRow key={firmante.id}>
+                <TableCell>{firmante.orden}</TableCell>
+                <TableCell>
+                  {firmante.nombre}
+                  <Typography component="span" sx={{ fontSize: 12, color: "text.secondary" }}>
+                    {" "}
+                    · {rolFirmante(firmante, tramite)}
+                  </Typography>
+                  {firmante.motivo_rechazo && (
+                    <Typography sx={{ fontSize: 12, color: "text.secondary" }}>Motivo: {firmante.motivo_rechazo}</Typography>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <EstadoPill {...estadoFirmante(firmante)} />
+                </TableCell>
+                <TableCell>{fecha ? formatearFechaHora(fecha) : "—"}</TableCell>
+                {enCurso && puedeGestionar && (
+                  <TableCell align="right">
+                    {firmante.estado === "pendiente" && (
+                      <Button size="small" disabled={reenviar.isPending} onClick={() => reenviar.mutate(firmante.id)}>
+                        Reenviar enlace
+                      </Button>
+                    )}
+                  </TableCell>
+                )}
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+      {reenviar.isSuccess && <Typography sx={{ fontSize: 12.5, mt: 0.5 }}>Enviamos un enlace nuevo.</Typography>}
+      {error !== null && (
+        <Alert severity="error" sx={{ mt: 1 }}>
+          {codigoDeConflicto(error) ? "La firma ya no está en curso." : "No pudimos completar la acción. Intenta de nuevo."}
+        </Alert>
       )}
     </Box>
   );

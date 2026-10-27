@@ -1,22 +1,25 @@
 /** All data here is synthetic. */
 
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getSesion } from "../../../../api/auth";
 import {
   cambiarFechaInicioBackoffice,
+  cancelarFirma,
   confirmarTramiteBackoffice,
   descargarDocumentoBackoffice,
   listarDocumentosBackoffice,
   obtenerFormularioTramite,
   obtenerTramiteBackoffice,
+  reenviarEnlaceFirma,
   regenerarDocumento,
   subirDocumentoFirmado,
 } from "../../../../api/tramites";
 import {
-  DOCUMENTO,
+  DOCUMENTO_BACKOFFICE,
+  DOCUMENTO_FIRMA_AVANZADA,
   FORMULARIO_BODEGA,
   TRAMITE_BACKOFFICE,
   TRAMITE_BODEGA,
@@ -34,6 +37,9 @@ vi.mock("../../../../api/tramites", () => ({
   confirmarTramiteBackoffice: vi.fn(),
   cambiarFechaInicioBackoffice: vi.fn(),
   obtenerFormularioTramite: vi.fn(),
+  reenviarEnlaceFirma: vi.fn(),
+  cancelarFirma: vi.fn(),
+  reintentarFirma: vi.fn(),
 }));
 
 const CON_PERMISOS = {
@@ -43,6 +49,7 @@ const CON_PERMISOS = {
     "tramites.gestionar_tramite",
     "documentos.view_documento",
     "documentos.subir_documento_firmado",
+    "documentos.gestionar_firma",
   ],
 };
 
@@ -56,7 +63,7 @@ describe("DetalleTramite", () => {
   beforeEach(() => {
     vi.mocked(getSesion).mockResolvedValue(CON_PERMISOS);
     vi.mocked(obtenerTramiteBackoffice).mockResolvedValue(TRAMITE_BACKOFFICE);
-    vi.mocked(listarDocumentosBackoffice).mockResolvedValue([DOCUMENTO]);
+    vi.mocked(listarDocumentosBackoffice).mockResolvedValue([DOCUMENTO_BACKOFFICE]);
     vi.mocked(subirDocumentoFirmado).mockReset();
   });
 
@@ -71,7 +78,7 @@ describe("DetalleTramite", () => {
   });
 
   it("uploads the signed PDF while the case waits for a signature", async () => {
-    vi.mocked(subirDocumentoFirmado).mockResolvedValue({ ...DOCUMENTO, estado: "firmado" });
+    vi.mocked(subirDocumentoFirmado).mockResolvedValue({ ...DOCUMENTO_BACKOFFICE, estado: "firmado" });
     const user = userEvent.setup();
     renderDetalle();
     const pdf = new File(["%PDF-1.7"], "firmado.pdf", { type: "application/pdf" });
@@ -79,7 +86,7 @@ describe("DetalleTramite", () => {
     await user.upload(await screen.findByLabelText("PDF firmado"), pdf);
     await user.click(screen.getByRole("button", { name: "Subir PDF firmado" }));
 
-    expect(subirDocumentoFirmado).toHaveBeenCalledWith(7, DOCUMENTO.id, pdf);
+    expect(subirDocumentoFirmado).toHaveBeenCalledWith(7, DOCUMENTO_BACKOFFICE.id, pdf);
   });
 
   it("hides the upload without the permission", async () => {
@@ -169,6 +176,59 @@ describe("DetalleTramite", () => {
       await user.click(screen.getByRole("button", { name: "Guardar fecha" }));
 
       expect(cambiarFechaInicioBackoffice).toHaveBeenCalledWith(8, "2026-10-25");
+    });
+  });
+
+  describe("advanced signature through the provider", () => {
+    beforeEach(() => {
+      vi.mocked(listarDocumentosBackoffice).mockResolvedValue([DOCUMENTO_FIRMA_AVANZADA]);
+      vi.mocked(reenviarEnlaceFirma).mockResolvedValue(DOCUMENTO_FIRMA_AVANZADA);
+      vi.mocked(cancelarFirma).mockResolvedValue(DOCUMENTO_FIRMA_AVANZADA);
+    });
+
+    it("lists each signer with their state and the request", async () => {
+      renderDetalle();
+
+      const tabla = await screen.findByRole("table", { name: "Firmantes de la versión 1" });
+      const filas = within(tabla).getAllByRole("row").slice(1);
+      expect(filas).toHaveLength(3);
+      expect(within(filas[0]).getByText("Firmado")).toBeInTheDocument();
+      expect(within(filas[1]).getByText(/Easy Office/)).toBeInTheDocument();
+      expect(within(filas[1]).getByText("Pendiente")).toBeInTheDocument();
+      expect(screen.getByText(/Solicitud 8f0e2c1a-0000-4000-8000-000000000001/)).toBeInTheDocument();
+    });
+
+    it("hides the assisted upload", async () => {
+      renderDetalle();
+
+      await screen.findByRole("table", { name: "Firmantes de la versión 1" });
+      expect(screen.queryByLabelText("PDF firmado")).not.toBeInTheDocument();
+    });
+
+    it("resends a pending signer's link and cancels the request", async () => {
+      const user = userEvent.setup();
+      renderDetalle();
+
+      const reenviar = await screen.findAllByRole("button", { name: "Reenviar enlace" });
+      expect(reenviar).toHaveLength(2);
+      await user.click(reenviar[0]);
+      expect(reenviarEnlaceFirma).toHaveBeenCalledWith(7, DOCUMENTO_FIRMA_AVANZADA.id, 33);
+      expect(await screen.findByText("Enviamos un enlace nuevo.")).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Cancelar firma" }));
+      expect(cancelarFirma).toHaveBeenCalledWith(7, DOCUMENTO_FIRMA_AVANZADA.id);
+    });
+
+    it("offers no actions without the permission", async () => {
+      vi.mocked(getSesion).mockResolvedValue({
+        ...CON_PERMISOS,
+        permisos: CON_PERMISOS.permisos.filter((p) => p !== "documentos.gestionar_firma"),
+      });
+      renderDetalle();
+
+      await screen.findByRole("table", { name: "Firmantes de la versión 1" });
+      expect(screen.queryByRole("button", { name: "Reenviar enlace" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Cancelar firma" })).not.toBeInTheDocument();
     });
   });
 });

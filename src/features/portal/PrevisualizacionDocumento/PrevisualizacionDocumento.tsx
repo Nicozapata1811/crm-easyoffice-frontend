@@ -25,6 +25,7 @@ const CONSULTAR_CADA_MS = 2000;
 
 function rolFirmante(rol: Documento["firmantes"][number]["rol"], tramite: Tramite): string {
   if (rol === "cliente_representante") return "Representante legal de tu empresa";
+  if (rol === "representante_emisor") return "Representante de Easy Office";
   return esBodega(tramite)
     ? "Propietario de la bodega (autoriza su uso)"
     : "Propietario de la oficina (autoriza el domicilio)";

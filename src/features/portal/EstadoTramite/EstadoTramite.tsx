@@ -20,7 +20,7 @@ import { SectionHeading } from "../../../components/SectionHeading";
 import { guardarArchivo } from "../../../lib/descargar";
 import { formatearFecha, formatearFechaHora } from "../../../lib/formato";
 import type { Tramite } from "../../../types/tramites";
-import { esBodega } from "../../tramites/contrato";
+import { estadoFirmante, rolFirmante } from "../../tramites/firmantes";
 import { etiquetaCliente, tituloEvento } from "../../tramites/estados";
 import { FormularioNuevaFecha } from "../../tramites/FormularioNuevaFecha";
 
@@ -132,17 +132,9 @@ export function EstadoTramite() {
               sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", py: 1.25, fontSize: 13 }}
             >
               <span>
-                {firmante.nombre} —{" "}
-                {firmante.rol === "cliente_representante"
-                  ? "Representante legal"
-                  : esBodega(datos)
-                    ? "Propietario de la bodega"
-                    : "Propietario de la oficina"}
+                {firmante.nombre} — {rolFirmante(firmante, datos)}
               </span>
-              <EstadoPill
-                etiqueta={firmante.firmado_en ? "Firmado" : "Pendiente"}
-                tono={firmante.firmado_en ? "completo" : "progreso"}
-              />
+              <EstadoPill {...estadoFirmante(firmante)} />
             </Box>
           ))}
           {vigente.tiene_firmado && <DescargaFirmado tramiteId={datos.id} documentoId={vigente.id} />}
