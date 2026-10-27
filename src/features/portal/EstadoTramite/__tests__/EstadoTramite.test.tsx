@@ -65,6 +65,26 @@ describe("EstadoTramite", () => {
     expect(await screen.findByRole("button", { name: "Descargar contrato firmado" })).toBeInTheDocument();
   });
 
+  it("shows each signer's state, with names only", async () => {
+    vi.mocked(listarDocumentos).mockResolvedValue([
+      {
+        ...DOCUMENTO,
+        firmantes: [
+          { ...DOCUMENTO.firmantes[0], estado: "firmado", firmado_en: "2026-10-16T11:00:00-03:00" },
+          { orden: 2, rol: "representante_emisor", nombre: "Rodrigo Andrés Ejemplo Ficticio", estado: "pendiente", firmado_en: null },
+          { ...DOCUMENTO.firmantes[1], orden: 3, estado: "rechazado" },
+        ],
+        firma: { nivel: "avanzada", ambiente_pruebas: true },
+      },
+    ]);
+    renderEstado();
+
+    expect(await screen.findByText(/Rodrigo Andrés Ejemplo Ficticio — Easy Office/)).toBeInTheDocument();
+    expect(screen.getByText("Firmado")).toBeInTheDocument();
+    expect(screen.getByText("Pendiente")).toBeInTheDocument();
+    expect(screen.getByText("Rechazó")).toBeInTheDocument();
+  });
+
   it("asks for a new start date when the chosen one passed", async () => {
     vi.mocked(obtenerTramite).mockResolvedValue({
       ...TRAMITE,

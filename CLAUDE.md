@@ -211,7 +211,27 @@ backoffice (`canal`), the executive:
 - previews the draft (`VisorPdf`);
 - records the client's confirmation, or edits the data;
 - sets a new start date when the chosen one passed. Guards: `tramites.view_tramite`, `documentos.view_documento`,
-`documentos.subir_documento_firmado`, `tramites.gestionar_tramite`.
+`documentos.subir_documento_firmado`, `tramites.gestionar_tramite`,
+`documentos.gestionar_firma`.
+
+**Signature level** (IN-01). Each document carries `firma`, read from the
+case type's configuration:
+- `nivel: "asistida"`: the executive uploads the signed PDF, as before.
+- `nivel: "avanzada"`: the backend sends the document to the
+  advanced-signature provider. The upload is hidden. `DetalleTramite` shows:
+  - each signer in order, with state (Pendiente / Firmado / Rechazó, from
+    `features/tramites/firmantes.ts`), date and decline reason;
+  - the provider's request id and state;
+  - "Reenviar enlace", "Cancelar firma" and "Reintentar envío"
+    (`documentos.gestionar_firma`).
+
+  The screen polls every 10 s while a request is in progress, and reads the
+  case again once the document is signed.
+- `firma.ambiente_pruebas` says the provider is the backend's test PSC. The
+  screens show no warning for it (the team decided it is noise in
+  development); the flag stays in the API.
+- The portal status shows each signer's name, role ("Easy Office" for
+  `representante_emisor`) and state, nothing else.
 
 Still to build: **case type configuration** — the screen that makes the
 configurable engine visible. It is the highest-value missing screen.
@@ -361,11 +381,14 @@ Built so far:
 - client management: list, search, record, create and edit;
 - the tax domicile flow end to end on the real PLT-01 (HU-24): form, real
   draft, payment of the plan, status, and the backoffice case list and detail
-  with the signed upload. No demo data remains in the portal.
+  with the signed upload. No demo data remains in the portal;
+- the advanced signature's signers and states in the backoffice and the
+  portal (IN-01, HU-36, HU-37).
 
 **Still unknown — do not invent answers:**
 
-- The closed list of pending reasons (TA-13) and the signing order (RN-39)
+- The closed list of pending reasons (TA-13) and the signing order (RN-39);
+  the advanced signature's order and signers are the backend's, an assumption
 - Roles beyond Administrador and Ejecutivo
 - Payment provider (Klap is implemented as an assumption), prices, and where
   payment sits in the flow

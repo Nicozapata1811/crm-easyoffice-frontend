@@ -9,4 +9,5 @@ export const PERMISOS = {
   iniciarTramites: "tramites.iniciar_tramite",
   verDocumentos: "documentos.view_documento",
   subirDocumentoFirmado: "documentos.subir_documento_firmado",
+  gestionarFirma: "documentos.gestionar_firma",
 } as const;

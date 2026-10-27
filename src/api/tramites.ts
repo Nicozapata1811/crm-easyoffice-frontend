@@ -2,6 +2,7 @@ import type { Pagina } from "../types/cliente";
 import type {
   ArchivoDocumento,
   Documento,
+  DocumentoBackoffice,
   EstadoTramite,
   FormularioDomicilio,
   FormularioPortal,
@@ -98,7 +99,7 @@ export function regenerarDocumento(tramiteId: number): Promise<TramiteBackoffice
   return api.post(`/tramites/${tramiteId}/regenerar/`);
 }
 
-export function listarDocumentosBackoffice(tramiteId: number, signal?: AbortSignal): Promise<Documento[]> {
+export function listarDocumentosBackoffice(tramiteId: number, signal?: AbortSignal): Promise<DocumentoBackoffice[]> {
   return api.get(`/tramites/${tramiteId}/documentos/`, signal);
 }
 
@@ -110,10 +111,25 @@ export function descargarDocumentoBackoffice(
   return api.descargar(`/tramites/${tramiteId}/documentos/${documentoId}/${tipo}/`);
 }
 
-export function subirDocumentoFirmado(tramiteId: number, documentoId: number, archivo: File): Promise<Documento> {
+export function subirDocumentoFirmado(tramiteId: number, documentoId: number, archivo: File): Promise<DocumentoBackoffice> {
   const formulario = new FormData();
   formulario.append("archivo", archivo);
   return api.enviarFormulario(`/tramites/${tramiteId}/documentos/${documentoId}/firmado/subir/`, formulario);
+}
+
+// --- Backoffice: advanced signature through the provider (IN-01) ------------
+// The backend calls the provider in Celery; each answers 202 with the document.
+
+export function reenviarEnlaceFirma(tramiteId: number, documentoId: number, firmanteId: number): Promise<DocumentoBackoffice> {
+  return api.post(`/tramites/${tramiteId}/documentos/${documentoId}/firma/reenviar/`, { firmante: firmanteId });
+}
+
+export function cancelarFirma(tramiteId: number, documentoId: number): Promise<DocumentoBackoffice> {
+  return api.post(`/tramites/${tramiteId}/documentos/${documentoId}/firma/cancelar/`);
+}
+
+export function reintentarFirma(tramiteId: number, documentoId: number): Promise<DocumentoBackoffice> {
+  return api.post(`/tramites/${tramiteId}/documentos/${documentoId}/firma/reintentar/`);
 }
 
 // --- Backoffice: cases an executive starts for a client (PLT-02) -------------

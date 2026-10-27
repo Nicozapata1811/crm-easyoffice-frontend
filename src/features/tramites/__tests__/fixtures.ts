@@ -2,6 +2,7 @@
 
 import type {
   Documento,
+  DocumentoBackoffice,
   FormularioDomicilio,
   FormularioPortal,
   FormularioTramite,
@@ -179,9 +180,54 @@ export const DOCUMENTO: Documento = {
   firmado_en: null,
   tiene_firmado: false,
   firmantes: [
-    { orden: 1, rol: "cliente_representante", nombre: "Camila Andrea Ejemplo Prueba", firmado_en: null },
-    { orden: 2, rol: "autorizante", nombre: "María José Propietaria Ejemplo", firmado_en: null },
+    { orden: 1, rol: "cliente_representante", nombre: "Camila Andrea Ejemplo Prueba", estado: "pendiente", firmado_en: null },
+    { orden: 2, rol: "autorizante", nombre: "María José Propietaria Ejemplo", estado: "pendiente", firmado_en: null },
   ],
+  firma: { nivel: "asistida", ambiente_pruebas: false },
+};
+
+export const DOCUMENTO_BACKOFFICE: DocumentoBackoffice = {
+  ...DOCUMENTO,
+  firmantes: DOCUMENTO.firmantes.map((firmante) => ({
+    ...firmante,
+    id: 30 + firmante.orden,
+    rechazado_en: null,
+    motivo_rechazo: "",
+  })),
+  firma: { nivel: "asistida", ambiente_pruebas: false, solicitud: null },
+};
+
+/** The same document sent to the test PSC: one of three signers has signed. */
+export const DOCUMENTO_FIRMA_AVANZADA: DocumentoBackoffice = {
+  ...DOCUMENTO_BACKOFFICE,
+  firmantes: [
+    { ...DOCUMENTO_BACKOFFICE.firmantes[0], estado: "firmado", firmado_en: "2026-10-16T11:00:00-03:00" },
+    {
+      id: 33,
+      orden: 2,
+      rol: "representante_emisor",
+      nombre: "Rodrigo Andrés Ejemplo Ficticio",
+      estado: "pendiente",
+      firmado_en: null,
+      rechazado_en: null,
+      motivo_rechazo: "",
+    },
+    { ...DOCUMENTO_BACKOFFICE.firmantes[1], orden: 3 },
+  ],
+  firma: {
+    nivel: "avanzada",
+    ambiente_pruebas: true,
+    solicitud: {
+      id_externo: "8f0e2c1a-0000-4000-8000-000000000001",
+      proveedor: "http",
+      estado: "enviada",
+      ambiente_pruebas: true,
+      enviada_en: "2026-10-16T10:30:00-03:00",
+      expira_en: "2026-10-23T23:59:59-03:00",
+      terminada_en: null,
+      detalle_error: "",
+    },
+  },
 };
 
 export const TRAMITE_BACKOFFICE: TramiteBackoffice = {
