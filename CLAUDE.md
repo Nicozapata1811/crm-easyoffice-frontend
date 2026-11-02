@@ -36,6 +36,11 @@ PTY4614), three students, 18 weeks. The repository is public and audited.
 
 The backend base URL comes from an environment variable. Never hardcode it.
 
+`Dockerfile` is the development image. `Dockerfile.nginx` builds `dist/` and
+serves it with nginx and an SPA fallback; the backend's
+`docker-compose.staging.yml` uses it. `.github/workflows/ci.yml` runs on every
+PR, and `deploy-staging.yml` deploys to staging after CI passes on `main`.
+
 ---
 
 ## Authentication
@@ -111,8 +116,7 @@ in the backend's order.
   (service `codigo` → route; the backend holds no frontend routes). Any
   other card is dimmed "Próximamente". A bookable service with no route
   warns in the console while developing.
-- Prices read "Precio referencial", or "Por confirmar" when there is none,
-  with the "Valores de ejemplo" note while any shown price is unconfirmed.
+- Prices read "Precio referencial", or "Por confirmar" when there is none.
 - The search box filters the cards client-side by name and description,
   ignoring case and accents.
 

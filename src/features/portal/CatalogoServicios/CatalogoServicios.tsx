@@ -44,9 +44,6 @@ export function CatalogoServicios() {
         normalizar(`${servicio.nombre} ${servicio.descripcion}`).includes(termino),
       )
     : visibles;
-  const preciosDeEjemplo = visibles.some(
-    (servicio) => servicio.precio_base !== null && !servicio.precio_confirmado,
-  );
 
   // A bookable card with no route is an admin change the frontend cannot
   // serve yet: say so while developing instead of failing in production.

@@ -33,13 +33,12 @@ describe("ConfirmacionPago", () => {
     vi.mocked(pagar).mockReset();
   });
 
-  it("charges the case's sale: plan plus the signature, labelled as examples", async () => {
+  it("charges the case's sale: plan plus the signature", async () => {
     renderPago();
 
     expect(await screen.findByText("Domicilio tributario · Plan semestral")).toBeInTheDocument();
     expect(screen.getByText("Firma electrónica avanzada")).toBeInTheDocument();
     expect(screen.getByText(/\$44\.990/)).toBeInTheDocument();
-    expect(screen.getByText(/Valores de ejemplo/)).toBeInTheDocument();
   });
 
   it("pays the case's sale with the method the client picks", async () => {

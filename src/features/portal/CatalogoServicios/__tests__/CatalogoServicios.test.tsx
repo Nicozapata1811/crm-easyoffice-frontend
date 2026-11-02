@@ -153,13 +153,12 @@ describe("CatalogoServicios", () => {
     expect(aviso).toHaveBeenCalledWith(expect.stringContaining("poder-simple"));
   });
 
-  it("shows reference prices as examples and missing prices as to be confirmed", async () => {
+  it("shows reference prices, and missing prices as to be confirmed", async () => {
     renderCatalogo();
 
     await screen.findByRole("heading", { name: "Domicilio tributario" });
     expect(within(tarjeta("Domicilio tributario")).getByText(/\$59\.990/)).toBeInTheDocument();
     expect(within(tarjeta("Bodega")).getByText("Por confirmar")).toBeInTheDocument();
-    expect(screen.getByText(/Valores de ejemplo/)).toBeInTheDocument();
   });
 
   it("filters the cards by name or description, ignoring accents", async () => {

@@ -93,6 +93,20 @@ Vite incrusta las variables `VITE_` en el bundle al compilar, así que **ninguna
 de ellas puede contener un secreto**. Una URL base no lo es. El archivo `.env`
 no se versiona.
 
+### Imagen para staging
+
+`Dockerfile` es la imagen de desarrollo. `Dockerfile.nginx` compila la aplicación
+con `VITE_API_BASE_URL=/api` y la sirve con nginx, con vuelta a `index.html` para
+que funcionen los enlaces directos:
+
+```bash
+docker build -f Dockerfile.nginx -t crm_easyoffice_frontend .
+```
+
+La usa `docker-compose.staging.yml` del backend; la guía completa está en
+`docs/staging.md` de ese repositorio. Cada merge a `main` que pasa la CI despliega
+a staging (`.github/workflows/deploy-staging.yml`).
+
 ---
 
 ## Integrantes y roles
