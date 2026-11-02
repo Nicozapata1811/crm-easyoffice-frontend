@@ -111,8 +111,7 @@ in the backend's order.
   (service `codigo` → route; the backend holds no frontend routes). Any
   other card is dimmed "Próximamente". A bookable service with no route
   warns in the console while developing.
-- Prices read "Precio referencial", or "Por confirmar" when there is none,
-  with the "Valores de ejemplo" note while any shown price is unconfirmed.
+- Prices read "Precio referencial", or "Por confirmar" when there is none.
 - The search box filters the cards client-side by name and description,
   ignoring case and accents.
 
