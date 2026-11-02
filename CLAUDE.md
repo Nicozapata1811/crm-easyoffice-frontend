@@ -36,6 +36,11 @@ PTY4614), three students, 18 weeks. The repository is public and audited.
 
 The backend base URL comes from an environment variable. Never hardcode it.
 
+`Dockerfile` is the development image. `Dockerfile.nginx` builds `dist/` and
+serves it with nginx and an SPA fallback; the backend's
+`docker-compose.staging.yml` uses it. `.github/workflows/ci.yml` runs on every
+PR, and `deploy-staging.yml` deploys to staging after CI passes on `main`.
+
 ---
 
 ## Authentication
