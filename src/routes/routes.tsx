@@ -22,6 +22,7 @@ import { PagarVenta } from "../features/portal/PagarVenta/PagarVenta";
 import { MisTramites } from "../features/portal/MisTramites/MisTramites";
 import { PrevisualizacionDocumento } from "../features/portal/PrevisualizacionDocumento/PrevisualizacionDocumento";
 import { ResultadoPago } from "../features/portal/ResultadoPago/ResultadoPago";
+import { RegistroAuditoria } from "../features/backoffice/Auditoria/RegistroAuditoria";
 import { FichaCliente } from "../features/backoffice/Clientes/FichaCliente";
 import { FormularioCliente } from "../features/backoffice/Clientes/FormularioCliente";
 import { ListaClientes } from "../features/backoffice/Clientes/ListaClientes";
@@ -219,6 +220,14 @@ export const router = createBrowserRouter([
         ),
       },
       { path: "tipos-tramite", element: <TiposTramite /> },
+      {
+        path: "auditoria",
+        element: (
+          <RequirePermission permiso={PERMISOS.consultarAuditoria}>
+            <RegistroAuditoria />
+          </RequirePermission>
+        ),
+      },
     ],
   },
   { path: "*", element: <NoEncontrado /> },

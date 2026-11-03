@@ -20,6 +20,7 @@ const LINKS: { to: string; label: string; end?: boolean; permiso?: string }[] = 
   { to: "/backoffice/tramites", label: "Trámites", permiso: PERMISOS.verTramites },
   { to: "/backoffice/ventas", label: "Ventas", permiso: PERMISOS.verVentas },
   { to: "/backoffice/tipos-tramite", label: "Tipos de trámite" },
+  { to: "/backoffice/auditoria", label: "Auditoría", permiso: PERMISOS.consultarAuditoria },
 ];
 
 export function BackofficeLayout() {

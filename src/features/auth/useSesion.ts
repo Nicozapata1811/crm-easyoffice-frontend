@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getSesion, login, logout } from "../../api/auth";
@@ -39,6 +40,12 @@ export function useLogout() {
       queryClient.setQueryData(SESION_KEY, null);
     },
   });
+}
+
+/** Reads the session again: a 403 may mean it ended, not that access is missing. */
+export function useRevisarSesion() {
+  const queryClient = useQueryClient();
+  return useCallback(() => queryClient.invalidateQueries({ queryKey: SESION_KEY }), [queryClient]);
 }
 
 export function tienePermiso(usuario: UsuarioSesion | null | undefined, permiso: string) {
