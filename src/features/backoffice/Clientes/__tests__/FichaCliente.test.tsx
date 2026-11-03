@@ -4,6 +4,7 @@ import { screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getSesion } from "../../../../api/auth";
+import { obtenerHistorial } from "../../../../api/auditoria";
 import { ApiError } from "../../../../api/client";
 import { obtenerCliente } from "../../../../api/clientes";
 import type { FichaCliente as Ficha } from "../../../../types/cliente";
@@ -12,6 +13,10 @@ import { EJECUTIVO, renderEn, SOLO_LECTURA } from "./renderConSesion";
 
 vi.mock("../../../../api/auth", () => ({ getSesion: vi.fn() }));
 vi.mock("../../../../api/clientes", () => ({ obtenerCliente: vi.fn() }));
+vi.mock("../../../../api/auditoria", async (original) => ({
+  ...(await original<typeof import("../../../../api/auditoria")>()),
+  obtenerHistorial: vi.fn(),
+}));
 
 const EMPRESA: Ficha = {
   id: 9,
@@ -66,6 +71,27 @@ describe("FichaCliente", () => {
     const representantes = screen.getByRole("region", { name: "Representantes legales" });
     expect(within(representantes).getByText("Valentina Fuentes Soto")).toBeInTheDocument();
     expect(within(representantes).getByText("Sin término")).toBeInTheDocument();
+  });
+
+  it("shows the client's audit history only with the permission", async () => {
+    vi.mocked(obtenerHistorial).mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
+    vi.mocked(getSesion).mockResolvedValue({
+      ...EJECUTIVO,
+      permisos: [...EJECUTIVO.permisos, "core.consultar_auditoria"],
+    });
+    renderFicha();
+
+    expect(await screen.findByRole("region", { name: "Registro de auditoría" })).toBeInTheDocument();
+    expect(obtenerHistorial).toHaveBeenCalledWith("clientes.cliente", 9, 1, expect.anything());
+  });
+
+  it("keeps the audit history from an executive", async () => {
+    vi.mocked(obtenerHistorial).mockClear();
+    renderFicha();
+
+    await screen.findByRole("region", { name: "Datos del cliente" });
+    expect(screen.queryByRole("region", { name: "Registro de auditoría" })).not.toBeInTheDocument();
+    expect(obtenerHistorial).not.toHaveBeenCalled();
   });
 
   it("offers editing only with the permission", async () => {

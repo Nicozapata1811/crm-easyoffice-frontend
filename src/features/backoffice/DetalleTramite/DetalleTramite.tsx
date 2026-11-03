@@ -35,6 +35,7 @@ import { formatearFecha, formatearFechaHora, formatearPesos } from "../../../lib
 import type { ArchivoDocumento, Documento, DocumentoBackoffice, TramiteBackoffice } from "../../../types/tramites";
 import { PERMISOS } from "../../auth/permisos";
 import { tienePermiso, useSesion } from "../../auth/useSesion";
+import { HistorialRegistro } from "../Auditoria/HistorialRegistro";
 import { etiquetaStaff, tituloEvento } from "../../tramites/estados";
 import { codigoDeConflicto, erroresDeCampo } from "../../tramites/errores";
 import { ESTADO_SOLICITUD, estadoFirmante, rolFirmante } from "../../tramites/firmantes";
@@ -207,7 +208,7 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
         </Paper>
       )}
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: 3, mb: 3 }}>
         <SectionHeading texto="Historial" primera />
         <Table size="small" aria-label="Historial del trámite">
           <TableHead>
@@ -230,6 +231,12 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
           </TableBody>
         </Table>
       </Paper>
+
+      <HistorialRegistro
+        entidad="tramites.tramite"
+        registroId={tramite.id}
+        bajada="Incluye su contrato y sus líneas, su venta y sus pagos, y sus documentos y firmantes."
+      />
     </Box>
   );
 }

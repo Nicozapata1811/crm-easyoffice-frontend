@@ -20,6 +20,7 @@ import { formatearRut } from "../../../lib/rut";
 import type { FichaCliente as Ficha } from "../../../types/cliente";
 import { PERMISOS } from "../../auth/permisos";
 import { tienePermiso, useSesion } from "../../auth/useSesion";
+import { HistorialRegistro } from "../Auditoria/HistorialRegistro";
 import { ETIQUETA_TIPO } from "./etiquetas";
 import { useCliente } from "./useClientes";
 
@@ -110,11 +111,16 @@ export function FichaCliente() {
         </Paper>
       )}
 
-      <Paper component="section" aria-label="Servicios, documentos e historial" sx={{ p: 4 }}>
-        <SectionHeading texto="Servicios, documentos e historial" primera />
+      <HistorialRegistro
+        entidad="clientes.cliente"
+        registroId={clienteId}
+        bajada="Incluye su persona o empresa, sus representantes y su cuenta del portal. Sus contratos y trámites tienen historial propio."
+      />
+
+      <Paper component="section" aria-label="Servicios y documentos" sx={{ p: 4 }}>
+        <SectionHeading texto="Servicios y documentos" primera />
         <Typography sx={{ color: "text.secondary" }}>
-          Aparecerán aquí cuando el sistema registre servicios contratados (HU-48), documentos y
-          el historial de cambios (RF-15).
+          Aparecerán aquí cuando el sistema registre servicios contratados (HU-48) y documentos.
         </Typography>
       </Paper>
     </Box>
