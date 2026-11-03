@@ -27,6 +27,9 @@ function mensajeDeError(error: unknown): string {
   if (error instanceof ApiError && error.status === 400) {
     return "Correo o contraseña incorrectos.";
   }
+  if (error instanceof ApiError && error.status === 429) {
+    return "Hiciste demasiados intentos de ingreso. Espera un momento e intenta nuevamente.";
+  }
   return "No pudimos conectar con el servidor. Intenta nuevamente.";
 }
 

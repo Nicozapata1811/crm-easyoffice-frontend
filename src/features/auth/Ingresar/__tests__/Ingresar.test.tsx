@@ -87,6 +87,17 @@ describe("Ingresar", () => {
     expect(await screen.findByText("Correo o contraseña incorrectos.")).toBeInTheDocument();
   });
 
+  it("says so when there were too many attempts", async () => {
+    vi.mocked(login).mockRejectedValue(new ApiError(429, {}, "throttled"));
+
+    renderIngresar();
+    await ingresar("persona@example.test", "incorrecta");
+
+    expect(await screen.findByText(/Hiciste demasiados intentos de ingreso/)).toBeInTheDocument();
+    expect(screen.queryByText(/No pudimos conectar/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Correo o contraseña incorrectos.")).not.toBeInTheDocument();
+  });
+
   it("goes to the requested page after signing in", async () => {
     vi.mocked(login).mockResolvedValue({
       id: 1,
