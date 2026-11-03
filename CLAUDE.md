@@ -53,7 +53,8 @@ Requests are sent with credentials included. CSRF token handling follows Django'
 convention.
 
 - Staff log in at `/backoffice/ingresar`. Endpoints: `/api/auth/csrf/`,
-  `login/`, `logout/`, `me/` (contract in the README).
+  `login/`, `logout/`, `me/` (contract in the README). Login answers `429` past
+  the attempt limit per address; `FormularioIngreso` says so, for both audiences.
 - The session user lives only in the TanStack Query cache (`useSesion`).
   Logout clears the whole cache.
 - `RequireAuth` guards the backoffice. `RequirePermission` checks a permission
@@ -237,6 +238,31 @@ case type's configuration:
 - The portal status shows each signer's name, role ("Easy Office" for
   `representante_emisor`) and state, nothing else.
 
+**Audit log** (`features/backoffice/Auditoria/`, HU-31, RF-17, UC-13), against
+`/api/auditoria/` from backend PR #62. Do not merge before that PR. Read-only.
+- `/backoffice/auditoria`, menu entry and route guarded by
+  `core.consultar_auditoria` (`PERMISOS.consultarAuditoria`), held only by the
+  Administrador. A `403` shows `SinAcceso` (shared with `RequirePermission`) and
+  reads the session again, so an ended session goes to login instead.
+- The URL holds the filters (`entidad`, `registro_id`, `usuario`, `accion`,
+  `origen`, `desde`, `hasta`, and `pagina`, sent as `page`). They stay text and
+  the API validates them; its errors show on their field.
+- Times use `formatearFechaHoraChile`, fixed to `America/Santiago` on a 24-hour
+  clock, never `formatearFechaHora`, which follows the browser. Timestamps inside
+  the values get the same treatment (`cambios.ts`).
+- A null `usuario_nombre` reads "Sistema", except `inicio_sesion_fallido`, which
+  reads "Sin identificar": who tried is unknown, and the system did not act.
+- `cambios.ts` builds a row's detail. A role or permission change is a
+  `modificar` with one side null, so a missing side reads "—", not "(vacío)".
+- The API gives no list of entities or users. `entidades.ts` is a manual copy of
+  `AUDITADAS` in the backend's `core/auditoria/registro.py`: add an entity there,
+  add it here. One missing still works from the URL. There is no user list: "Ver
+  solo este usuario" in a row's detail sets that filter.
+- `HistorialRegistro` shows `/api/auditoria/historial/` in `FichaCliente` and
+  `DetalleTramite`. Without the permission it renders nothing and asks nothing.
+  HU-31 has no written acceptance criteria; these come from the story, RF-17,
+  UC-13, RN-31, RN-35 and EVI-T11.
+
 Still to build: **case type configuration** — the screen that makes the
 configurable engine visible. It is the highest-value missing screen.
 
@@ -387,7 +413,9 @@ Built so far:
   draft, payment of the plan, status, and the backoffice case list and detail
   with the signed upload. No demo data remains in the portal;
 - the advanced signature's signers and states in the backoffice and the
-  portal (IN-01, HU-36, HU-37).
+  portal (IN-01, HU-36, HU-37);
+- on `feature/HU-31-auditoria`, unmerged: the audit log screen (HU-31), waiting
+  for backend PR #62.
 
 **Still unknown — do not invent answers:**
 
