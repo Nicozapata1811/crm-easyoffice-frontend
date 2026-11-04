@@ -324,6 +324,35 @@ terminó, lleva a la pantalla de ingreso.
 
 Depende del PR #62 del backend: sin esa rama, estas rutas de la API no existen.
 
+## Alertas de vencimiento y contratos del cliente
+
+`/backoffice/alertas` (HU-42, UC-09) muestra los contratos próximos a vencer, para
+gestionar su pago o renovación. Requiere `contratos.view_alertavencimiento`, que
+tienen el Administrador y el Ejecutivo. Qué alertas ve cada uno lo decide el backend:
+el responsable del contrato; si no tiene, todo Ejecutivo; el Administrador, todas.
+
+- **Menú.** La entrada "Alertas" muestra cuántas hay pendientes. Se actualiza al
+  volver a la ventana y al gestionar una, nunca con un temporizador, para no mantener
+  viva una sesión inactiva.
+- **Tabla.** Cliente (con enlace a su ficha), folio, servicios, vencimiento, días
+  restantes, umbral y responsable. Los días los calcula el backend con el calendario
+  de Chile.
+- **Filtros.** Pendientes o gestionadas, "Solo los contratos a mi cargo" y umbral.
+  Viven en la URL (`?estado=gestionada&mias=true&umbral=30`); sin `estado` se ven las
+  pendientes.
+- **Gestión.** "Marcar como gestionada" admite una nota opcional, que queda en el
+  registro de auditoría y no se puede borrar. Una alerta gestionada no vuelve a
+  pendiente. Si otra persona ya la gestionó, la pantalla lo dice y actualiza el listado.
+
+La ficha del cliente lista sus contratos en "Servicios y documentos", sobre el
+registro de auditoría: folio, estado, servicios, inicio, vencimiento, días restantes y
+responsable. Requiere `contratos.view_contrato`. Pasado el vencimiento guardado se lee
+"Vencido", o "Término inicial cumplido" si el contrato se renueva automáticamente,
+porque su plazo rodante no está modelado (RN-10, TA-17). El Administrador cambia ahí
+el ejecutivo responsable.
+
+Depende del PR del backend de estas historias: sin él, estas rutas de la API no existen.
+
 ## Trámite de bodega (PLT-02)
 
 El contrato de bodega se vende por plan: anual (12 meses), semestral (6) y
@@ -392,10 +421,16 @@ Contrato definido por el backend y documentado también en su README.
 | `PUT /api/portal/tramites/{id}/` | Editar la solicitud antes del pago |
 | `GET /api/auditoria/?entidad=&registro_id=&usuario=&accion=&origen=&desde=&hasta=&page=` | Pantalla "Registro de auditoría". `403` sin el permiso; `400` con errores por filtro |
 | `GET /api/auditoria/historial/?entidad=&registro_id=&page=` | Historial en la ficha del cliente y el detalle del trámite |
+| `GET /api/contratos/?cliente=&page=` | Contratos en la ficha del cliente |
+| `GET /api/contratos/ejecutivos/` | Lista para cambiar el responsable. Solo el Administrador |
+| `POST /api/contratos/{id}/responsable/` | Cambiar el responsable con `{"ejecutivo"}`. `409` si el contrato ya no lo admite |
+| `GET /api/alertas-vencimiento/?estado=&mias=&umbral=&page=` | Pantalla "Alertas de vencimiento". `400` con errores por filtro |
+| `GET /api/alertas-vencimiento/resumen/` | Indicador del menú y opciones del filtro de umbral |
+| `POST /api/alertas-vencimiento/{id}/gestionar/` | "Marcar como gestionada" con `{"nota"}`. `409` si ya lo estaba |
 
 Las respuestas están tipadas en `src/types/panel.ts`, `src/types/cliente.ts`,
-`src/types/ventas.ts` y `src/types/auditoria.ts` con las mismas claves que
-documenta el backend.
+`src/types/ventas.ts`, `src/types/auditoria.ts` y `src/types/contratos.ts` con las
+mismas claves que documenta el backend.
 
 ---
 
@@ -412,6 +447,7 @@ Sprint 2 (6 – 17 de octubre de 2026). Ya están:
 - la gestión de clientes: listado con búsqueda, ficha, registro y edición;
 - el contrato de bodega (PLT-02), iniciado por un ejecutivo desde el
   backoffice;
+- las alertas de vencimiento y los contratos en la ficha del cliente (HU-42, HU-48);
 - en la rama `feature/HU-31-auditoria`, sin fusionar: la consulta del registro de
   auditoría (HU-31), que espera el PR #62 del backend.
 

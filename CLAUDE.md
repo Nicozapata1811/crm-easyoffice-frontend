@@ -126,6 +126,32 @@ backoffice's client module: list with search, record, and create/edit form,
 against `/api/clientes/`.
 - Guards use `clientes.view_cliente`, `add_cliente` and `change_cliente`.
 - Staff without the dashboard permission land on the client list.
+- The record's "Servicios y documentos" section (`ContratosCliente`, HU-48) lists
+  the client's contracts from `/api/contratos/?cliente=`, above the audit section.
+  It needs `contratos.view_contrato`; without it, it renders nothing and asks
+  nothing. The Administrador changes the responsible executive there
+  (`DialogoResponsable`, `contratos.asignar_responsable_contrato`), only on a
+  draft or a contract in force. An Ejecutivo holds `change_contrato`, so that
+  permission is not what guards this.
+
+**Expiry alerts** (`features/backoffice/Alertas/`, HU-42, UC-09), against
+`/api/alertas-vencimiento/`:
+- `/backoffice/alertas`, menu entry and route guarded by
+  `contratos.view_alertavencimiento`. Handling needs
+  `contratos.gestionar_alertavencimiento`. Which alerts someone sees is the
+  backend's rule; never filter by role here.
+- The URL holds `estado` (absent means pending), `mias`, `umbral` and `pagina`.
+  The threshold options come from `…/resumen/`, because thresholds are edited in
+  the admin.
+- The menu badge reads `…/resumen/` through `useResumenAlertas`. It refreshes on
+  window focus and after handling, **never on a timer**: polling would keep an
+  idle session alive past its inactivity timeout.
+- Days left always come from the backend. `Alertas/dias.ts` words them: past the
+  stored expiry a contract reads "Vencido", or "Término inicial cumplido" if it
+  renews automatically, because its rolling term is not modelled.
+- A `409` on handling means someone else did it: the screen says so and refreshes.
+  The dialog warns that the note stays in the audit log, which cannot be purged.
+- There is no "Renovar" button: RN-10 is still a proposal.
 
 **Payment** (`features/portal/Pago/`, HU-39): the client picks a provider
 from `GET /api/portal/medios-pago/` (today Klap and Flow, both an assumption
