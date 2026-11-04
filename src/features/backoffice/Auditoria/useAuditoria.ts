@@ -6,7 +6,7 @@ import { ApiError } from "../../../api/client";
 import { useRevisarSesion } from "../../auth/useSesion";
 
 // Asking again cannot change a refused or invalid request.
-const reintentar = (fallas: number, error: Error) =>
+export const reintentar = (fallas: number, error: Error) =>
   fallas < 1 && !(error instanceof ApiError && error.status < 500);
 
 export function useRegistroAuditoria(filtros: FiltrosAuditoria) {

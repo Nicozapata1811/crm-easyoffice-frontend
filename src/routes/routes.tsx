@@ -22,6 +22,7 @@ import { PagarVenta } from "../features/portal/PagarVenta/PagarVenta";
 import { MisTramites } from "../features/portal/MisTramites/MisTramites";
 import { PrevisualizacionDocumento } from "../features/portal/PrevisualizacionDocumento/PrevisualizacionDocumento";
 import { ResultadoPago } from "../features/portal/ResultadoPago/ResultadoPago";
+import { AlertasVencimiento } from "../features/backoffice/Alertas/AlertasVencimiento";
 import { RegistroAuditoria } from "../features/backoffice/Auditoria/RegistroAuditoria";
 import { FichaCliente } from "../features/backoffice/Clientes/FichaCliente";
 import { FormularioCliente } from "../features/backoffice/Clientes/FormularioCliente";
@@ -220,6 +221,14 @@ export const router = createBrowserRouter([
         ),
       },
       { path: "tipos-tramite", element: <TiposTramite /> },
+      {
+        path: "alertas",
+        element: (
+          <RequirePermission permiso={PERMISOS.verAlertas}>
+            <AlertasVencimiento />
+          </RequirePermission>
+        ),
+      },
       {
         path: "auditoria",
         element: (

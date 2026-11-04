@@ -11,4 +11,8 @@ export const PERMISOS = {
   subirDocumentoFirmado: "documentos.subir_documento_firmado",
   gestionarFirma: "documentos.gestionar_firma",
   consultarAuditoria: "core.consultar_auditoria",
+  verContratos: "contratos.view_contrato",
+  asignarResponsable: "contratos.asignar_responsable_contrato",
+  verAlertas: "contratos.view_alertavencimiento",
+  gestionarAlertas: "contratos.gestionar_alertavencimiento",
 } as const;
