@@ -23,3 +23,13 @@ export function formatearFecha(iso: string): string {
 const fechaHora = new Intl.DateTimeFormat("es-CL", { dateStyle: "medium", timeStyle: "short" });
 
 export const formatearFechaHora = (iso: string) => fechaHora.format(new Date(iso));
+
+const fechaHoraChile = new Intl.DateTimeFormat("es-CL", {
+  dateStyle: "medium",
+  timeStyle: "medium",
+  hourCycle: "h23",
+  timeZone: "America/Santiago",
+});
+
+/** Chile's time wherever the browser is, on a 24-hour clock with seconds: the audit log's "when". */
+export const formatearFechaHoraChile = (iso: string) => fechaHoraChile.format(new Date(iso));

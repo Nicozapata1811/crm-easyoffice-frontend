@@ -282,8 +282,9 @@ ventas por servicio y por ejecutivo.
   filtra por tipo. La búsqueda queda en la URL, así que volver atrás conserva
   los resultados.
 - **Ficha** (`/backoffice/clientes/:id`). Muestra los datos del cliente y, para
-  empresas, sus representantes legales. Servicios, documentos e historial
-  aparecerán cuando el sistema los registre.
+  empresas, sus representantes legales. Con el permiso de auditoría, también su
+  historial (ver "Registro de auditoría"). Servicios y documentos aparecerán
+  cuando el sistema los registre.
 - **Formulario** (`/nuevo` y `/:id/editar`). Registra a una persona natural o a
   una empresa y valida el RUT antes de enviar. Si el backend informa que el RUT
   ya es de un cliente (HU-52), el error aparece en el campo RUT. Al editar se
@@ -293,6 +294,35 @@ Leer requiere `clientes.view_cliente`, crear `clientes.add_cliente` y editar
 `clientes.change_cliente`. Quien no ve el panel operativo, como hoy el
 Ejecutivo, entra directo al listado de clientes. Para tener datos con qué
 trabajar, el backend carga clientes ficticios con `seed_demo_clientes`.
+
+## Registro de auditoría
+
+`/backoffice/auditoria` (HU-31, RF-17, UC-13) muestra quién hizo qué, cuándo y
+desde dónde. Es de solo lectura. Requiere `core.consultar_auditoria`, que hoy solo
+tiene el Administrador: sin ese permiso no aparece en el menú, y una URL directa o
+un `403` de la API muestran "Sin acceso". Si el `403` se debe a que la sesión
+terminó, lleva a la pantalla de ingreso.
+
+- **Tabla.** Fecha y hora de Chile (sea cual sea la zona del navegador, en formato
+  de 24 horas), usuario, canal, acción, entidad, registro e IP. Sin usuario se lee
+  "Sistema"; un ingreso fallido se lee "Sin identificar", porque no se sabe quién
+  lo intentó.
+- **Detalle.** Cada fila abre sus valores campo por campo: una modificación se lee
+  "campo: antes → después", una creación muestra solo los valores nuevos y una
+  eliminación solo los anteriores. Los nombres de campo son los de la API, porque
+  no entrega etiquetas.
+- **Filtros.** Entidad e ID de registro, acción, canal, fechas y usuario. Viven en
+  la URL (`?accion=crear&pagina=2`), así que una vista filtrada se puede compartir
+  y resiste una recarga. Los errores de la API aparecen junto a su filtro.
+- **Listas que la API no entrega.** Las entidades salen de `Auditoria/entidades.ts`,
+  una copia de `core/auditoria/registro.py` del backend que hay que mantener a
+  mano; una entidad que falte sigue funcionando desde la URL. No hay lista de
+  usuarios: "Ver solo este usuario", en el detalle de una fila, fija ese filtro.
+- **Historial de un registro.** La ficha del cliente y el detalle del trámite
+  muestran el historial de ese registro junto con los que le pertenecen. Solo con
+  el permiso: sin él, la sección no aparece y no se consulta la API.
+
+Depende del PR #62 del backend: sin esa rama, estas rutas de la API no existen.
 
 ## Trámite de bodega (PLT-02)
 
@@ -332,7 +362,7 @@ Contrato definido por el backend y documentado también en su README.
 | Método y ruta | Uso en el frontend |
 |---|---|
 | `GET /api/auth/csrf/` | Obtiene el token CSRF, que se guarda en memoria |
-| `POST /api/auth/login/` | Pantalla de ingreso. `400` significa credenciales inválidas |
+| `POST /api/auth/login/` | Pantalla de ingreso. `400` significa credenciales inválidas; `429`, demasiados intentos desde la misma dirección |
 | `POST /api/auth/logout/` | Botón "Cerrar sesión" |
 | `GET /api/auth/me/` | Sesión actual: `id`, `email`, `name`, `tipo`, `cliente`, `rol`, `permisos`. `403` = sin sesión |
 | `POST /api/portal/registro/` | Pantalla "Crea tu cuenta". `201` deja la sesión iniciada; `400` trae errores por campo o un `detail` genérico |
@@ -360,9 +390,12 @@ Contrato definido por el backend y documentado también en su README.
 | `GET /api/portal/tramites/formulario/?tipo=bodega` | Formulario de la bodega en el portal |
 | `POST /api/portal/tramites/` | Solicitar la bodega con el plan elegido |
 | `PUT /api/portal/tramites/{id}/` | Editar la solicitud antes del pago |
+| `GET /api/auditoria/?entidad=&registro_id=&usuario=&accion=&origen=&desde=&hasta=&page=` | Pantalla "Registro de auditoría". `403` sin el permiso; `400` con errores por filtro |
+| `GET /api/auditoria/historial/?entidad=&registro_id=&page=` | Historial en la ficha del cliente y el detalle del trámite |
 
-Las respuestas están tipadas en `src/types/panel.ts`, `src/types/cliente.ts` y
-`src/types/ventas.ts` con las mismas claves que documenta el backend.
+Las respuestas están tipadas en `src/types/panel.ts`, `src/types/cliente.ts`,
+`src/types/ventas.ts` y `src/types/auditoria.ts` con las mismas claves que
+documenta el backend.
 
 ---
 
@@ -378,7 +411,9 @@ Sprint 2 (6 – 17 de octubre de 2026). Ya están:
 - el panel operativo conectado al backend y exportable a Excel;
 - la gestión de clientes: listado con búsqueda, ficha, registro y edición;
 - el contrato de bodega (PLT-02), iniciado por un ejecutivo desde el
-  backoffice.
+  backoffice;
+- en la rama `feature/HU-31-auditoria`, sin fusionar: la consulta del registro de
+  auditoría (HU-31), que espera el PR #62 del backend.
 
 Los estados de los trámites, los roles más allá de Administrador y Ejecutivo,
 la confirmación del proveedor de pago y de los precios, y el momento exacto de

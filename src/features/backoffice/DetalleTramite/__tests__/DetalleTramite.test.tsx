@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getSesion } from "../../../../api/auth";
+import { obtenerHistorial } from "../../../../api/auditoria";
 import {
   cambiarFechaInicioBackoffice,
   cancelarFirma,
@@ -28,6 +29,10 @@ import { EJECUTIVO, renderEn } from "../../Clientes/__tests__/renderConSesion";
 import { DetalleTramite } from "../DetalleTramite";
 
 vi.mock("../../../../api/auth", () => ({ getSesion: vi.fn() }));
+vi.mock("../../../../api/auditoria", async (original) => ({
+  ...(await original<typeof import("../../../../api/auditoria")>()),
+  obtenerHistorial: vi.fn(),
+}));
 vi.mock("../../../../api/tramites", () => ({
   obtenerTramiteBackoffice: vi.fn(),
   listarDocumentosBackoffice: vi.fn(),
@@ -75,6 +80,27 @@ describe("DetalleTramite", () => {
     expect(await screen.findByText(/Versión 1 · PLT-01 v1/)).toBeInTheDocument();
     expect(screen.getByText(/SHA-256 PDF b{64}/)).toBeInTheDocument();
     expect(screen.getByText("cliente@empresa-ficticia.example")).toBeInTheDocument();
+  });
+
+  it("shows the case's audit history only with the permission", async () => {
+    vi.mocked(obtenerHistorial).mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
+    vi.mocked(getSesion).mockResolvedValue({
+      ...CON_PERMISOS,
+      permisos: [...CON_PERMISOS.permisos, "core.consultar_auditoria"],
+    });
+    renderDetalle();
+
+    expect(await screen.findByRole("region", { name: "Registro de auditoría" })).toBeInTheDocument();
+    expect(obtenerHistorial).toHaveBeenCalledWith("tramites.tramite", 7, 1, expect.anything());
+  });
+
+  it("keeps the audit history from an executive", async () => {
+    vi.mocked(obtenerHistorial).mockClear();
+    renderDetalle();
+
+    await screen.findByText("Trámite TRA-000007");
+    expect(screen.queryByRole("region", { name: "Registro de auditoría" })).not.toBeInTheDocument();
+    expect(obtenerHistorial).not.toHaveBeenCalled();
   });
 
   it("uploads the signed PDF while the case waits for a signature", async () => {
