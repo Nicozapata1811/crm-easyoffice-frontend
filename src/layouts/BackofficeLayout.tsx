@@ -12,11 +12,15 @@ import { Marca } from "../components/Marca";
 import { NavLinks } from "../components/NavLinks";
 import { PERMISOS } from "../features/auth/permisos";
 import { tienePermiso, useLogout, useSesion } from "../features/auth/useSesion";
+import { useResumenAlertas } from "../features/backoffice/Alertas/useAlertas";
 import { RUTA_INGRESO } from "../routes/RequireAuth";
+
+const RUTA_ALERTAS = "/backoffice/alertas";
 
 const LINKS: { to: string; label: string; end?: boolean; permiso?: string }[] = [
   { to: "/backoffice", label: "Panel", end: true, permiso: PERMISOS.verPanelOperativo },
   { to: "/backoffice/clientes", label: "Clientes", permiso: PERMISOS.verClientes },
+  { to: RUTA_ALERTAS, label: "Alertas", permiso: PERMISOS.verAlertas },
   { to: "/backoffice/tramites", label: "Trámites", permiso: PERMISOS.verTramites },
   { to: "/backoffice/ventas", label: "Ventas", permiso: PERMISOS.verVentas },
   { to: "/backoffice/tipos-tramite", label: "Tipos de trámite" },
@@ -27,6 +31,14 @@ export function BackofficeLayout() {
   const { data: usuario } = useSesion();
   const logout = useLogout();
   const navigate = useNavigate();
+  const { data: resumenAlertas } = useResumenAlertas(tienePermiso(usuario, PERMISOS.verAlertas));
+  const pendientes = resumenAlertas?.pendientes ?? 0;
+
+  const links = LINKS.filter(({ permiso }) => !permiso || tienePermiso(usuario, permiso)).map((link) =>
+    link.to === RUTA_ALERTAS && pendientes > 0
+      ? { ...link, insignia: { cantidad: pendientes, que: "pendientes" } }
+      : link,
+  );
 
   const cerrarSesion = () =>
     logout.mutate(undefined, { onSettled: () => navigate(RUTA_INGRESO, { replace: true }) });
@@ -36,9 +48,7 @@ export function BackofficeLayout() {
       <AppBar position="static" color="default">
         <Toolbar sx={{ gap: 3 }}>
           <Marca contexto="Backoffice" />
-          <NavLinks
-            links={LINKS.filter(({ permiso }) => !permiso || tienePermiso(usuario, permiso))}
-          />
+          <NavLinks links={links} />
           {usuario && (
             <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 2 }}>
               <Typography sx={{ fontSize: 13.5, display: { xs: "none", sm: "block" } }}>

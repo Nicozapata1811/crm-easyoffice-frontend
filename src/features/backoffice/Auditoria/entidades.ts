@@ -23,6 +23,7 @@ const ENTIDADES: Record<string, string> = {
   "contratos.duracioncontrato": "Duración de contrato",
   "contratos.contrato": "Contrato",
   "contratos.serviciocontratado": "Servicio contratado",
+  "contratos.alertavencimiento": "Alerta de vencimiento",
   "tramites.tipotramite": "Tipo de trámite",
   "tramites.motivopendiente": "Motivo de pendiente",
   "tramites.tramite": "Trámite",
