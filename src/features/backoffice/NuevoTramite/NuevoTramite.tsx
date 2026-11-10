@@ -22,6 +22,7 @@ import { listarClientes } from "../../../api/clientes";
 import {
   crearTramiteBackoffice,
   editarTramiteBackoffice,
+  listarTiposIniciables,
   obtenerFormularioTramite,
   obtenerTramiteBackoffice,
 } from "../../../api/tramites";
@@ -33,6 +34,7 @@ import { codigoDeConflicto, erroresDeCampo } from "../../tramites/errores";
 import { CampoTexto, Grilla, Opcion } from "../../tramites/formulario/campos";
 import { SeccionesContratante } from "../../tramites/formulario/SeccionesContratante";
 import { SelectorPlan } from "../../tramites/formulario/selectores";
+import { FORMULARIOS } from "./formularios";
 import {
   aSolicitudTramite,
   conPlanes,
@@ -45,10 +47,11 @@ import {
 } from "./schema";
 
 /**
- * An executive starts a case for a client (PLT-02, sold only in the
- * backoffice): first the company, then the form the case type's
- * configuration describes. With a :tramiteId it edits a request not yet
- * signed; the document is generated again.
+ * An executive starts a case for a client: first the client, then the form
+ * the case type's configuration describes (PLT-02), or the type's own form
+ * when the backend names one (PLT-03 …, `formularios.ts`). With a
+ * :tramiteId it edits a request not yet signed; the document is generated
+ * again.
  */
 export function NuevoTramite() {
   const { tipo, tramiteId } = useParams();
@@ -73,7 +76,7 @@ export function NuevoTramite() {
     }
     return <Formulario tipo={tramite.data.tipo_codigo} clienteId={tramite.data.cliente.id} tramite={tramite.data} />;
   }
-  if (clienteId === undefined) return <ElegirCliente onElegir={setClienteId} />;
+  if (clienteId === undefined) return <ElegirCliente tipo={tipo!} onElegir={setClienteId} />;
   return <Formulario tipo={tipo!} clienteId={clienteId} onCambiarCliente={() => setClienteId(undefined)} />;
 }
 
@@ -85,34 +88,61 @@ function Cargando() {
   );
 }
 
-/** Search a company client by name, RUT or code. */
-function ElegirCliente({ onElegir }: { onElegir: (id: number) => void }) {
+const CLIENTES = {
+  empresa: {
+    bajada: "Elige la empresa para la que inicias el trámite.",
+    buscar: "Buscar empresa",
+    ayuda: "Razón social, RUT o código",
+    lista: "Empresas",
+    ninguna: "Ninguna empresa coincide. Regístrala primero en Clientes.",
+  },
+  persona: {
+    bajada: "Elige la persona para la que inicias el trámite.",
+    buscar: "Buscar persona",
+    ayuda: "Nombre, RUT o código",
+    lista: "Personas",
+    ninguna: "Ninguna persona coincide. Regístrala primero en Clientes.",
+  },
+};
+
+/**
+ * Search a client by name, RUT or code. The case type says which kind of
+ * client it is for (`tipos_cliente`); a company until the types load.
+ */
+function ElegirCliente({ tipo, onElegir }: { tipo: string; onElegir: (id: number) => void }) {
   const [buscar, setBuscar] = useState("");
+  const tipos = useQuery({
+    queryKey: ["tramites", "tipos"],
+    queryFn: ({ signal }) => listarTiposIniciables(signal),
+  });
+  const tipoCliente = tipos.data?.find((t) => t.codigo === tipo)?.tipos_cliente?.[0] ?? "empresa";
+  const textos = CLIENTES[tipoCliente];
   const clientes = useQuery({
-    queryKey: ["clientes", "empresas", buscar.trim()],
-    queryFn: ({ signal }) => listarClientes({ buscar: buscar.trim(), tipo: "empresa" }, signal),
+    queryKey: ["clientes", tipoCliente, buscar.trim()],
+    queryFn: ({ signal }) => listarClientes({ buscar: buscar.trim(), tipo: tipoCliente }, signal),
     placeholderData: keepPreviousData,
+    enabled: !tipos.isPending,
   });
 
   return (
     <Box sx={{ maxWidth: 760, mx: "auto" }}>
-      <PageHeading titulo="Nuevo trámite" bajada="Elige la empresa para la que inicias el trámite." />
+      <PageHeading titulo="Nuevo trámite" bajada={textos.bajada} />
       <Paper sx={{ p: 3 }}>
         <TextField
-          label="Buscar empresa"
+          label={textos.buscar}
           type="search"
           size="small"
           fullWidth
           value={buscar}
           onChange={(event) => setBuscar(event.target.value)}
-          placeholder="Razón social, RUT o código"
+          placeholder={textos.ayuda}
         />
         {clientes.isError && (
           <Alert severity="error" sx={{ mt: 2 }}>
             No pudimos cargar los clientes.
           </Alert>
         )}
-        <List aria-label="Empresas">
+        <List aria-label={textos.lista}>
           {clientes.data?.results.map((cliente) => (
             <ListItemButton key={cliente.id} onClick={() => onElegir(cliente.id)}>
               <ListItemText primary={cliente.nombre} secondary={`RUT ${cliente.rut}`} />
@@ -121,7 +151,7 @@ function ElegirCliente({ onElegir }: { onElegir: (id: number) => void }) {
         </List>
         {clientes.data?.results.length === 0 && (
           <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
-            Ninguna empresa coincide. Regístrala primero en Clientes.
+            {textos.ninguna}
           </Typography>
         )}
       </Paper>
@@ -164,6 +194,18 @@ function Formulario({
           </Button>
         )}
       </Box>
+    );
+  }
+  const Propio = formulario.data.formulario ? FORMULARIOS[formulario.data.formulario] : undefined;
+  if (Propio) {
+    return (
+      <Propio
+        formulario={formulario.data}
+        tramite={tramite}
+        onCambiarCliente={onCambiarCliente}
+        clienteId={clienteId}
+        tipo={tipo}
+      />
     );
   }
   return <Contenido formulario={formulario.data} tramite={tramite} onCambiarCliente={onCambiarCliente} clienteId={clienteId} tipo={tipo} />;

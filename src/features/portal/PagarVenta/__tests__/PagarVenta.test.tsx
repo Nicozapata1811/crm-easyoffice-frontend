@@ -47,6 +47,8 @@ describe("PagarVenta", () => {
           precio_unitario: "18400",
           cantidad: 1,
           subtotal: "18400",
+          neto: "15462",
+          iva: "2938",
         },
       ],
     });

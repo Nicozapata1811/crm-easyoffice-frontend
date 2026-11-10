@@ -9,6 +9,7 @@ import { Navigate, Link as RouterLink, useParams } from "react-router-dom";
 
 import { obtenerVenta } from "../../../api/portal";
 import { PageHeading } from "../../../components/PageHeading";
+import { DesgloseVenta } from "../../../components/DesgloseVenta";
 import { formatearPesos } from "../../../lib/formato";
 import { mensajeDePago } from "../Pago/mensajes";
 import { PanelMedioPago } from "../Pago/PanelMedioPago";
@@ -60,20 +61,7 @@ export function PagarVenta() {
               <span>{formatearPesos(Number(item.subtotal))}</span>
             </Box>
           ))}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 15,
-              fontWeight: 700,
-              borderTop: 1, borderColor: "divider",
-              mt: 0.75,
-              pt: 1.75,
-            }}
-          >
-            <span>Total</span>
-            <span>{formatearPesos(Number(venta.data.total))}</span>
-          </Box>
+          <DesgloseVenta neto={venta.data.neto} iva={venta.data.iva} total={venta.data.total} />
           {pagar.isError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {mensajeDePago(pagar.error)}

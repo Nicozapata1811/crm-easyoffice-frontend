@@ -7,6 +7,7 @@ import type {
   FormularioPortal,
   FormularioTramite,
   PlanDomicilio,
+  SolicitudVehiculo,
   Tramite,
   TramiteBackoffice,
 } from "../../../types/tramites";
@@ -132,6 +133,7 @@ export const TRAMITE: Tramite = {
       },
     ],
   },
+  resumen: [],
   venta: null,
   eventos: [
     { fecha: "2026-10-16T10:00:00-03:00", estado_nuevo: "iniciado", motivo_nuevo: "" },
@@ -148,6 +150,8 @@ export const TRAMITE_A_PAGAR: Tramite = {
     id: 31,
     folio: "VEN-000031",
     estado: "pendiente_pago",
+    neto: "37807",
+    iva: "7183",
     total: "44990",
     items: [
       {
@@ -156,6 +160,8 @@ export const TRAMITE_A_PAGAR: Tramite = {
         precio_unitario: "39990",
         cantidad: 1,
         subtotal: "39990",
+        neto: "33605",
+        iva: "6385",
       },
       {
         servicio: "firma-electronica-avanzada",
@@ -163,6 +169,8 @@ export const TRAMITE_A_PAGAR: Tramite = {
         precio_unitario: "5000",
         cantidad: 1,
         subtotal: "5000",
+        neto: "4202",
+        iva: "798",
       },
     ],
   },
@@ -235,7 +243,14 @@ export const TRAMITE_BACKOFFICE: TramiteBackoffice = {
   motivo: { codigo: "firma", nombre: "Firma", texto_cliente: "Estamos gestionando la firma del contrato." },
   accion_cliente: null,
   editable: false,
-  cliente: { id: 4, codigo: "CLI-000004", nombre: "Comercial Ficticia del Sur SpA", rut: "76543210-3" },
+  cliente: {
+    id: 4,
+    codigo: "CLI-000004",
+    nombre: "Comercial Ficticia del Sur SpA",
+    rut: "76543210-3",
+    tiene_cuenta_portal: true,
+  },
+  formulario: null,
   detalle_pendiente: "",
   canal: "portal",
   eventos: [
@@ -253,6 +268,8 @@ export const TRAMITE_BACKOFFICE: TramiteBackoffice = {
 
 /** The backoffice form of the warehouse case (PLT-02). */
 export const FORMULARIO_BODEGA: FormularioTramite = {
+  formulario: null,
+  precio: null,
   disponible: true,
   problemas: [],
   fecha_min: "2026-10-16",
@@ -397,4 +414,99 @@ export const FORMULARIO_PORTAL_BODEGA: FormularioPortal = {
   planes: PLANES_BODEGA,
   inmuebles: FORMULARIO_BODEGA.inmuebles,
   datos: FORMULARIO.datos,
+};
+
+/** The backoffice form of the vehicle lease (PLT-03): its own form, list price plus VAT. */
+export const FORMULARIO_VEHICULO: FormularioTramite = {
+  disponible: true,
+  problemas: [],
+  fecha_min: "2026-10-16",
+  fecha_max: "2026-11-15",
+  planes: [],
+  duraciones: [],
+  duracion_por_defecto: null,
+  inmuebles: {},
+  lineas: [],
+  ciclos_pago: [],
+  datos: {
+    ...FORMULARIO_BODEGA.datos!,
+    representante: { ...FORMULARIO_BODEGA.datos!.representante, email: "" } as never,
+  },
+  formulario: "PLT-03",
+  precio: {
+    servicio: "Arriendo de vehículo",
+    precio_confirmado: false,
+    neto: "30000",
+    iva: "5700",
+    total: "35700",
+  },
+};
+
+export const SOLICITUD_VEHICULO: SolicitudVehiculo = {
+  empresa: FORMULARIO_BODEGA.datos!.empresa,
+  representante: { ...FORMULARIO_BODEGA.datos!.representante, email: "representante@empresa-ficticia.example" },
+  personeria: {
+    fecha_instrumento: FORMULARIO_BODEGA.datos!.personeria.fecha_instrumento!,
+    sitio_o_notaria: FORMULARIO_BODEGA.datos!.personeria.sitio_o_notaria,
+  },
+  arrendador: {
+    rut: "32333444-7",
+    nombres: "Rodrigo Ignacio",
+    apellido_paterno: "Inventado",
+    apellido_materno: "Ficticio",
+    domicilio: "Avenida Imaginaria 456",
+    comuna: "La Florida",
+    email: "arrendador@persona-ficticia.example",
+  },
+  domicilio_empresa: "Calle Supuesta 789, oficina 12",
+  comuna: "Santiago",
+  fecha: "2026-10-16",
+  vehiculo: { marca: "Marca Ficticia", modelo: "Modelo X", anio: 2021, patente: "BBDF12", color: "Blanco", vin: "9BWZZZ377VT004251" },
+  plazo_meses: 12,
+  fecha_inicio: "2026-10-02",
+  renta: 250000,
+  dia_pago: 5,
+  medio_pago: "transferencia",
+  medio_pago_otro: "",
+};
+
+/** A vehicle lease an executive started, waiting for the client's payment. */
+export const TRAMITE_VEHICULO: TramiteBackoffice = {
+  ...TRAMITE_BACKOFFICE,
+  id: 12,
+  folio: "TRA-000012",
+  tipo: "Arriendo de vehículo",
+  tipo_codigo: "arriendo-vehiculo",
+  canal: "backoffice",
+  motivo: { codigo: "pago", nombre: "Pago", texto_cliente: "Falta el pago para continuar." },
+  accion_cliente: "pagar",
+  editable: true,
+  datos: {},
+  contrato: null,
+  resumen: [
+    { etiqueta: "Arrendador", valor: "Rodrigo Ignacio Inventado Ficticio (32333444-7)" },
+    { etiqueta: "Patente", valor: "BBDF12" },
+    { etiqueta: "Vigencia", valor: "02-10-2026 al 01-10-2027" },
+    { etiqueta: "Renta mensual", valor: "$250.000" },
+  ],
+  formulario: SOLICITUD_VEHICULO,
+  venta: {
+    id: 40,
+    folio: "VEN-000040",
+    estado: "pendiente_pago",
+    neto: "30000",
+    iva: "5700",
+    total: "35700",
+    items: [
+      {
+        servicio: "arriendo-vehiculo",
+        nombre: "Arriendo de vehículo",
+        precio_unitario: "35700",
+        cantidad: 1,
+        subtotal: "35700",
+        neto: "30000",
+        iva: "5700",
+      },
+    ],
+  },
 };

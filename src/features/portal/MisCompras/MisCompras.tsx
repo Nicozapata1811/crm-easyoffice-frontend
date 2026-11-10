@@ -52,13 +52,16 @@ export function MisCompras() {
                 <span>{formatearPesos(Number(item.subtotal))}</span>
               </Box>
             ))}
+            <Typography sx={{ fontSize: 12.5, color: "text.secondary", textAlign: "right", pt: 1 }}>
+              Neto {formatearPesos(Number(venta.neto))} · IVA (19 %) {formatearPesos(Number(venta.iva))}
+            </Typography>
             <Box
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
                 borderTop: 1, borderColor: "divider",
-                mt: 1.5,
+                mt: 1,
                 pt: 1.5,
               }}
             >

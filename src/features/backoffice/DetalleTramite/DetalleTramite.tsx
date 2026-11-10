@@ -28,6 +28,7 @@ import {
   subirDocumentoFirmado,
 } from "../../../api/tramites";
 import { EstadoPill } from "../../../components/EstadoPill";
+import { DesgloseVenta } from "../../../components/DesgloseVenta";
 import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
 import { guardarArchivo } from "../../../lib/descargar";
@@ -162,6 +163,23 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
             </Typography>
           </>
         )}
+        {tramite.resumen.length > 0 && (
+          <>
+            <SectionHeading texto="Datos del trámite" />
+            <Box component="dl" sx={{ m: 0, display: "grid", gridTemplateColumns: "max-content 1fr", columnGap: 2, rowGap: 0.5 }}>
+              {tramite.resumen.map((linea) => (
+                <Box key={linea.etiqueta} sx={{ display: "contents", fontSize: 13 }}>
+                  <Box component="dt" sx={{ color: "text.secondary" }}>
+                    {linea.etiqueta}
+                  </Box>
+                  <Box component="dd" sx={{ m: 0 }}>
+                    {linea.valor}
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </>
+        )}
         {tramite.venta && (
           <>
             <SectionHeading texto="Venta" />
@@ -171,6 +189,15 @@ function Detalle({ tramite }: { tramite: TramiteBackoffice }) {
             <Typography component="span" sx={{ fontSize: 13, color: "text.secondary" }}>
               {formatearPesos(Number(tramite.venta.total))} · {tramite.venta.estado.replace("_", " ")}
             </Typography>
+            <Box sx={{ maxWidth: 320 }}>
+              <DesgloseVenta neto={tramite.venta.neto} iva={tramite.venta.iva} total={tramite.venta.total} />
+            </Box>
+            {tramite.motivo?.codigo === "pago" && !tramite.cliente.tiene_cuenta_portal && (
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                El cliente debe crear su cuenta en el portal, con el RUT y el correo de su ficha, para pagar. El
+                trámite sigue cuando el pago se confirme.
+              </Alert>
+            )}
           </>
         )}
       </Paper>

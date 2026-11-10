@@ -36,6 +36,8 @@ describe("ListaVentas", () => {
           id: 9,
           folio: "VEN-000009",
           estado: "pagada",
+          neto: "15462",
+          iva: "2938",
           total: "18400",
           pagada_en: "2026-10-10T12:05:00Z",
           created_at: "2026-10-10T12:00:00Z",

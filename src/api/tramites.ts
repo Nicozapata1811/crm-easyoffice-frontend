@@ -8,14 +8,16 @@ import type {
   FormularioPortal,
   FormularioTramite,
   NuevaSolicitudTramite,
+  PersonaRegistrada,
   SolicitudDomicilio,
   SolicitudPortal,
+  SolicitudPropia,
   SolicitudTramite,
   TipoTramiteIniciable,
   Tramite,
   TramiteBackoffice,
 } from "../types/tramites";
-import { api } from "./client";
+import { ApiError, api } from "./client";
 
 // --- Portal (the client's own cases) ----------------------------------------
 
@@ -147,13 +149,26 @@ export function obtenerFormularioTramite(
   return api.get(`/tramites/formulario/?${params.toString()}`, signal);
 }
 
-export function crearTramiteBackoffice(solicitud: NuevaSolicitudTramite): Promise<TramiteBackoffice> {
+export function crearTramiteBackoffice(
+  solicitud: NuevaSolicitudTramite | (SolicitudPropia & { tipo: string; cliente: number }),
+): Promise<TramiteBackoffice> {
   return api.post("/tramites/", solicitud);
+}
+
+/** The person on record with a RUT, or null: the form then creates them. */
+export async function buscarPersona(rut: string, signal?: AbortSignal): Promise<PersonaRegistrada | null> {
+  const params = new URLSearchParams({ rut });
+  try {
+    return await api.get<PersonaRegistrada>(`/tramites/personas/?${params.toString()}`, signal);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
 }
 
 export function editarTramiteBackoffice(
   tramiteId: number,
-  solicitud: SolicitudTramite,
+  solicitud: SolicitudTramite | SolicitudPropia,
 ): Promise<TramiteBackoffice> {
   return api.put(`/tramites/${tramiteId}/`, solicitud);
 }
