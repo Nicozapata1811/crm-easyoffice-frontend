@@ -12,7 +12,7 @@ import {
   obtenerTramite,
 } from "../../../../api/tramites";
 import { renderEn } from "../../../backoffice/Clientes/__tests__/renderConSesion";
-import { DOCUMENTO, FORMULARIO, TRAMITE } from "../../../tramites/__tests__/fixtures";
+import { DOCUMENTO, FORMULARIO, TRAMITE, TRAMITE_VEHICULO } from "../../../tramites/__tests__/fixtures";
 import { MisTramites } from "../../MisTramites/MisTramites";
 import { EstadoTramite } from "../EstadoTramite";
 
@@ -53,6 +53,25 @@ describe("EstadoTramite", () => {
     expect(screen.getByText("Borrador listo para revisar")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Revisar el borrador" })).toHaveAttribute("href", "/tramites/7/documento");
     expect(await screen.findByText(/Camila Andrea Ejemplo Prueba/)).toBeInTheDocument();
+  });
+
+  it("shows a case an executive started read-only, and sends the client to pay it", async () => {
+    vi.mocked(obtenerTramite).mockResolvedValue(TRAMITE_VEHICULO);
+    vi.mocked(listarDocumentos).mockResolvedValue([
+      {
+        ...DOCUMENTO,
+        firmantes: [{ ...DOCUMENTO.firmantes[0], rol: "arrendador", nombre: "Rodrigo Ignacio Inventado Ficticio" }],
+      },
+    ]);
+    renderEstado();
+
+    expect(await screen.findByText("Datos del trámite")).toBeInTheDocument();
+    expect(screen.getByText(/BBDF12/)).toBeInTheDocument();
+    expect(screen.getByText(/02-10-2026 al 01-10-2027/)).toBeInTheDocument();
+    expect(await screen.findByText(/Rodrigo Ignacio Inventado Ficticio — Arrendador/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Ir al pago" })).toHaveAttribute("href", "/tramites/12/pago");
+    expect(screen.queryByRole("link", { name: /Editar/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Revisar el borrador" })).not.toBeInTheDocument();
   });
 
   it("offers the signed contract once completed", async () => {

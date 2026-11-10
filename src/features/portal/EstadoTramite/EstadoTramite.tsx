@@ -123,6 +123,20 @@ export function EstadoTramite() {
         </Paper>
       )}
 
+      {datos.resumen.length > 0 && (
+        <Paper sx={{ p: 3.25, mb: 2.5 }}>
+          <SectionHeading texto="Datos del trámite" primera />
+          {datos.resumen.map((linea) => (
+            <Typography key={linea.etiqueta} sx={{ fontSize: 13 }}>
+              <Box component="span" sx={{ color: "text.secondary" }}>
+                {linea.etiqueta}:
+              </Box>{" "}
+              {linea.valor}
+            </Typography>
+          ))}
+        </Paper>
+      )}
+
       {vigente && (
         <Paper sx={{ p: 3.25 }}>
           <SectionHeading texto="Firmantes" primera />

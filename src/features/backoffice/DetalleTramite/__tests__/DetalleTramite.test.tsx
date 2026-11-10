@@ -24,6 +24,7 @@ import {
   FORMULARIO_BODEGA,
   TRAMITE_BACKOFFICE,
   TRAMITE_BODEGA,
+  TRAMITE_VEHICULO,
 } from "../../../tramites/__tests__/fixtures";
 import { EJECUTIVO, renderEn } from "../../Clientes/__tests__/renderConSesion";
 import { DetalleTramite } from "../DetalleTramite";
@@ -256,5 +257,72 @@ describe("DetalleTramite", () => {
       expect(screen.queryByRole("button", { name: "Reenviar enlace" })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Cancelar firma" })).not.toBeInTheDocument();
     });
+  });
+});
+
+describe("DetalleTramite: a case without a contract (PLT-03)", () => {
+  beforeEach(() => {
+    vi.mocked(getSesion).mockResolvedValue(CON_PERMISOS);
+    vi.mocked(listarDocumentosBackoffice).mockResolvedValue([
+      {
+        ...DOCUMENTO_BACKOFFICE,
+        firmantes: [
+          {
+            ...DOCUMENTO_BACKOFFICE.firmantes[0],
+            id: 901,
+            orden: 1,
+            rol: "arrendador",
+            nombre: "Rodrigo Ignacio Inventado Ficticio",
+          },
+          { ...DOCUMENTO_BACKOFFICE.firmantes[0], id: 902, orden: 2, rol: "cliente_representante" },
+        ],
+      },
+    ]);
+  });
+
+  it("shows the case's data and net, VAT and total instead of a contract", async () => {
+    vi.mocked(obtenerTramiteBackoffice).mockResolvedValue(TRAMITE_VEHICULO);
+    renderDetalle();
+
+    expect(await screen.findByText("Datos del trámite")).toBeInTheDocument();
+    expect(screen.getByText("Patente").nextSibling).toHaveTextContent("BBDF12");
+    expect(screen.getByText("Vigencia").nextSibling).toHaveTextContent("02-10-2026 al 01-10-2027");
+    expect(screen.queryByText("Contrato")).not.toBeInTheDocument();
+    expect(screen.getByText("Neto").nextSibling).toHaveTextContent("$30.000");
+    expect(screen.getByText("IVA (19 %)").nextSibling).toHaveTextContent("$5.700");
+    expect(screen.getByText("Total").nextSibling).toHaveTextContent("$35.700");
+    expect(screen.queryByText(/debe crear su cuenta en el portal/)).not.toBeInTheDocument();
+  });
+
+  it("names each party that signs", async () => {
+    vi.mocked(obtenerTramiteBackoffice).mockResolvedValue(TRAMITE_VEHICULO);
+    renderDetalle();
+
+    expect(await screen.findByText("Rodrigo Ignacio Inventado Ficticio")).toBeInTheDocument();
+    expect(screen.getByText(/· Arrendador/)).toBeInTheDocument();
+    expect(screen.getByText(/· Representante legal/)).toBeInTheDocument();
+  });
+
+  it("says the client needs a portal account to pay, with no way to mark it paid", async () => {
+    vi.mocked(obtenerTramiteBackoffice).mockResolvedValue({
+      ...TRAMITE_VEHICULO,
+      cliente: { ...TRAMITE_VEHICULO.cliente, tiene_cuenta_portal: false },
+    });
+    renderDetalle();
+
+    expect(await screen.findByText(/El cliente debe crear su cuenta en el portal/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /pagad/i })).not.toBeInTheDocument();
+  });
+
+  it("drops the notice once the case no longer waits for payment", async () => {
+    vi.mocked(obtenerTramiteBackoffice).mockResolvedValue({
+      ...TRAMITE_VEHICULO,
+      motivo: { codigo: "firma", nombre: "Firma", texto_cliente: "" },
+      cliente: { ...TRAMITE_VEHICULO.cliente, tiene_cuenta_portal: false },
+    });
+    renderDetalle();
+
+    expect(await screen.findByText("Datos del trámite")).toBeInTheDocument();
+    expect(screen.queryByText(/debe crear su cuenta en el portal/)).not.toBeInTheDocument();
   });
 });
