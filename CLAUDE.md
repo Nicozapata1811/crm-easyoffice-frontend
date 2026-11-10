@@ -226,6 +226,33 @@ executive starts it for a company client.
   (`tramites.gestionar_tramite`).
 - Missing data: staff see the backend's `problemas`.
 
+**Documents implemented directly (PLT-03 …)**. The configurable engine is out
+of the MVP (team decision, 05-11-2026): no configuration screens, no generic
+form engine. A case type whose backend `formulario` names a template code
+gets its own form, registered in `NuevoTramite/formularios.ts`; any other type
+keeps the generic form above.
+- **Vehicle lease (PLT-03)**, `NuevoTramite/vehiculo/`: section A without the
+  notice contact (`SeccionesContratante sinContacto`), the owner in a
+  `BloquePersona`, the vehicle (plate and VIN validated) and the lease terms.
+  The client picker follows the type's `tipos_cliente`.
+- `features/tramites/formulario/BloquePersona` is a party who is a natural
+  person. Leaving the RUT looks them up (`GET /api/tramites/personas/?rut=`)
+  and fills the block, or says a new person will be created; it can copy
+  another block (the owner is often the legal representative). It is a named
+  `group`, because its labels repeat other blocks'.
+- These cases have no contract: `DetalleTramite` and the portal's
+  `EstadoTramite` show `resumen`, label/value lines the backend builds, so
+  they need no per-document code. Signer roles `arrendador`, `arrendatario`
+  and `accionista` are worded in `features/tramites/firmantes.ts`.
+- Confirming the draft creates the sale; the client pays it in the portal
+  ("Ir al pago", the existing checkout). If the client has no portal account
+  (`cliente.tiene_cuenta_portal`), `DetalleTramite` says they must create it;
+  there is no manual "paid".
+- **Net, VAT and total** come from the API and are shown by
+  `components/DesgloseVenta` wherever a sale's total is (case detail, sale
+  detail, "Confirma y paga", "Pagar", "Mis compras"). Nothing is computed in
+  the frontend. Prices stay referential.
+
 The pieces the request forms share live in `features/tramites/`:
 `formulario/SeccionesContratante` (through `FormProvider`), `CampoTexto`,
 `Grilla`, `Opcion`, `formulario/selectores.tsx` (`SelectorPlan`,
