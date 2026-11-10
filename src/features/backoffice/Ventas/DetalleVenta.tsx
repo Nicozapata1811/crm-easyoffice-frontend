@@ -16,6 +16,7 @@ import { obtenerVentaBackoffice } from "../../../api/ventas";
 import { EstadoPill } from "../../../components/EstadoPill";
 import { PageHeading } from "../../../components/PageHeading";
 import { SectionHeading } from "../../../components/SectionHeading";
+import { DesgloseVenta } from "../../../components/DesgloseVenta";
 import { formatearFechaHora, formatearPesos } from "../../../lib/formato";
 import { ESTADO_VENTA } from "../../portal/Pago/estados";
 import { ETIQUETA_ORDEN } from "./etiquetas";
@@ -61,19 +62,7 @@ export function DetalleVenta() {
             <span>{formatearPesos(Number(item.subtotal))}</span>
           </Box>
         ))}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontWeight: 700,
-            borderTop: 1, borderColor: "divider",
-            mt: 1,
-            pt: 1.25,
-          }}
-        >
-          <span>Total</span>
-          <span>{formatearPesos(Number(venta.total))}</span>
-        </Box>
+        <DesgloseVenta neto={venta.neto} iva={venta.iva} total={venta.total} />
       </Paper>
 
       <Paper sx={{ overflowX: "auto" }}>

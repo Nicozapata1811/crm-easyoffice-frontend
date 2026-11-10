@@ -25,7 +25,10 @@ export interface ItemVenta {
   nombre: string;
   precio_unitario: string;
   cantidad: number;
+  /** What is charged for the line, VAT included. */
   subtotal: string;
+  neto: string;
+  iva: string;
 }
 
 export type EstadoVenta = "pendiente_pago" | "pagada" | "reembolsada" | "anulada";
@@ -82,6 +85,9 @@ export interface Venta {
   id: number;
   folio: string;
   estado: EstadoVenta;
+  /** neto + iva = total, what the client pays. */
+  neto: string;
+  iva: string;
   total: string;
   pagada_en: string | null;
   created_at: string;
