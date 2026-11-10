@@ -12,10 +12,19 @@ export function estadoFirmante(firmante: Firmante) {
   return ESTADOS[firmante.estado];
 }
 
+// The parties of the documents Easy Office is not a party to (PLT-03 …).
+const PARTES: Partial<Record<Firmante["rol"], string>> = {
+  arrendador: "Arrendador",
+  arrendatario: "Arrendatario",
+  accionista: "Accionista",
+};
+
 /** Who a signer is in the contract, in the client's words. */
 export function rolFirmante(firmante: Firmante, tramite: Tramite): string {
   if (firmante.rol === "cliente_representante") return "Representante legal";
   if (firmante.rol === "representante_emisor") return "Easy Office";
+  const parte = PARTES[firmante.rol];
+  if (parte) return parte;
   return esBodega(tramite) ? "Propietario de la bodega" : "Propietario de la oficina";
 }
 

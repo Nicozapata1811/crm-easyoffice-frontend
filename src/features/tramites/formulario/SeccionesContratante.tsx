@@ -25,12 +25,15 @@ export function SeccionesContratante({
   hoy,
   ayudaRut,
   ayudaRepresentante,
+  sinContacto = false,
 }: {
   /** Today in the backend's calendar: the personería cannot be later. */
   hoy: string;
   /** Why the company RUT cannot be typed, said to whoever fills the form. */
   ayudaRut: string;
   ayudaRepresentante: string;
+  /** A document with no contract (PLT-03 …) has no notice contact to keep. */
+  sinContacto?: boolean;
 }) {
   const {
     control,
@@ -108,16 +111,20 @@ export function SeccionesContratante({
         />
       </Grilla>
 
-      <SectionHeading texto="Contacto para notificaciones" />
-      <Grilla>
-        <Campo nombre="email_aviso" etiqueta="Correo electrónico" type="email" />
-        <Campo
-          nombre="movil_aviso"
-          etiqueta="Celular"
-          inputMode="numeric"
-          slotProps={{ input: { startAdornment: <InputAdornment position="start">+56</InputAdornment> } }}
-        />
-      </Grilla>
+      {!sinContacto && (
+        <>
+          <SectionHeading texto="Contacto para notificaciones" />
+          <Grilla>
+            <Campo nombre="email_aviso" etiqueta="Correo electrónico" type="email" />
+            <Campo
+              nombre="movil_aviso"
+              etiqueta="Celular"
+              inputMode="numeric"
+              slotProps={{ input: { startAdornment: <InputAdornment position="start">+56</InputAdornment> } }}
+            />
+          </Grilla>
+        </>
+      )}
     </>
   );
 }

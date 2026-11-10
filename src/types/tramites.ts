@@ -97,7 +97,66 @@ export interface SolicitudDomicilio extends SolicitudContratante {
 export interface TipoTramiteIniciable {
   codigo: string;
   nombre: string;
+  tipos_cliente: ("empresa" | "persona")[];
+  /** The template code of the type's own form (PLT-03 …), or null: the generic one. */
+  formulario: string | null;
 }
+
+/** A person on record, to fill a party block (GET /api/tramites/personas/). */
+export interface PersonaRegistrada {
+  rut: string;
+  nombres: string;
+  apellido_paterno: string;
+  apellido_materno: string;
+  nacionalidad: string;
+  estado_civil: string;
+  profesion: string;
+  domicilio: string;
+  comuna: string;
+  region: string;
+  email: string;
+}
+
+/** What confirming the draft of a list-price type charges. */
+export interface PrecioTramite {
+  servicio: string;
+  precio_confirmado: boolean;
+  neto: string;
+  iva: string;
+  total: string;
+}
+
+/** A party who is a natural person, as a form posts it. */
+export interface PersonaSolicitud {
+  rut: string;
+  nombres: string;
+  apellido_paterno: string;
+  apellido_materno: string;
+  domicilio: string;
+  comuna: string;
+  email: string;
+}
+
+/** The vehicle lease (PLT-03) as its form posts it and a saved case returns it. */
+export interface SolicitudVehiculo {
+  empresa: EmpresaContratante;
+  representante: RepresentanteContratante & { email: string };
+  personeria: { fecha_instrumento: string; sitio_o_notaria: string };
+  arrendador: PersonaSolicitud;
+  domicilio_empresa: string;
+  comuna: string;
+  fecha: string;
+  vehiculo: { marca: string; modelo: string; anio: number; patente: string; color: string; vin: string };
+  plazo_meses: number;
+  fecha_inicio: string;
+  renta: number;
+  dia_pago: number;
+  medio_pago: "transferencia" | "otro";
+  medio_pago_otro: string;
+}
+
+/** The request of a type with its own form, one shape per template. */
+export type SolicitudPropia = SolicitudVehiculo;
 
 /** A property a request can name: a branch office or a warehouse. */
 export interface InmuebleFormulario {
@@ -136,6 +195,9 @@ export interface FormularioTramite {
   lineas: LineaFormulario[];
   ciclos_pago: { codigo: string; nombre: string }[];
   datos: DatosContratante | null;
+  /** The template code of the type's own form, or null: the generic form. */
+  formulario: string | null;
+  precio: PrecioTramite | null;
 }
 
 /** A line's choices when the type is not sold by plans. */
@@ -209,6 +271,8 @@ export interface VentaTramite {
   id: number;
   folio: string;
   estado: EstadoVenta;
+  neto: string;
+  iva: string;
   total: string;
   items: ItemVenta[];
 }
@@ -237,6 +301,8 @@ export interface Tramite {
     lineas?: LineaElegida[];
   };
   contrato: ContratoTramite | null;
+  /** A case without a contract (PLT-03 …) in label/value lines; else empty. */
+  resumen: { etiqueta: string; valor: string }[];
   venta: VentaTramite | null;
   eventos: EventoTramite[];
   created_at: string;
@@ -251,7 +317,9 @@ export interface EventoTramiteBackoffice extends EventoTramite {
 
 /** The executive also sees the client, the internal note and who moved it. */
 export interface TramiteBackoffice extends Omit<Tramite, "eventos"> {
-  cliente: { id: number; codigo: string; nombre: string; rut: string };
+  cliente: { id: number; codigo: string; nombre: string; rut: string; tiene_cuenta_portal: boolean };
+  /** A case with its own form, as that form's payload, to edit it. */
+  formulario: SolicitudPropia | null;
   detalle_pendiente: string;
   canal: "portal" | "backoffice";
   eventos: EventoTramiteBackoffice[];
@@ -259,7 +327,13 @@ export interface TramiteBackoffice extends Omit<Tramite, "eventos"> {
 
 export type EstadoDocumento = "generado" | "reemplazado" | "firmado";
 
-export type RolFirmante = "cliente_representante" | "representante_emisor" | "autorizante";
+export type RolFirmante =
+  | "cliente_representante"
+  | "representante_emisor"
+  | "autorizante"
+  | "arrendador"
+  | "arrendatario"
+  | "accionista";
 export type EstadoFirmante = "pendiente" | "firmado" | "rechazado";
 
 /** A signer as the client sees it: name, role and state only. */

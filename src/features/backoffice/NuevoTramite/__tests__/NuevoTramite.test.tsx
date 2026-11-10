@@ -22,6 +22,7 @@ vi.mock("../../../../api/tramites", () => ({
   obtenerTramiteBackoffice: vi.fn(),
   crearTramiteBackoffice: vi.fn(),
   editarTramiteBackoffice: vi.fn(),
+  listarTiposIniciables: vi.fn().mockResolvedValue([]),
 }));
 
 const EMPRESA = {
